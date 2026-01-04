@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, Save, X, Sparkles, Download } from 'lucide-react'
+import { Upload, Save, X, Sparkles, Download, BookOpen, Layers } from 'lucide-react'
 import axios from 'axios'
 
 const api = axios.create()
@@ -16,15 +16,16 @@ const CLASS_CATEGORIES = {
 
 export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
-    title: '', author: '', status: 'A Ler', book_class: 'Desenvolvimento Pessoal', category: 'Geral',
+    title: '', original_title: '', author: '', status: 'A Ler', book_class: 'Desenvolvimento Pessoal', category: 'Geral',
     priority: '2 - Média', availability: 'Estante', type: 'Não Técnico',
-    year: new Date().getFullYear(), rating: 0, order: null, 
+    year: new Date().getFullYear(), rating: 0, order: null, google_rating: null,
     motivation: '', cover_image: null, date_read: ''
   })
   const [coverFile, setCoverFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null)
+  const [googleRating, setGoogleRating] = useState(null) // {rating: 4.5, count: 1234}
 
   useEffect(() => {
     if (bookToEdit) {
@@ -40,7 +41,24 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    
+    setFormData(prev => {
+        const newData = { ...prev, [name]: value }
+        
+        // Logic: If status becomes 'Lido', set priority to 'Concluído'
+        if (name === 'status') {
+            if (value === 'Lido') {
+                newData.priority = 'Concluído'
+            } else if (prev.status === 'Lido' && value !== 'Lido') {
+                // If moving back from Lido, reset priority to default if it was Concluído
+                if (prev.priority === 'Concluído') {
+                    newData.priority = '1 - Baixa'
+                }
+            }
+        }
+        
+        return newData
+    })
   }
 
   const handleClassChange = (e) => {
@@ -70,12 +88,22 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   year: suggestion.year || prev.year,
                   type: suggestion.type || prev.type,
                   category: suggestion.category || prev.category,
-                  motivation: suggestion.motivation || prev.motivation
+                  motivation: suggestion.motivation || prev.motivation,
+                  original_title: suggestion.original_title || prev.original_title,
+                  google_rating: suggestion.google_rating || null
               }))
               
               // Armazena URL da capa sugerida
               if (suggestion.cover_url) {
                   setSuggestedCoverUrl(suggestion.cover_url)
+              }
+              
+              // Armazena nota do Google Books
+              if (suggestion.google_rating) {
+                  setGoogleRating({
+                      rating: suggestion.google_rating,
+                      count: suggestion.google_ratings_count || 0
+                  })
               }
           }
       } catch (err) {
@@ -126,271 +154,281 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-neutral-900 rounded-lg shadow-lg border border-neutral-800 max-w-7xl mx-auto">
-       {/* Header */}
-       <div className="flex items-center justify-between p-4 border-b border-neutral-800">
-          <h2 className="text-xl font-bold text-white">
-             {bookToEdit ? '✏️ Editar Livro' : '➕ Novo Livro'}
+    <form onSubmit={handleSubmit} className="bg-neutral-900 rounded-lg shadow-lg border border-neutral-800 w-full animate-fade-in">
+       {/* Header Actions */}
+       <div className="flex items-center justify-between p-3 border-b border-neutral-800 bg-neutral-800/50">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+             {bookToEdit ? 'Gerenciar Livro' : 'Adicionar Livro'}
           </h2>
           <div className="flex gap-2">
              <button 
                 type="submit" 
                 disabled={loading} 
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500 disabled:opacity-50 transition-colors text-sm"
+                className="flex items-center gap-2 px-5 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-500 disabled:opacity-50 transition-colors text-xs font-bold shadow-lg shadow-emerald-900/20"
              >
-                <Save size={16} /> {loading ? 'Salvando...' : 'Salvar'}
+                <Save size={16} /> {loading ? 'Salvando...' : 'Salvar Alterações'}
              </button>
              {onCancel && (
                <button 
                   type="button" 
                   onClick={onCancel} 
-                  className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-neutral-300 rounded hover:bg-neutral-700 transition-colors text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 text-neutral-400 rounded hover:bg-neutral-700 hover:text-white transition-colors text-xs"
                >
-                  <X size={16} /> Cancelar
+                  <X size={16} />
                </button>
              )}
           </div>
        </div>
 
-       <div className="p-6 space-y-6">
-          {/* Required Fields Section */}
-          <div>
-             <h3 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
-                <span className="w-1 h-4 bg-purple-600 rounded"></span>
-                Campos Obrigatórios
-             </h3>
-             <div className="grid grid-cols-6 gap-3">
-                {/* Título - 3 cols */}
-                <div className="col-span-3">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Título *</label>
-                   <input 
-                      required 
-                      name="title" 
-                      value={formData.title} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                      placeholder="Ex: O Senhor dos Anéis" 
-                   />
-                </div>
+       <div className="p-3 grid grid-cols-1 md:grid-cols-12 gap-4">
+          
+          {/* LEFT COLUMN: BOOK DATA (AI & METADATA) - 7 cols */}
+          <div className="md:col-span-7 space-y-3">
+              <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                     <BookOpen size={14} /> Dados da Obra
+                  </h3>
+                  {/* AI Button Contextual */}
+                   <button 
+                      type="button" 
+                      onClick={handleAiSuggest}
+                      disabled={aiLoading || !formData.title}
+                      className="flex items-center gap-1.5 bg-gradient-to-r from-purple-900/50 to-purple-800/50 hover:from-purple-800 hover:to-purple-700 text-purple-200 border border-purple-500/30 px-2 py-1 rounded text-[10px] transition-all disabled:opacity-50"
+                      title="Preencher restante do formulário com IA"
+                  >
+                      <Sparkles size={12} /> {aiLoading ? 'Buscando...' : 'Auto-Completar'}
+                  </button>
+              </div>
 
-                {/* Status - 1 col */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Status</label>
-                   <select 
-                      name="status" 
-                      value={formData.status} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      <option>A Ler</option>
-                      <option>Lendo</option>
-                      <option>Lido</option>
-                   </select>
-                </div>
-
-                {/* Prioridade */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Prioridade</label>
-                   <select 
-                      name="priority" 
-                      value={formData.priority} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      <option>1 - Baixa</option>
-                      <option>2 - Média</option>
-                      <option>3 - Média-Alta</option>
-                      <option>4 - Alta</option>
-                   </select>
-                </div>
-
-                {/* Disponibilidade */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Disponível em</label>
-                   <select 
-                      name="availability" 
-                      value={formData.availability} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      <option value="Estante">Estante</option>
-                      <option value="PDF">PDF</option>
-                      <option value="Kindle">Kindle</option>
-                      <option value="Audiobook">Audiobook</option>
-                      <option value="Biblioteca">Biblioteca</option>
-                      <option value="Emprestado">Emprestado</option>
-                      <option value="A Comprar">A Comprar</option>
-                      <option value="Online">Online</option>
-                   </select>
-                </div>
-
-                {/* Ordem - Only show if not "Lido" */}
-                {formData.status !== "Lido" && (
-                  <div>
-                     <label className="block text-xs font-medium text-neutral-300 mb-1">Ordem</label>
-                     <input 
-                        type="number"
-                        name="order" 
-                        value={formData.order || ''} 
-                        onChange={handleChange} 
-                        className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                        placeholder="#"
-                     />
+              <div className="bg-black/20 p-3 rounded-lg border border-neutral-800/50 space-y-3">
+                  {/* Title & Original Title */}
+                  <div className="space-y-2">
+                      <div>
+                         <label className="block text-[10px] font-bold text-neutral-400 mb-0.5">Título Principal</label>
+                         <input 
+                            required 
+                            name="title" 
+                            value={formData.title} 
+                            onChange={handleChange} 
+                            className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold" 
+                            placeholder="Ex: Hábitos Atômicos"
+                         />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                          <div>
+                             <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Título Original</label>
+                             <input name="original_title" value={formData.original_title || ''} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-neutral-300 text-xs p-1.5 focus:border-purple-500 italic" placeholder="..." />
+                          </div>
+                          <div>
+                             <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Autor</label>
+                             <input name="author" value={formData.author} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500" />
+                          </div>
+                      </div>
                   </div>
-                )}
 
-                {/* Nota */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Nota (1-5)</label>
-                   <input 
-                      type="number"
-                      min="0"
-                      max="5"
-                      name="rating" 
-                      value={formData.rating || ''} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                   />
-                </div>
+                  {/* Visual & Core Meta */}
+                  <div className="flex gap-3">
+                      {/* Cover */}
+                      <div className="w-20 flex-shrink-0 space-y-1.5">
+                          <label className="block text-[9px] uppercase text-neutral-500 text-center">Capa</label>
+                          <div className="w-20 h-28 bg-neutral-800 rounded border border-neutral-700 overflow-hidden relative group shadow-lg">
+                              {formData.cover_image ? (
+                                  <img src={formData.cover_image} alt="Capa" className="w-full h-full object-cover" />
+                              ) : (
+                                  <div className="flex flex-col items-center justify-center h-full text-neutral-600 gap-1">
+                                      <Upload size={16}/>
+                                  </div>
+                              )}
+                          </div>
+                          <div className="relative">
+                             <input type="file" onChange={handleFileChange} accept="image/*" 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                             />
+                             <button type="button" className="w-full bg-neutral-700 hover:bg-neutral-600 text-[9px] py-0.5 rounded text-white transition-colors">
+                                Upload
+                             </button>
+                          </div>
+                          {suggestedCoverUrl && (
+                            <button type="button" onClick={handleUseSuggestedCover}
+                              className="w-full flex items-center justify-center gap-1 px-1 py-0.5 bg-emerald-900/40 text-emerald-400 border border-emerald-800/50 rounded text-[9px] hover:bg-emerald-900/60 transition-colors">
+                              <Download size={8} /> Usar IA
+                            </button>
+                           )}
+                      </div>
 
-                {/* Data de Leitura - Only show if "Lido" */}
-                {formData.status === "Lido" && (
-                  <div>
-                     <label className="block text-xs font-medium text-neutral-300 mb-1">Lido em</label>
-                     <input 
-                        type="text"
-                        name="date_read" 
-                        value={formData.date_read || ''} 
-                        onChange={handleChange} 
-                        className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                        placeholder="2025/01"
-                     />
+                      {/* Classification Grid */}
+                      <div className="flex-1 grid grid-cols-2 gap-2 content-start">
+                           <div>
+                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Ano</label>
+                               <input type="number" name="year" value={formData.year} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500" />
+                           </div>
+                           <div>
+                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Tipo</label>
+                               <select name="type" value={formData.type} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
+                                  <option>Não Técnico</option>
+                                  <option>Técnico</option>
+                               </select>
+                           </div>
+                           <div className="col-span-2">
+                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Classe Macro</label>
+                               <select name="book_class" value={formData.book_class} onChange={handleClassChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
+                                  {Object.keys(CLASS_CATEGORIES).map(cls => (
+                                    <option key={cls} value={cls}>{cls}</option>
+                                  ))}
+                               </select>
+                           </div>
+                           <div className="col-span-2">
+                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Categoria Específica</label>
+                               <select name="category" value={formData.category} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
+                                  {CLASS_CATEGORIES[formData.book_class].map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                  ))}
+                               </select>
+                           </div>
+                      </div>
                   </div>
-                )}
 
-                {/* Capa - 2 cols */}
-                <div className="col-span-2">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Capa</label>
-                   <div className="flex gap-2">
-                      <input 
-                         type="file" 
-                         onChange={handleFileChange} 
-                         accept="image/*" 
-                         className="flex-1 text-xs text-neutral-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-neutral-700 file:text-white hover:file:bg-neutral-600" 
-                      />
-                      {suggestedCoverUrl && (
-                        <button
-                          type="button"
-                          onClick={handleUseSuggestedCover}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs"
-                          title="Usar capa da API"
-                        >
-                          <Download size={14} /> Usar API
-                        </button>
-                      )}
-                   </div>
-                   {formData.cover_image && <p className="text-xs text-emerald-400 mt-1">✓ Capa definida</p>}
-                </div>
-             </div>
+                  {/* Motivation */}
+                  <div>
+                      <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Resumo / Motivação</label>
+                      <textarea name="motivation" value={formData.motivation} onChange={handleChange} rows={2}
+                          className="w-full rounded bg-neutral-800 border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-neutral-600 resize-none" 
+                          placeholder="Sobre o que é este livro?"
+                       />
+                  </div>
+              </div>
           </div>
 
-          {/* AI-Suggested Fields Section */}
-          <div>
-             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2">
-                   <span className="w-1 h-4 bg-amber-600 rounded"></span>
-                   Campos Sugeridos por IA
-                </h3>
-                <button 
-                   type="button" 
-                   onClick={handleAiSuggest}
-                   disabled={aiLoading || !formData.title}
-                   className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 transition-all shadow-lg shadow-purple-500/30"
-                >
-                   <Sparkles size={14} /> {aiLoading ? 'Buscando...' : '✨ Completar com IA'}
-                </button>
-             </div>
-             <div className="grid grid-cols-6 gap-3">
-                {/* Autor - 2 cols */}
-                <div className="col-span-2">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Autor</label>
-                   <input 
-                      name="author" 
-                      value={formData.author} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                   />
-                </div>
 
-                {/* Ano */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Ano</label>
-                   <input 
-                      type="number"
-                      name="year" 
-                      value={formData.year} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                   />
-                </div>
+          {/* RIGHT COLUMN: USER MANAGEMENT (STATUS & CONTROL) - 5 cols */}
+          <div className="md:col-span-5 flex flex-col gap-3">
+              <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                  <Layers size={14} /> Meu Gerenciamento
+              </h3>
 
-                {/* Tipo */}
-                <div>
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Tipo</label>
-                   <select 
-                      name="type" 
-                      value={formData.type} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      <option>Não Técnico</option>
-                      <option>Técnico</option>
-                   </select>
-                </div>
+              <div className="bg-neutral-800/30 p-4 rounded-lg border border-neutral-700/50 flex flex-col gap-4 flex-1">
+                  
+                  {/* Status Highlight */}
+                  <div>
+                       <label className="block text-[10px] font-bold text-white mb-1.5 uppercase">Status Atual</label>
+                       <div className="grid grid-cols-3 gap-1.5">
+                           {['A Ler', 'Lendo', 'Lido'].map((s) => (
+                               <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => setFormData(prev => {
+                                      const newData = { ...prev, status: s }
+                                      if (s === 'Lido') {
+                                          newData.priority = 'Concluído'
+                                      } else if (prev.status === 'Lido') {
+                                          if (prev.priority === 'Concluído') {
+                                              newData.priority = '1 - Baixa'
+                                          }
+                                      }
+                                      return newData
+                                  })}
+                                  className={`py-1.5 rounded text-xs font-bold border transition-all ${
+                                      formData.status === s 
+                                      ? s === 'Lido' ? 'bg-emerald-600 border-emerald-500 text-white' 
+                                      : s === 'Lendo' ? 'bg-purple-600 border-purple-500 text-white'
+                                      : 'bg-neutral-600 border-neutral-500 text-white'
+                                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'
+                                  }`}
+                               >
+                                   {s}
+                               </button>
+                           ))}
+                       </div>
+                  </div>
+                  
+                  <div className="border-t border-neutral-700/50"></div>
 
-                {/* Classe - 2 cols */}
-                <div className="col-span-2">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Classe</label>
-                   <select 
-                      name="book_class" 
-                      value={formData.book_class} 
-                      onChange={handleClassChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      {Object.keys(CLASS_CATEGORIES).map(cls => (
-                        <option key={cls} value={cls}>{cls}</option>
-                      ))}
-                   </select>
-                </div>
+                  {/* CONDITIONAL FIELDS BASED ON STATUS */}
+                  {formData.status === 'Lido' ? (
+                      <div className="space-y-4 animate-fade-in">
+                          <div className="bg-emerald-900/10 p-3 rounded-lg border border-emerald-900/30 text-center">
+                              <label className="block text-[10px] font-bold text-emerald-400 mb-2 uppercase tracking-wider">Sua Avaliação</label>
+                              <div className="flex justify-center gap-1.5 mb-1">
+                                  {[1,2,3,4,5].map((star) => (
+                                      <button 
+                                          key={star}
+                                          type="button"
+                                          onClick={() => setFormData(prev => ({...prev, rating: star}))}
+                                          className={`text-xl transition-transform hover:scale-110 ${
+                                              (formData.rating || 0) >= star ? 'text-amber-400' : 'text-neutral-700'
+                                          }`}
+                                      >
+                                          ★
+                                      </button>
+                                  ))}
+                              </div>
+                              <p className="text-[10px] text-neutral-400 font-mono">
+                                  {formData.rating ? `${formData.rating}/5 Estrelas` : 'Sem nota'}
+                              </p>
+                          </div>
 
-                {/* Categoria - 2 cols (dinâmico baseado na classe) */}
-                <div className="col-span-2">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Categoria</label>
-                   <select 
-                      name="category" 
-                      value={formData.category} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                   >
-                      {CLASS_CATEGORIES[formData.book_class].map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                   </select>
-                </div>
+                          <div>
+                              <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Data de Conclusão</label>
+                              <input type="text" name="date_read" value={formData.date_read || ''} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-emerald-500 text-center" 
+                                  placeholder="YYYY/MM" />
+                          </div>
+                      </div>
+                  ) : (
+                      <div className="space-y-3 animate-fade-in">
+                          <div>
+                               <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Prioridade de Leitura</label>
+                               <select name="priority" value={formData.priority} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-purple-500">
+                                  <option>1 - Baixa</option>
+                                  <option>2 - Média</option>
+                                  <option>3 - Média-Alta</option>
+                                  <option>4 - Alta</option>
+                               </select>
+                          </div>
 
-                {/* Motivação - 6 cols (full width) */}
-                <div className="col-span-6">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">Motivação / Resumo</label>
-                   <textarea 
-                      name="motivation" 
-                      value={formData.motivation} 
-                      onChange={handleChange} 
-                      rows={2}
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                      placeholder="Por que ler este livro?"
-                   />
-                </div>
-             </div>
+                          <div>
+                               <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Modo de Leitura (Disponibilidade)</label>
+                               <select name="availability" value={formData.availability} onChange={handleChange} 
+                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-purple-500">
+                                  <option value="Estante">Estante (Físico)</option>
+                                  <option value="Kindle">Kindle (E-book)</option>
+                                  <option value="PDF">PDF / Digital</option>
+                                  <option value="Audiobook">Audiobook</option>
+                                  <option value="Biblioteca">Biblioteca</option>
+                                  <option value="Online">Web / Online</option>
+                                  <option value="A Comprar">Desejado / A Comprar</option>
+                               </select>
+                          </div>
+
+                          <div>
+                             <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Ordem na Fila</label>
+                             <div className="flex items-center gap-2">
+                                 <span className="text-neutral-500 text-sm">#</span>
+                                 <input type="number" name="order" value={formData.order || ''} onChange={handleChange} 
+                                    className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-sm p-1.5 font-bold focus:border-purple-500" 
+                                    placeholder="Auto" />
+                             </div>
+                          </div>
+                      </div>
+                  )}
+
+                  {googleRating && (
+                       <div className="mt-2 pt-2 border-t border-neutral-700/50 text-center">
+                          <p className="text-[9px] uppercase text-neutral-500 mb-0.5">Referência Externa</p>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-900/20 border border-amber-900/40 rounded-full text-amber-500 text-[10px]">
+                             <span>Google Books: <b>{googleRating.rating}</b></span>
+                             <span className="opacity-50">({googleRating.count})</span>
+                          </div>
+                       </div>
+                   )}
+              </div>
           </div>
        </div>
     </form>

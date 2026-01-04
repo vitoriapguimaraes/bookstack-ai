@@ -11,7 +11,7 @@ export default function Sidebar({ currentTab, setTab, onAddBook, filters, onFilt
     <aside className="w-20 bg-neutral-950 border-r border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-10">
       {/* Brand Icon */}
       <div className="mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+        <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
           <BookOpen className="text-white w-7 h-7" />
         </div>
       </div>
