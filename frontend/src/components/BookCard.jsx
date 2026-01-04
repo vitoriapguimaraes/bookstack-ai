@@ -9,14 +9,7 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
       ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
       : `https://placehold.co/300x450/1a1a1a/6b21a8?text=${encodeURIComponent(book.title)}`
   
-  const statusConfig = {
-     'Lendo': { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-     'A Ler': { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-     'Lido': { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' }
-  }
   
-  const status = statusConfig[book.status] || { color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/20' }
-
   const handleDelete = async (e) => {
       e.stopPropagation()
       if (window.confirm(`Tem certeza que deseja apagar "${book.title}"?`)) {
@@ -75,7 +68,7 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
 
   // Main Card - Informative Design
   return (
-    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-40">
+    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-50">
       {/* Cover Image */}
       <div className="w-28 flex-shrink-0 bg-neutral-950 relative overflow-hidden">
          <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
@@ -99,9 +92,6 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
                   </h3>
                   <p className="text-xs text-neutral-400">{book.author}</p>
                </div>
-               <span className={`text-[10px] px-1.5 py-0.5 rounded ${status.bg} ${status.color} ${status.border} border font-medium uppercase tracking-wide whitespace-nowrap h-fit flex-shrink-0`}>
-                  {book.status}
-               </span>
             </div>
             
             {/* Classification: Class + Category */}

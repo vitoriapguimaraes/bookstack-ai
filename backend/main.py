@@ -1,12 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from sqlmodel import Session, select
-from typing import List
+from typing import List, Optional
 from database import create_db_and_tables, get_session
 from models import Book
 from utils import calculate_book_score, get_book_details_hybrid
 import requests
+import csv
+import io
+import codecs
 from pydantic import BaseModel
 
 class TitleRequest(BaseModel):
@@ -252,5 +255,136 @@ async def proxy_image(url: str):
         # Return the image with appropriate content type
         content_type = response.headers.get('content-type', 'image/jpeg')
         return Response(content=response.content, media_type=content_type)
+    except Exception as e:
+        print(f"Error proxying image: {e}")
+        # Return a 1x1 transparent pixel or 404
+        return Response(status_code=404)
+
+@app.get("/books_export/", response_class=StreamingResponse)
+def export_books_csv(session: Session = Depends(get_session)):
+    """
+    Gera e baixa um CSV com todos os livros da biblioteca.
+    """
+    books = session.exec(select(Book)).all()
+    
+    # Criar um buffer em memória para o CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Cabeçalhos
+    headers = [
+        "id", "title", "original_title", "author", "year", "type", 
+        "priority", "status", "availability", "book_class", 
+        "category", "rating", "google_rating", "date_read", 
+        "score", "motivation", "cover_image"
+    ]
+    writer.writerow(headers)
+    
+    # Dados
+    for book in books:
+        writer.writerow([
+            book.id,
+            book.title,
+            book.original_title,
+            book.author,
+            book.year,
+            book.type,
+            book.priority,
+            book.status,
+            book.availability,
+            book.book_class,
+            book.category,
+            book.rating,
+            book.google_rating,
+            book.date_read,
+            book.score,
+            book.motivation,
+            book.cover_image
+        ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=biblioteca_backup.csv"}
+    )
+
+@app.post("/books_import/")
+async def import_books_csv(file: UploadFile = File(...), session: Session = Depends(get_session)):
+    """
+    Importa livros via CSV.
+    Campos obrigatórios: 'title'
+    Campos recomendados: 'author', 'status'
+    """
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Arquivo deve ser um CSV")
+    
+    try:
+        # Ler conteúdo do arquivo
+        content = await file.read()
+        # Decodificar para string (tenta utf-8)
+        decoded = content.decode('utf-8')
+        
+        # Usar csv.DictReader
+        reader = csv.DictReader(io.StringIO(decoded))
+        
+        # Normalizar headers (remover espaços e lowercase)
+        if reader.fieldnames:
+             reader.fieldnames = [name.encode('utf-8').decode('utf-8-sig').strip().lower() for name in reader.fieldnames]
+
+        imported_count = 0
+        errors = []
+        
+        for row in reader:
+            # Check for required title
+            if 'title' not in row or not row['title']:
+                continue
+            
+            # Map CSV fields to Book model
+            book_data = {
+                "title": row['title'],
+                "author": row.get('author', "Desconhecido"),
+                "status": row.get('status', 'A Ler'),
+                "priority": row.get('priority', '1 - Baixa'),
+                "type": row.get('type', 'Não Técnico'),
+                "book_class": row.get('book_class', 'Desenvolvimento Pessoal'),
+                "category": row.get('category', 'Geral'),
+                "availability": row.get('availability', 'Estante'),
+                "original_title": row.get('original_title')
+            }
+            
+            # Handle numeric fields if present
+            if row.get('year'):
+                try: book_data['year'] = int(row['year'])
+                except: pass
+                
+            if row.get('rating'):
+                try: book_data['rating'] = int(row['rating'])
+                except: pass
+                
+            if row.get('google_rating'):
+                try: book_data['google_rating'] = float(row['google_rating'])
+                except: pass
+            
+            # Create Book
+            new_book = Book(**book_data)
+            
+            # Calculate initial score
+            new_book.score = calculate_book_score(new_book)
+            
+            # Assign order (append to end)
+            last_order = session.exec(select(Book.order).order_by(Book.order.desc())).first() or 0
+            new_book.order = last_order + 1
+            
+            session.add(new_book)
+            imported_count += 1
+        
+        session.commit()
+        return {"message": f"Importação concluída. {imported_count} livros adicionados.", "errors": errors}
+        
+    except Exception as e:
+        print(f"Erro na importação: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Failed to fetch image: {str(e)}")

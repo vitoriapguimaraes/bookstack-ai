@@ -72,6 +72,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   type: suggestion.type || prev.type,
                   category: suggestion.category || prev.category,
                   motivation: suggestion.motivation || prev.motivation,
+                  original_title: suggestion.original_title || prev.original_title,
                   google_rating: suggestion.google_rating || null
               }))
               
@@ -170,8 +171,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                 Campos Obrigatórios
              </h3>
              <div className="grid grid-cols-6 gap-3">
-                {/* Título - 3 cols */}
-                <div className="col-span-3">
+                {/* Título - Full width */}
+                <div className="col-span-6">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Título *</label>
                    <input 
                       required 
@@ -183,24 +184,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                    />
                 </div>
 
-                {/* Título Original - 3 cols */}
-                <div className="col-span-3">
-                   <label className="block text-xs font-medium text-neutral-300 mb-1">
-                      Título Original 
-                      <span className="text-neutral-500 ml-1">(opcional)</span>
-                   </label>
-                   <input 
-                      name="original_title" 
-                      value={formData.original_title || ''} 
-                      onChange={handleChange} 
-                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                      placeholder="Ex: Atomic Habits"
-                   />
-                   <p className="text-xs text-neutral-500 mt-1">🌐 Melhora busca de ratings</p>
-                </div>
-
-                {/* Status - 3 cols */}
-                <div className="col-span-3">
+                {/* Status - 2 cols */}
+                <div className="col-span-2">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Status</label>
                    <select 
                       name="status" 
@@ -214,8 +199,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                    </select>
                 </div>
 
-                {/* Prioridade */}
-                <div>
+                {/* Prioridade - 2 cols */}
+                <div className="col-span-2">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Prioridade</label>
                    <select 
                       name="priority" 
@@ -230,8 +215,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                    </select>
                 </div>
 
-                {/* Disponibilidade */}
-                <div>
+                {/* Disponibilidade - 2 cols */}
+                <div className="col-span-2">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Disponível em</label>
                    <select 
                       name="availability" 
@@ -318,7 +303,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                         <button
                           type="button"
                           onClick={handleUseSuggestedCover}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs whitespace-nowrap"
                           title="Usar capa da API"
                         >
                           <Download size={14} /> Usar API
@@ -343,10 +328,25 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                    disabled={aiLoading || !formData.title}
                    className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 transition-all shadow-lg shadow-purple-500/30"
                 >
-                   <Sparkles size={14} /> {aiLoading ? 'Buscando...' : '✨ Completar com IA'}
+                   <Sparkles size={14} /> {aiLoading ? 'Buscando...' : 'Completar com IA'}
                 </button>
              </div>
              <div className="grid grid-cols-6 gap-3">
+                {/* Título Original (IA) - 6 cols */}
+                <div className="col-span-6">
+                   <label className="block text-xs font-medium text-neutral-300 mb-1">
+                      Título Original 
+                      <span className="text-neutral-500 ml-1 text-[10px]">(Auto-completar IA)</span>
+                   </label>
+                   <input 
+                      name="original_title" 
+                      value={formData.original_title || ''} 
+                      onChange={handleChange} 
+                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
+                      placeholder="Preenchido automaticamente..."
+                   />
+                </div>
+
                 {/* Autor - 2 cols */}
                 <div className="col-span-2">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Autor</label>

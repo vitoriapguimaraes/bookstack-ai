@@ -305,12 +305,79 @@ def get_hybrid_rating(title: str, author: str = None, original_title: str = None
     
     return None
 
-def get_ai_classification(title: str, description: str = ""):
-    """Usa Groq AI para classificar categoria, tipo e motivação de forma personalizada."""
+# --- AI PROVIDERS ---
+
+def get_groq_classification(prompt, system_prompt):
     api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        print("Erro: GROQ_API_KEY não encontrada.")
+    if not api_key: return None
+    
+    try:
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" },
+            temperature=0.7
+        )
+        return json.loads(response.choices[0].message.content)
+    except Exception as e:
+        print(f"Erro no Groq: {e}")
         return None
+
+def get_gemini_classification(prompt, system_prompt):
+    # Requires: pip install google-generativeai
+    # Env: GEMINI_API_KEY
+    try:
+        import google.generativeai as genai
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key: 
+            print("Erro: GEMINI_API_KEY não encontrada.")
+            return None
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
+        
+        full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
+        response = model.generate_content(full_prompt)
+        return json.loads(response.text)
+    except ImportError:
+        print("Erro: Biblioteca 'google-generativeai' não instalada.")
+        return None
+    except Exception as e:
+        print(f"Erro no Gemini: {e}")
+        return None
+
+def get_openai_classification(prompt, system_prompt):
+    # Requires: pip install openai
+    # Env: OPENAI_API_KEY
+    try:
+        from openai import OpenAI
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key: return None
+        
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" },
+            temperature=0.7
+        )
+        return json.loads(response.choices[0].message.content)
+    except ImportError:
+        print("Erro: Biblioteca 'openai' não instalada.")
+        return None
+    except Exception as e:
+        print(f"Erro na OpenAI: {e}")
+        return None
+
+def get_ai_classification(title: str, description: str = ""):
+    """Usa IA (Provider configurável) para classificar o livro."""
     
     # Mapeamento de classes para categorias
     class_categories_str = "\n".join([
@@ -318,9 +385,9 @@ def get_ai_classification(title: str, description: str = ""):
         for cls, cats in CLASS_CATEGORIES.items()
     ])
     
-    client = Groq(api_key=api_key)
-    prompt = f"""Você é um assistente literário especializado que conhece profundamente o perfil da leitora.
-
+    system_prompt = "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
+    
+    prompt = f"""
 PERFIL DA LEITORA:
 Vitória é uma mulher de 30 anos, pansexual e profissional de tecnologia (Cientista de Dados e Desenvolvedora) com raízes na Engenharia Ambiental. Seu estilo de leitura é marcado pela busca de equilíbrio entre a densidade técnica e a sensibilidade humana. Ela não lê apenas para aprender uma sintaxe, mas para entender como a tecnologia e o comportamento humano se moldam. Como estudante contínua, ela valoriza o rigor técnico, mas sua lente de mundo é inclusiva, ética e focada em impacto coletivo.
 
@@ -357,6 +424,8 @@ DIRETRIZES PARA A MOTIVAÇÃO:
 ESTRUTURA IDEAL DA MOTIVAÇÃO:
 "Este livro explora [eixo central] e faz total sentido para o momento da Vitória porque, enquanto oferece [benefício prático/técnico], também provoca uma reflexão necessária sobre [aspecto humano/comportamental/social], alinhando-se à sua busca por uma tecnologia mais consciente e uma liderança autêntica."
 
+5. "original_title" (string): O título original do livro. IMPORTANTE: Se o título fornecido JA ESTIVER no idioma original (ex: Inglês), repita exatamente o mesmo título aqui. NÃO retorne null.
+
 IMPORTANTE:
 - Seja específico e relevante ao perfil dela
 - Evite generalizações vazias
@@ -368,21 +437,19 @@ Responda APENAS com um JSON válido no formato:
   "book_class": "...",
   "category": "...",
   "type": "...",
-  "motivation": "..."
+  "motivation": "...",
+  "original_title": "..."
 }}
 """
     
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={ "type": "json_object" },
-            temperature=0.7  # Um pouco de criatividade, mas não demais
-        )
-        return json.loads(response.choices[0].message.content)
-    except Exception as e:
-        print(f"Erro no Groq: {e}")
-        return None
+    provider = os.getenv("AI_PROVIDER", "groq").lower()
+    
+    if provider == "gemini":
+        return get_gemini_classification(prompt, system_prompt)
+    elif provider == "openai":
+        return get_openai_classification(prompt, system_prompt)
+    else:
+        return get_groq_classification(prompt, system_prompt)
 
 def get_book_details_hybrid(title: str):
     """
@@ -425,6 +492,9 @@ def get_book_details_hybrid(title: str):
     if ai_data:
         result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")
+        result["category"] = ai_data.get("category", "Geral")
+        result["motivation"] = ai_data.get("motivation")
+        result["original_title"] = ai_data.get("original_title")
         result["category"] = ai_data.get("category", "Geral")
         result["motivation"] = ai_data.get("motivation")
     
