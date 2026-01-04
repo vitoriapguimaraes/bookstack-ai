@@ -81,7 +81,15 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
       try {
           const res = await api.post('/api/books/suggest', { title: formData.title })
           const suggestion = res.data
+          
           if (suggestion) {
+              // Check for explicit error from backend
+              if (suggestion.error) {
+                  console.error("AI Error Log:", suggestion.error)
+                  alert(`❌ Falha na IA:\n${suggestion.error}\n\nTente novamente ou preencha manualmente.`)
+                  return
+              }
+
               setFormData(prev => ({
                   ...prev,
                   author: suggestion.author || prev.author,
@@ -94,6 +102,10 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   google_rating: suggestion.google_rating || null,
                   cover_image: suggestion.cover_url || prev.cover_image
               }))
+              
+              if (!suggestion.motivation) {
+                  alert("⚠️ Aviso: A IA não conseguiu gerar a motivação/classificação completa. Preencha manualmente os campos faltantes.")
+              }
               
               if (suggestion.cover_url) {
                   setSuggestedCoverUrl(null)
@@ -109,7 +121,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
           }
       } catch (err) {
           console.error(err)
-          alert("Não foi possível obter sugestão. Verifique a conexão.")
+          alert("Não foi possível conectar ao servidor. Verifique se o backend está rodando.")
       } finally {
           setAiLoading(false)
       }
@@ -125,6 +137,21 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validation
+    if (!formData.title || !formData.title.trim()) {
+        alert("O Título é obrigatório!")
+        return
+    }
+    if (!formData.author || !formData.author.trim()) {
+        alert("O Autor é obrigatório!")
+        return
+    }
+    if (formData.status === 'Lido' && !formData.date_read) {
+        alert("Para livros 'Lidos', a Data de Leitura é obrigatória!")
+        return
+    }
+
     setLoading(true)
     try {
       let savedBook
@@ -203,28 +230,28 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
               <div className="bg-black/20 p-3 rounded-lg border border-neutral-800/50 space-y-3">
                   {/* Title & Original Title */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                       <div>
-                         <label className="block text-[10px] font-bold text-neutral-400 mb-0.5">Título Principal</label>
+                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Título Principal</label>
                          <input 
                             required 
                             name="title" 
                             value={formData.title} 
                             onChange={handleChange} 
-                            className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold" 
+                            className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold placeholder-neutral-700" 
                             placeholder="Ex: Hábitos Atômicos"
                          />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                           <div>
-                             <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Título Original</label>
+                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Título Original</label>
                              <input name="original_title" value={formData.original_title || ''} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-neutral-300 text-xs p-1.5 focus:border-purple-500 italic" placeholder="..." />
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 italic placeholder-neutral-700" placeholder="..." />
                           </div>
                           <div>
-                             <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Autor</label>
+                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Autor</label>
                              <input name="author" value={formData.author} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500" />
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500 placeholder-neutral-700" />
                           </div>
                       </div>
                   </div>
@@ -233,12 +260,12 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   <div className="flex gap-3">
                       {/* Cover */}
                       <div className="w-20 flex-shrink-0 space-y-1.5">
-                          <label className="block text-[9px] uppercase text-neutral-500 text-center">Capa</label>
-                          <div className="w-20 h-28 bg-neutral-800 rounded border border-neutral-700 overflow-hidden relative group shadow-lg">
+                          <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider text-center">Capa</label>
+                          <div className="w-20 h-28 bg-neutral-900 rounded border border-neutral-700 overflow-hidden relative group shadow-lg">
                               {formData.cover_image ? (
                                   <img src={formData.cover_image} alt="Capa" className="w-full h-full object-cover" />
                               ) : (
-                                  <div className="flex flex-col items-center justify-center h-full text-neutral-600 gap-1">
+                                  <div className="flex flex-col items-center justify-center h-full text-neutral-700 gap-1">
                                       <Upload size={16}/>
                                   </div>
                               )}
@@ -247,7 +274,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                              <input type="file" onChange={handleFileChange} accept="image/*" 
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                              />
-                             <button type="button" className="w-full bg-neutral-700 hover:bg-neutral-600 text-[9px] py-0.5 rounded text-white transition-colors">
+                             <button type="button" className="w-full bg-neutral-800 hover:bg-neutral-700 text-[9px] py-1 rounded text-neutral-400 hover:text-white transition-colors border border-neutral-700">
                                 Upload
                              </button>
                           </div>
@@ -260,34 +287,34 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                       </div>
 
                       {/* Classification Grid */}
-                      <div className="flex-1 grid grid-cols-2 gap-2 content-start">
+                      <div className="flex-1 grid grid-cols-2 gap-3 content-start">
                            <div>
-                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Ano</label>
+                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Ano</label>
                                <input type="number" name="year" value={formData.year} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500" />
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500" />
                            </div>
                            <div>
-                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Tipo</label>
+                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Tipo</label>
                                <select name="type" value={formData.type} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
                                   <option>Não Técnico</option>
                                   <option>Técnico</option>
                                </select>
                            </div>
                            <div className="col-span-2">
-                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Classe Macro</label>
+                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Classe Macro</label>
                                <select name="book_class" value={formData.book_class} onChange={handleClassChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
                                   {Object.keys(CLASS_CATEGORIES).map(cls => (
                                     <option key={cls} value={cls}>{cls}</option>
                                   ))}
                                </select>
                            </div>
                            <div className="col-span-2">
-                               <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Categoria Específica</label>
+                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Categoria Específica</label>
                                <select name="category" value={formData.category} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-xs p-1.5 focus:border-purple-500">
-                                  {CLASS_CATEGORIES[formData.book_class].map(cat => (
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                                  {(CLASS_CATEGORIES[formData.book_class] || []).map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
                                   ))}
                                </select>
@@ -297,9 +324,9 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
                   {/* Motivation */}
                   <div>
-                      <label className="block text-[9px] uppercase text-neutral-500 mb-0.5">Resumo / Motivação</label>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Resumo / Motivação</label>
                       <textarea name="motivation" value={formData.motivation} onChange={handleChange} rows={2}
-                          className="w-full rounded bg-neutral-800 border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-neutral-600 resize-none" 
+                          className="w-full rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-neutral-700 resize-none" 
                           placeholder="Sobre o que é este livro?"
                        />
                   </div>
@@ -350,6 +377,24 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   
                   <div className="border-t border-neutral-700/50"></div>
 
+                  {/* Availability - Always Visible */}
+                  <div>
+                       <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Disponível em</label>
+                       <select name="availability" value={formData.availability} onChange={handleChange} 
+                           className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                           <option value="N/A">N/A</option>
+                           <option value="Estante">Estante</option>
+                           <option value="Estante Araçatuba">Estante Araçatuba</option>
+                           <option value="Kindle">Kindle (E-book)</option>
+                           <option value="PDF">PDF / Digital</option>
+                           <option value="Audiobook">Audiobook</option>
+                           <option value="Emprestado">Emprestado</option>
+                           <option value="Biblioteca">Biblioteca</option>
+                           <option value="Online">Web / Online</option>
+                           <option value="A Comprar">Desejado / A Comprar</option>
+                       </select>
+                  </div>
+
                   {/* CONDITIONAL FIELDS BASED ON STATUS */}
                   {formData.status === 'Lido' ? (
                       <div className="space-y-4 animate-fade-in">
@@ -375,18 +420,18 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                           </div>
 
                           <div>
-                              <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Data de Conclusão</label>
+                              <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Data de Conclusão</label>
                               <input type="text" name="date_read" value={formData.date_read || ''} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-emerald-500 text-center" 
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-emerald-500 text-center" 
                                   placeholder="YYYY/MM" />
                           </div>
                       </div>
                   ) : (
                       <div className="space-y-3 animate-fade-in">
                           <div>
-                               <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Prioridade de Leitura</label>
+                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Prioridade de Leitura</label>
                                <select name="priority" value={formData.priority} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-purple-500">
+                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
                                   <option>1 - Baixa</option>
                                   <option>2 - Média</option>
                                   <option>3 - Média-Alta</option>
@@ -395,25 +440,11 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                           </div>
 
                           <div>
-                               <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Modo de Leitura (Disponibilidade)</label>
-                               <select name="availability" value={formData.availability} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-xs p-2 focus:border-purple-500">
-                                  <option value="Estante">Estante (Físico)</option>
-                                  <option value="Kindle">Kindle (E-book)</option>
-                                  <option value="PDF">PDF / Digital</option>
-                                  <option value="Audiobook">Audiobook</option>
-                                  <option value="Biblioteca">Biblioteca</option>
-                                  <option value="Online">Web / Online</option>
-                                  <option value="A Comprar">Desejado / A Comprar</option>
-                               </select>
-                          </div>
-
-                          <div>
-                             <label className="block text-[10px] font-bold text-neutral-300 mb-0.5">Ordem na Fila</label>
+                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Ordem na Fila</label>
                              <div className="flex items-center gap-2">
                                  <span className="text-neutral-500 text-sm">#</span>
                                  <input type="number" name="order" value={formData.order || ''} onChange={handleChange} 
-                                    className="w-full rounded bg-neutral-900 border-neutral-600 text-white text-sm p-1.5 font-bold focus:border-purple-500" 
+                                    className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-sm p-1.5 font-bold focus:border-purple-500" 
                                     placeholder="Auto" />
                              </div>
                           </div>

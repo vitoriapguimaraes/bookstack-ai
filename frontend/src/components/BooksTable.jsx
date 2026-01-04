@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowUpDown, Pencil, Trash2, Search, X } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2, Search, X, Check, Edit3, Trash } from 'lucide-react'
 import axios from 'axios'
+import BulkEditModal from './BulkEditModal'
 
 const api = axios.create()
 
@@ -8,13 +9,23 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
   // Destructure state from parent (or use defaults if not provided - though App.jsx provides them)
   const { 
       sortConfig = { key: 'order', direction: 'asc' }, 
-      searchTerm = '', 
+      searchTerm = '',
       selectedClasses = [], 
       selectedCategories = [], 
       selectedStatuses = [], 
       selectedPriorities = [], 
+      selectedAvailabilities = [],
       yearRange 
   } = tableState || {}
+
+  const [selectedBooks, setSelectedBooks] = useState([])
+  const [showBulkEdit, setShowBulkEdit] = useState(false)
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+
+  // Clear selection when filters change (to avoid operating on hidden items? or keep them? better clear to be safe)
+  useEffect(() => {
+    setSelectedBooks([])
+  }, [searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, selectedAvailabilities, yearRange])
 
   // Calculate year bounds first
   const yearBounds = useMemo(() => {
@@ -49,6 +60,10 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
     return [...new Set(books.map(b => b.priority).filter(Boolean))].sort()
   }, [books])
 
+  const uniqueAvailabilities = useMemo(() => {
+    return [...new Set(books.map(b => b.availability).filter(Boolean))].sort()
+  }, [books])
+
   // Apply filters
   const filteredBooks = useMemo(() => {
     return books.filter(book => {
@@ -80,6 +95,11 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
         return false
       }
 
+      // Availability filter
+      if (selectedAvailabilities.length > 0 && !selectedAvailabilities.includes(book.availability)) {
+        return false
+      }
+
       // Year range filter
       if (book.year && (book.year < safeYearRange[0] || book.year > safeYearRange[1])) {
         return false
@@ -87,7 +107,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
       return true
     })
-  }, [books, searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, safeYearRange])
+  }, [books, searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, selectedAvailabilities, safeYearRange])
 
   const sortedBooks = useMemo(() => {
     return [...filteredBooks].sort((a, b) => {
@@ -140,6 +160,78 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
       }
   }
 
+  // --- Bulk Actions Handlers ---
+
+  const toggleSelectBook = (id) => {
+      setSelectedBooks(prev => 
+          prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
+      )
+  }
+
+  const toggleSelectAll = () => {
+      if (selectedBooks.length === sortedBooks.length) {
+          setSelectedBooks([])
+      } else {
+          setSelectedBooks(sortedBooks.map(b => b.id))
+      }
+  }
+
+  const handleBulkDelete = async () => {
+      if (!window.confirm(`Tem certeza que deseja apagar ${selectedBooks.length} livros? Esta ação não pode ser desfeita.`)) return
+
+      setIsBulkProcessing(true)
+      try {
+          // Process sequentially to allow partial success and avoid overwhelming backend
+          for (const id of selectedBooks) {
+              await api.delete(`/api/books/${id}`)
+              onDelete(id) // Update parent list locally
+          }
+          setSelectedBooks([])
+          alert("Livros apagados com sucesso!")
+      } catch (err) {
+          console.error(err)
+          alert("Houve um erro ao apagar alguns livros.")
+      } finally {
+          setIsBulkProcessing(false)
+      }
+  }
+
+  const handleBulkSave = async (updates) => {
+      setShowBulkEdit(false)
+      setIsBulkProcessing(true)
+      try {
+          // Identify books to update
+          const booksToUpdate = books.filter(b => selectedBooks.includes(b.id))
+          
+          for (const book of booksToUpdate) {
+              const updatedBook = { ...book, ...updates }
+              await api.put(`/api/books/${book.id}`, updatedBook)
+          }
+          
+          // Trigger a refresh from parent to get updated data
+          // Since onUpdate prop was passed but maybe not sufficient for full refresh, 
+          // we can assume parent might re-fetch or we ideally should update parent state locally.
+          // Since we don't have a specific `onBulkUpdate` prop, we rely on `onUpdate` or just reload?
+          // The current `App.jsx` `onEdit` refreshes? No, `handleFormSuccess` refreshes.
+          // We can call `onDelete` (wrong) or `onEdit` (wrong).
+          // We should probably rely on the user refreshing or add a callback.
+          // BUT `BooksTable` receives `books` as prop.
+          // IF we update the backend, the frontend state is stale.
+          // Wait, `onUpdate` prop is passed! usage: `BooksTable({ ..., onUpdate })`
+          // Let's call `onUpdate` if available.
+          if (onUpdate) onUpdate() 
+          else window.location.reload() // Fallback if no refresh handler
+          
+          setSelectedBooks([])
+          alert("Atualização em massa concluída!")
+      } catch (err) {
+          console.error(err)
+          alert("Erro ao atualizar livros.")
+      } finally {
+          setIsBulkProcessing(false)
+      }
+  }
+
   const toggleFilter = (value, listName) => {
     // Generic toggler based on list name in state
     const currentList = tableState[listName] || []
@@ -160,15 +252,17 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
         selectedCategories: [],
         selectedStatuses: [],
         selectedPriorities: [],
+        selectedAvailabilities: [],
         yearRange: yearBounds
     }))
   }
 
   const hasActiveFilters = searchTerm || selectedClasses.length > 0 || selectedCategories.length > 0 || 
-    selectedStatuses.length > 0 || selectedPriorities.length > 0 ||
-    yearRange[0] !== yearBounds[0] || yearRange[1] !== yearBounds[1]
+    selectedStatuses.length > 0 || selectedPriorities.length > 0 || selectedAvailabilities.length > 0 ||
+    safeYearRange[0] !== yearBounds[0] || safeYearRange[1] !== yearBounds[1]
 
   const columns = [
+    { key: 'select', label: '', width: 'w-[40px]' }, // Selection Column
     { key: 'order', label: '#', width: 'w-[3%]' },
     { key: 'title', label: 'Título', width: 'w-[18%]' },
     { key: 'author', label: 'Autor', width: 'w-[10%]' },
@@ -211,8 +305,16 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                 placeholder="🔍 Buscar por Título ou Autor..."
                 value={searchTerm}
                 onChange={(e) => setTableState(prev => ({...prev, searchTerm: e.target.value}))}
-                className="w-full pl-10 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
+                className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setTableState(prev => ({...prev, searchTerm: ''}))}
+                  className="absolute right-3 top-2.5 text-neutral-500 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -256,8 +358,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
             </div>
           </div>
 
-          {/* Status, Priority, Year - Single Row */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Status, Priority, Availability, Year - Single Row */}
+          <div className="grid gap-2" style={{gridTemplateColumns: '0.7fr 1.5fr 1.5fr 1fr'}}>
             {/* Status */}
             <div>
               <label className="block text-xs text-neutral-400 mb-1.5">Status</label>
@@ -293,6 +395,26 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     }`}
                   >
                     {prio}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Availability */}
+            <div>
+              <label className="block text-xs text-neutral-400 mb-1.5">Disponibilidade</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {uniqueAvailabilities.map(avail => (
+                  <button
+                    key={avail}
+                    onClick={() => toggleFilter(avail, 'selectedAvailabilities')}
+                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
+                      selectedAvailabilities.includes(avail)
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                    }`}
+                  >
+                    {avail}
                   </button>
                 ))}
               </div>
@@ -366,8 +488,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                 {columns.map(({ key, label, width }) => (
                   <th
                     key={key}
-                    onClick={() => requestSort(key)}
-                    className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider cursor-pointer hover:bg-neutral-800 transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
+                    onClick={() => key !== 'select' && requestSort(key)}
+                    className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider ${key !== 'select' ? 'cursor-pointer hover:bg-neutral-800' : ''} transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
                   >
                     <div className="flex items-center gap-1">
                       {label}
@@ -380,7 +502,15 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
             </thead>
             <tbody className="bg-neutral-900 divide-y divide-neutral-800">
               {sortedBooks.map((book) => (
-                <tr key={book.id} className="hover:bg-neutral-800 transition-colors">
+                <tr key={book.id} className={`hover:bg-neutral-800 transition-colors ${selectedBooks.includes(book.id) ? 'bg-purple-900/10' : ''}`}>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-neutral-700 bg-neutral-800 text-purple-600 focus:ring-purple-500 focus:ring-offset-neutral-900"
+                        checked={selectedBooks.includes(book.id)}
+                        onChange={() => toggleSelectBook(book.id)}
+                    />
+                  </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-neutral-400">
                       {book.order || '-'}
                   </td>
@@ -452,6 +582,50 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
           </table>
         </div>
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {selectedBooks.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-neutral-900 border border-neutral-700 rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 z-50 animate-bounce-in">
+            <span className="text-white font-bold text-sm bg-purple-600 px-2 py-0.5 rounded-full">
+                {selectedBooks.length} selecionados
+            </span>
+            
+            <div className="h-4 w-px bg-neutral-700"></div>
+
+            <button 
+                onClick={() => setShowBulkEdit(true)}
+                className="flex items-center gap-2 text-neutral-300 hover:text-white hover:text-purple-400 transition-colors text-sm font-medium"
+            >
+                <Edit3 size={16} />
+                Editar em Massa
+            </button>
+
+            <button 
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 text-neutral-300 hover:text-red-400 transition-colors text-sm font-medium"
+            >
+                <Trash size={16} />
+                Excluir
+            </button>
+
+             <button 
+                onClick={() => setSelectedBooks([])}
+                className="ml-2 text-neutral-500 hover:text-white transition-colors"
+                title="Cancelar Seleção"
+            >
+                <X size={16} />
+            </button>
+        </div>
+      )}
+
+      {/* Bulk Edit Modal */}
+      {showBulkEdit && (
+        <BulkEditModal 
+            count={selectedBooks.length} 
+            onClose={() => setShowBulkEdit(false)} 
+            onSave={handleBulkSave} 
+        />
+      )}
     </div>
   )
 }

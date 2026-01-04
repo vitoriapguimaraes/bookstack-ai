@@ -307,9 +307,54 @@ def get_hybrid_rating(title: str, author: str = None, original_title: str = None
 
 # --- AI PROVIDERS ---
 
+def get_gemini_classification(prompt, system_prompt):
+    # Requires: pip install google-generativeai
+    # Env: GEMINI_API_KEY
+    try:
+        import google.generativeai as genai
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key: 
+            return {"error": "GEMINI_API_KEY não configurada"}
+            
+        genai.configure(api_key=api_key)
+        # Fallback to 'gemini-pro' if flash is not found or deprecated
+        model = genai.GenerativeModel('gemini-pro', generation_config={"response_mime_type": "application/json"})
+        
+        full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
+        response = model.generate_content(full_prompt)
+        return json.loads(response.text)
+    except ImportError:
+        return {"error": "Biblioteca 'google-generativeai' não instalada"}
+    except Exception as e:
+        return {"error": f"Erro Gemini: {str(e)}"}
+
+def get_openai_classification(prompt, system_prompt):
+    # Requires: pip install openai
+    # Env: OPENAI_API_KEY
+    try:
+        from openai import OpenAI
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key: return {"error": "OPENAI_API_KEY não configurada"}
+        
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" },
+            temperature=0.7
+        )
+        return json.loads(response.choices[0].message.content)
+    except ImportError:
+        return {"error": "Biblioteca 'openai' não instalada"}
+    except Exception as e:
+        return {"error": f"Erro OpenAI: {str(e)}"}
+
 def get_groq_classification(prompt, system_prompt):
     api_key = os.getenv("GROQ_API_KEY")
-    if not api_key: return None
+    if not api_key: return {"error": "GROQ_API_KEY não configurada"}
     
     try:
         client = Groq(api_key=api_key)
@@ -324,60 +369,10 @@ def get_groq_classification(prompt, system_prompt):
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Erro no Groq: {e}")
-        return None
-
-def get_gemini_classification(prompt, system_prompt):
-    # Requires: pip install google-generativeai
-    # Env: GEMINI_API_KEY
-    try:
-        import google.generativeai as genai
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key: 
-            print("Erro: GEMINI_API_KEY não encontrada.")
-            return None
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
-        
-        full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
-        response = model.generate_content(full_prompt)
-        return json.loads(response.text)
-    except ImportError:
-        print("Erro: Biblioteca 'google-generativeai' não instalada.")
-        return None
-    except Exception as e:
-        print(f"Erro no Gemini: {e}")
-        return None
-
-def get_openai_classification(prompt, system_prompt):
-    # Requires: pip install openai
-    # Env: OPENAI_API_KEY
-    try:
-        from openai import OpenAI
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key: return None
-        
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={ "type": "json_object" },
-            temperature=0.7
-        )
-        return json.loads(response.choices[0].message.content)
-    except ImportError:
-        print("Erro: Biblioteca 'openai' não instalada.")
-        return None
-    except Exception as e:
-        print(f"Erro na OpenAI: {e}")
-        return None
+        return {"error": f"Erro Groq: {str(e)}"}
 
 def get_ai_classification(title: str, description: str = ""):
-    """Usa IA (Provider configurável) para classificar o livro."""
+    """Usa IA (Provider configurável com Fallback) para classificar o livro."""
     
     # Mapeamento de classes para categorias
     class_categories_str = "\n".join([
@@ -395,20 +390,25 @@ LIVRO A ANALISAR:
 Título: "{title}"
 Descrição: "{description[:800]}"
 
-TAREFA:
-Analise este livro e retorne um JSON com:
+PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
+1. Primeiro, defina a "book_class" (Classe Macro) adequada.
+2. Depois, consulte a lista de categorias APENAS dessa classe específica.
+3. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
 
-1. "book_class" (string): Escolha UMA das 6 classes abaixo:
+1. "book_class" (string): Escolha UMA das classes abaixo.
+   ATENÇÃO: Use EXACTAMENTE a string da classe. NÃO INVENTE ou modifique.
+   OPÇÕES VÁLIDAS:
    - Tecnologia & IA
    - Desenvolvimento Pessoal
-   - Negócios & Carreira
-   - Ciência & Conhecimento
-   - Ficção & Literatura
+   - Negócios & Finanças
+   - Conhecimento & Ciências
+   - Literatura & Cultura
    - Engenharia & Arquitetura
 
-2. "category" (string): Escolha UMA categoria específica dentro da classe escolhida.
-   Atenção: Você DEVE escolher EXATAMENTE uma das opções listadas abaixo. NÃO INVENTE CATEGORIAS NOVAS.
-   OPÇÕES VÁLIDAS:
+2. "category" (string): Escolha UMA categoria específica válida para a classe que você escolheu no passo anterior.
+   CRÍTICO: A categoria DEVE pertencer à classe selecionada.
+   
+   TABELA DE REFERÊNCIA (CLASSE -> CATEGORIAS):
 {class_categories_str}
 
 3. "type" (string): "Técnico" ou "Não Técnico"
@@ -444,14 +444,44 @@ Responda APENAS com um JSON válido no formato:
 }}
 """
     
-    provider = os.getenv("AI_PROVIDER", "groq").lower()
+    preferred_provider = os.getenv("AI_PROVIDER", "groq").lower()
     
-    if provider == "gemini":
-        return get_gemini_classification(prompt, system_prompt)
-    elif provider == "openai":
-        return get_openai_classification(prompt, system_prompt)
-    else:
-        return get_groq_classification(prompt, system_prompt)
+    providers = []
+    # Order providers: Preferred first, then others
+    if preferred_provider == "gemini":
+        providers = [get_gemini_classification, get_groq_classification, get_openai_classification]
+    elif preferred_provider == "openai":
+        providers = [get_openai_classification, get_gemini_classification, get_groq_classification]
+    else: # Groq or default
+        providers = [get_groq_classification, get_gemini_classification, get_openai_classification]
+        
+    errors = []
+    
+    print(f"Tentando classificar com {preferred_provider.upper()}...")
+    
+    for provider_func in providers:
+        res = provider_func(prompt, system_prompt)
+        
+        # Se retornou dicionário com 'error', registramos e continuamos
+        if isinstance(res, dict) and "error" in res:
+            error_msg = f"{provider_func.__name__}: {res['error']}"
+            print(error_msg)
+            errors.append(error_msg)
+            continue
+            
+        # Se retornou None ou vazio (caso antigo), também continuamos
+        if not res:
+            errors.append(f"{provider_func.__name__}: Retorno vazio")
+            continue
+
+        # Se chegou aqui, é sucesso (JSON válido)
+        print(f"Sucesso com {provider_func.__name__}")
+        return res
+
+    # Se saiu do loop, tudo falhou
+    print("Todas as IAs falharam.")
+    error_summary = " | ".join(errors)
+    return {"error": f"Falha em todas as IAs. Detalhes: {error_summary}"}
 
 def get_book_details_hybrid(title: str):
     """

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Layers, CheckCircle, ArrowUp, ArrowDown, Download, Upload, Info, X, Loader2 } from 'lucide-react'
+import { BookOpen, Layers, CheckCircle, ArrowUp, ArrowDown, Download, Upload, Info, X, Loader2, Library, CheckCircle2 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import BookCard from './components/BookCard'
 import BooksTable from './components/BooksTable'
@@ -15,15 +15,21 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState(null)
-  const [tab, setTab] = useState('mural')
+  const [tab, setTab] = useState(() => localStorage.getItem('activeTab') || 'mural')
   const [editingBook, setEditingBook] = useState(null)
   const [showCsvInfo, setShowCsvInfo] = useState(false)
+  
+  // Persist tab selection
+  useEffect(() => {
+    localStorage.setItem('activeTab', tab)
+  }, [tab])
   
   // Scroll States
   /* Scroll States */
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
   const [returnTab, setReturnTab] = useState('mural')
+  const [statusTab, setStatusTab] = useState('lendo') // 'lendo', 'a-ler', 'lido'
 
   // Table Persistence State
   const [tableState, setTableState] = useState({
@@ -33,6 +39,7 @@ function App() {
       selectedCategories: [],
       selectedStatuses: [],
       selectedPriorities: [],
+      selectedAvailabilities: [],
       yearRange: null 
   })
   
@@ -120,8 +127,11 @@ function App() {
         const scrolled = window.scrollY
         setIsAtTop(scrolled < 100)
         
-        // Detect bottom
-        const isBottom = window.innerHeight + scrolled >= document.documentElement.scrollHeight - 50
+        // Detect bottom - also check if page is scrollable
+        const scrollHeight = document.documentElement.scrollHeight
+        const clientHeight = window.innerHeight
+        const isScrollable = scrollHeight > clientHeight
+        const isBottom = !isScrollable || (scrolled + clientHeight >= scrollHeight - 50)
         setIsAtBottom(isBottom)
     }
 
@@ -129,17 +139,39 @@ function App() {
     window.addEventListener('scroll', handleScroll)
     const mainElement = document.querySelector('main')
     if (mainElement) mainElement.addEventListener('scroll', handleScroll)
+    
+    // Initial check
+    handleScroll()
 
     return () => {
         window.removeEventListener('scroll', handleScroll)
         if (mainElement) mainElement.removeEventListener('scroll', handleScroll)
     }
   }, [])
+  
+  // Recalculate scroll state when tab changes
+  useEffect(() => {
+    const handleScroll = () => {
+        const scrolled = window.scrollY
+        setIsAtTop(scrolled < 100)
+        
+        const scrollHeight = document.documentElement.scrollHeight
+        const clientHeight = window.innerHeight
+        const isScrollable = scrollHeight > clientHeight
+        const isBottom = !isScrollable || (scrolled + clientHeight >= scrollHeight - 50)
+        setIsAtBottom(isBottom)
+    }
+    
+    // Delay to ensure DOM has updated
+    setTimeout(handleScroll, 100)
+  }, [tab, statusTab])
 
   const scrollToTop = () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
       const mainElement = document.querySelector('main')
-      if (mainElement) mainElement.scrollTo({ top: 0, behavior: 'smooth' })
+      if (mainElement) {
+          mainElement.scrollTop = 0
+      }
+      window.scrollTo(0, 0)
   }
 
   // Export/Import Handlers
@@ -218,63 +250,99 @@ function App() {
             {loading && <p className="text-center mt-20 text-lg animate-pulse text-neutral-500">Carregando biblioteca...</p>}
             
             {!loading && tab === 'mural' && (
-            <div className="space-y-12 pb-20 animate-fade-in">
-                {/* Lendo Agora */}
-                {reading.length > 0 && (
-                    <section>
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Lendo Agora
-                           <span className="bg-purple-500/20 text-purple-400 text-xs font-medium px-2 py-0.5 rounded border border-purple-500/30">
-                               {reading.length}
-                           </span>
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {reading.map(book => <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />)}
+            <div className="pb-20 animate-fade-in">
+                {/* Status Tabs */}
+                <div className="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800 mb-8 -mx-8 px-8 py-4">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setStatusTab('lendo')}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                statusTab === 'lendo'
+                                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                            }`}
+                        >
+                            <BookOpen size={18} className="inline-block mr-1.5" /> Lendo Agora {reading.length > 0 && `(${reading.length})`}
+                        </button>
+                        <button
+                            onClick={() => setStatusTab('a-ler')}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                statusTab === 'a-ler'
+                                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
+                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                            }`}
+                        >
+                            <Library size={18} className="inline-block mr-1.5" /> Próximos da Fila {toRead.length > 0 && `(${toRead.length})`}
+                        </button>
+                        <button
+                            onClick={() => setStatusTab('lido')}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                statusTab === 'lido'
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                            }`}
+                        >
+                            <CheckCircle2 size={18} className="inline-block mr-1.5" /> Já Lidos {read.length > 0 && `(${read.length})`}
+                        </button>
+                    </div>
                 </div>
+
+                <div>
+                {/* Lendo Agora */}
+                {statusTab === 'lendo' && (
+                    <section>
+                        {reading.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {reading
+                                    .sort((a,b) => (a.order||999) - (b.order||999))
+                                    .map(book => <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />)}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 text-neutral-500">
+                                <p className="text-lg">Nenhum livro sendo lido no momento</p>
+                            </div>
+                        )}
               </section>
                 )}
 
                 {/* A Ler (Fila) */}
-                {toRead.length > 0 && (
+                {statusTab === 'a-ler' && (
                     <section>
-                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Próximos da Fila
-                           <span className="bg-amber-500/20 text-amber-400 text-xs font-medium px-2 py-0.5 rounded border border-amber-500/30">
-                               {toRead.length}
-                           </span>
-                         </h2>
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                           {toRead
-                              .sort((a,b) => (a.order||999) - (b.order||999))
-                              .map(book => (
-                                <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />
-                           ))}
-                         </div>
+                        {toRead.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {toRead
+                                    .sort((a,b) => (a.order||999) - (b.order||999))
+                                    .map(book => (
+                                        <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />
+                                    ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 text-neutral-500">
+                                <p className="text-lg">Nenhum livro na fila</p>
+                            </div>
+                        )}
                     </section>
                 )}
                 
                 {/* Lidos */}
-                {read.length > 0 && (
+                {statusTab === 'lido' && (
                     <section>
-                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Já Lidos
-                           <span className="bg-emerald-500/20 text-emerald-400 text-xs font-medium px-2 py-0.5 rounded border border-emerald-500/30">
-                               {read.length}
-                           </span>
-                         </h2>
-                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                           {read.map(book => (
-                             <BookCard key={book.id} book={book} compact onEdit={handleEdit} onDelete={handleDelete} />
-                           ))}
-                         </div>
+                        {read.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                {read
+                                    .sort((a,b) => new Date(b.date_read || 0) - new Date(a.date_read || 0))
+                                    .map(book => (
+                                        <BookCard key={book.id} book={book} compact onEdit={handleEdit} onDelete={handleDelete} />
+                                    ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 text-neutral-500">
+                                <p className="text-lg">Nenhum livro lido ainda</p>
+                            </div>
+                        )}
                     </section>
                 )}
-
-                {filteredBooks.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-neutral-500">Nenhum livro encontrado com os filtros atuais.</p>
-                    </div>
-                )}
+                </div>
             </div>
             )}
 
@@ -321,6 +389,7 @@ function App() {
                     books={filteredBooks} 
                     onDelete={handleDelete} 
                     onEdit={handleEdit} 
+                    onUpdate={fetchBooks}
                     tableState={tableState}
                     setTableState={setTableState}
                 />
@@ -346,33 +415,38 @@ function App() {
       </main>
 
       {/* Button Scroll to Top */}
-      {/* Button Scroll to Top */}
-      <button
-        onClick={isAtTop ? undefined : scrollToTop}
-        disabled={isAtTop}
-        className={`fixed bottom-20 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
-          isAtTop 
-            ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
-            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
-        }`}
-        title="Voltar ao topo"
-      >
-        <ArrowUp size={20} />
-      </button>
+      {/* Scroll Buttons - Only visible in Mural/Table views */}
+      {(tab === 'mural' || tab === 'table') && (
+        <>
+          {/* Button Scroll to Top */}
+          <button
+            onClick={isAtTop ? undefined : scrollToTop}
+            disabled={isAtTop}
+            className={`fixed bottom-20 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
+              isAtTop 
+                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
+                : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
+            }`}
+            title="Voltar ao topo"
+          >
+            <ArrowUp size={20} />
+          </button>
 
-      {/* Button Scroll to Bottom */}
-      <button
-        onClick={isAtBottom ? undefined : () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
-        disabled={isAtBottom}
-        className={`fixed bottom-8 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
-           isAtBottom 
-            ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
-            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
-        }`}
-        title="Ir para o final"
-      >
-        <ArrowDown size={20} />
-      </button>
+          {/* Button Scroll to Bottom */}
+          <button
+            onClick={isAtBottom ? undefined : () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
+            disabled={isAtBottom}
+            className={`fixed bottom-8 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
+               isAtBottom 
+                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
+                : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
+            }`}
+            title="Ir para o final"
+          >
+            <ArrowDown size={20} />
+          </button>
+        </>
+      )}
 
       {/* CSV Info Modal */}
       {showCsvInfo && (
