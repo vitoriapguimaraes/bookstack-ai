@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ArrowUpDown, Pencil, Trash2, Search, X } from 'lucide-react'
 import axios from 'axios'
 
@@ -7,13 +7,25 @@ const api = axios.create()
 export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
   const [sortConfig, setSortConfig] = useState({ key: 'order', direction: 'asc' })
   
+  // Calculate year bounds first
+  const yearBounds = useMemo(() => {
+    const years = books.map(b => b.year).filter(y => y && y > 0)
+    if (years.length === 0) return [1800, 2030]
+    return [Math.min(...years), Math.max(...years)]
+  }, [books])
+  
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedClasses, setSelectedClasses] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [selectedStatuses, setSelectedStatuses] = useState([])
   const [selectedPriorities, setSelectedPriorities] = useState([])
-  const [yearRange, setYearRange] = useState([1800, 2030])
+  const [yearRange, setYearRange] = useState(yearBounds)
+
+  // Update yearRange when yearBounds changes
+  useEffect(() => {
+    setYearRange(yearBounds)
+  }, [yearBounds])
 
   // Get unique values for filters
   const uniqueClasses = useMemo(() => {
@@ -30,12 +42,6 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
 
   const uniquePriorities = useMemo(() => {
     return [...new Set(books.map(b => b.priority).filter(Boolean))].sort()
-  }, [books])
-
-  const yearBounds = useMemo(() => {
-    const years = books.map(b => b.year).filter(y => y && y > 0)
-    if (years.length === 0) return [1800, 2030]
-    return [Math.min(...years), Math.max(...years)]
   }, [books])
 
   // Apply filters
@@ -267,7 +273,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                   <button
                     key={prio}
                     onClick={() => toggleFilter(prio, selectedPriorities, setSelectedPriorities)}
-                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedPriorities.includes(prio)
                         ? 'bg-purple-600 text-white'
                         : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'

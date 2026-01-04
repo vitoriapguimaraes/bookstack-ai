@@ -23,6 +23,67 @@ app.add_middleware(
 )
 
 
+def reorder_books(session: Session, operation: str, **kwargs):
+    """
+    Reorganiza a ordem dos livros baseado na operação.
+    
+    Args:
+        operation: 'delete', 'insert', 'move'
+        kwargs: parâmetros específicos da operação
+    """
+    if operation == 'delete':
+        deleted_order = kwargs.get('deleted_order')
+        if deleted_order:
+            # Decrementa ordem de todos os livros após o deletado
+            books = session.exec(
+                select(Book).where(Book.order > deleted_order)
+            ).all()
+            for book in books:
+                book.order -= 1
+                session.add(book)
+    
+    elif operation == 'insert':
+        new_order = kwargs.get('new_order')
+        if new_order:
+            # Incrementa ordem de todos os livros >= nova ordem
+            books = session.exec(
+                select(Book).where(Book.order >= new_order)
+            ).all()
+            for book in books:
+                book.order += 1
+                session.add(book)
+    
+    elif operation == 'move':
+        old_order = kwargs.get('old_order')
+        new_order = kwargs.get('new_order')
+        book_id = kwargs.get('book_id')  # ID do livro sendo movido
+        
+        if old_order and new_order and old_order != new_order:
+            if new_order > old_order:
+                # Movendo para baixo: decrementar ordens entre old e new
+                books = session.exec(
+                    select(Book).where(
+                        Book.order > old_order,
+                        Book.order <= new_order,
+                        Book.id != book_id  # Excluir o próprio livro
+                    )
+                ).all()
+                for book in books:
+                    book.order -= 1
+                    session.add(book)
+            else:
+                # Movendo para cima: incrementar ordens entre new e old
+                books = session.exec(
+                    select(Book).where(
+                        Book.order >= new_order,
+                        Book.order < old_order,
+                        Book.id != book_id  # Excluir o próprio livro
+                    )
+                ).all()
+                for book in books:
+                    book.order += 1
+                    session.add(book)
+
 
 @app.on_event("startup")
 def on_startup():
@@ -41,6 +102,10 @@ def read_books(session: Session = Depends(get_session)):
 def create_book(book: Book, session: Session = Depends(get_session)):
     # Auto-calculate score
     book.score = calculate_book_score(book)
+    
+    # Reordenar se tem ordem definida (inserir e empurrar outros)
+    if book.order:
+        reorder_books(session, 'insert', new_order=book.order)
     
     session.add(book)
     session.commit()
@@ -61,7 +126,14 @@ def delete_book(book_id: int, session: Session = Depends(get_session)):
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    deleted_order = book.order  # Salvar ordem antes de deletar
     session.delete(book)
+    
+    # Reordenar após deletar (recontar ordens)
+    if deleted_order:
+        reorder_books(session, 'delete', deleted_order=deleted_order)
+    
     session.commit()
     return {"ok": True}
 
@@ -70,6 +142,8 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    old_order = book.order  # Salvar ordem antiga
     
     # Update fields manually to avoid overwriting ID or cover if not passed
     book.title = book_data.title
@@ -87,9 +161,23 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     
     # Auto-clear order when status is "Lido" (finished books don't need queue position)
     if book_data.status == "Lido":
-        book.order = None
+        new_order = None
     else:
-        book.order = book_data.order
+        new_order = book_data.order
+    
+    # Reordenar se a ordem mudou
+    if old_order != new_order:
+        if old_order is None and new_order is not None:
+            # Inserindo ordem pela primeira vez
+            reorder_books(session, 'insert', new_order=new_order)
+        elif old_order is not None and new_order is None:
+            # Removendo ordem (livro marcado como "Lido")
+            reorder_books(session, 'delete', deleted_order=old_order)
+        elif old_order is not None and new_order is not None:
+            # Movendo de uma posição para outra
+            reorder_books(session, 'move', old_order=old_order, new_order=new_order, book_id=book_id)
+    
+    book.order = new_order
     
     # Recalculate score based on new data
     book.score = calculate_book_score(book)
