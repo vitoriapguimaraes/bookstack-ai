@@ -20,8 +20,21 @@ function App() {
   const [showCsvInfo, setShowCsvInfo] = useState(false)
   
   // Scroll States
+  /* Scroll States */
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
+  const [returnTab, setReturnTab] = useState('mural')
+
+  // Table Persistence State
+  const [tableState, setTableState] = useState({
+      sortConfig: { key: 'order', direction: 'asc' },
+      searchTerm: '',
+      selectedClasses: [],
+      selectedCategories: [],
+      selectedStatuses: [],
+      selectedPriorities: [],
+      yearRange: null 
+  })
   
   // States for Sidebar Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -54,6 +67,7 @@ function App() {
 
   const handleEdit = (book) => {
     setEditingBook(book)
+    setReturnTab(tab)
     setTab('admin')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -65,7 +79,7 @@ function App() {
   const handleFormSuccess = () => {
     setEditingBook(null)
     fetchBooks()
-    setTab('mural') 
+    setTab(returnTab) 
   }
 
   const handleFilterChange = (type, value, checked) => {
@@ -186,7 +200,7 @@ function App() {
       <Sidebar 
           currentTab={tab === 'admin' ? 'table' : tab}
           setTab={setTab} 
-          onAddBook={() => { setEditingBook(null); setTab('admin'); }}
+          onAddBook={() => { setEditingBook(null); setReturnTab(tab); setTab('admin'); }}
           filters={{ searchTerm, activeStatuses }}
           onFilterChange={handleFilterChange}
       />
@@ -303,7 +317,13 @@ function App() {
                         </button>
                     </div>
                 </div>
-                <BooksTable books={filteredBooks} onDelete={handleDelete} onEdit={handleEdit} />
+                <BooksTable 
+                    books={filteredBooks} 
+                    onDelete={handleDelete} 
+                    onEdit={handleEdit} 
+                    tableState={tableState}
+                    setTableState={setTableState}
+                />
             </div>
             )}
             
@@ -318,7 +338,7 @@ function App() {
                 <BookForm 
                     bookToEdit={editingBook} 
                     onSuccess={handleFormSuccess} 
-                    onCancel={() => { setEditingBook(null); setTab('mural'); }}
+                    onCancel={() => { setEditingBook(null); setTab(returnTab); }}
                 />
             </div>
             )}

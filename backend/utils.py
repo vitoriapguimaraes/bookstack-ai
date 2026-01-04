@@ -406,7 +406,9 @@ Analise este livro e retorne um JSON com:
    - Ficção & Literatura
    - Engenharia & Arquitetura
 
-2. "category" (string): Escolha UMA categoria específica dentro da classe escolhida:
+2. "category" (string): Escolha UMA categoria específica dentro da classe escolhida.
+   Atenção: Você DEVE escolher EXATAMENTE uma das opções listadas abaixo. NÃO INVENTE CATEGORIAS NOVAS.
+   OPÇÕES VÁLIDAS:
 {class_categories_str}
 
 3. "type" (string): "Técnico" ou "Não Técnico"

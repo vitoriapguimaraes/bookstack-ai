@@ -4,9 +4,18 @@ import axios from 'axios'
 
 const api = axios.create()
 
-export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
-  const [sortConfig, setSortConfig] = useState({ key: 'order', direction: 'asc' })
-  
+export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableState, setTableState }) {
+  // Destructure state from parent (or use defaults if not provided - though App.jsx provides them)
+  const { 
+      sortConfig = { key: 'order', direction: 'asc' }, 
+      searchTerm = '', 
+      selectedClasses = [], 
+      selectedCategories = [], 
+      selectedStatuses = [], 
+      selectedPriorities = [], 
+      yearRange 
+  } = tableState || {}
+
   // Calculate year bounds first
   const yearBounds = useMemo(() => {
     const years = books.map(b => b.year).filter(y => y && y > 0)
@@ -14,18 +23,14 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
     return [Math.min(...years), Math.max(...years)]
   }, [books])
   
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedClasses, setSelectedClasses] = useState([])
-  const [selectedCategories, setSelectedCategories] = useState([])
-  const [selectedStatuses, setSelectedStatuses] = useState([])
-  const [selectedPriorities, setSelectedPriorities] = useState([])
-  const [yearRange, setYearRange] = useState(yearBounds)
-
-  // Update yearRange when yearBounds changes
+  // Initialize yearRange if null (on first load)
   useEffect(() => {
-    setYearRange(yearBounds)
-  }, [yearBounds])
+    if (!yearRange) {
+        setTableState(prev => ({ ...prev, yearRange: yearBounds }))
+    }
+  }, [yearBounds, yearRange, setTableState])
+
+  const safeYearRange = yearRange || yearBounds
 
   // Get unique values for filters
   const uniqueClasses = useMemo(() => {
@@ -76,13 +81,13 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
       }
 
       // Year range filter
-      if (book.year && (book.year < yearRange[0] || book.year > yearRange[1])) {
+      if (book.year && (book.year < safeYearRange[0] || book.year > safeYearRange[1])) {
         return false
       }
 
       return true
     })
-  }, [books, searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, yearRange])
+  }, [books, searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, safeYearRange])
 
   const sortedBooks = useMemo(() => {
     return [...filteredBooks].sort((a, b) => {
@@ -120,7 +125,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc'
     }
-    setSortConfig({ key, direction })
+    setTableState(prev => ({ ...prev, sortConfig: { key, direction } }))
   }
 
   const handleDelete = async (id) => {
@@ -135,21 +140,28 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
       }
   }
 
-  const toggleFilter = (value, selected, setSelected) => {
-    if (selected.includes(value)) {
-      setSelected(selected.filter(v => v !== value))
+  const toggleFilter = (value, listName) => {
+    // Generic toggler based on list name in state
+    const currentList = tableState[listName] || []
+    let newList
+    if (currentList.includes(value)) {
+        newList = currentList.filter(v => v !== value)
     } else {
-      setSelected([...selected, value])
+        newList = [...currentList, value]
     }
+    setTableState(prev => ({ ...prev, [listName]: newList }))
   }
 
   const clearAllFilters = () => {
-    setSearchTerm('')
-    setSelectedClasses([])
-    setSelectedCategories([])
-    setSelectedStatuses([])
-    setSelectedPriorities([])
-    setYearRange(yearBounds)
+    setTableState(prev => ({
+        ...prev,
+        searchTerm: '',
+        selectedClasses: [],
+        selectedCategories: [],
+        selectedStatuses: [],
+        selectedPriorities: [],
+        yearRange: yearBounds
+    }))
   }
 
   const hasActiveFilters = searchTerm || selectedClasses.length > 0 || selectedCategories.length > 0 || 
@@ -198,7 +210,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                 type="text"
                 placeholder="🔍 Buscar por Título ou Autor..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setTableState(prev => ({...prev, searchTerm: e.target.value}))}
                 className="w-full pl-10 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -211,7 +223,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
               {uniqueClasses.map(cls => (
                 <button
                   key={cls}
-                  onClick={() => toggleFilter(cls, selectedClasses, setSelectedClasses)}
+                  onClick={() => toggleFilter(cls, 'selectedClasses')}
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     selectedClasses.includes(cls)
                       ? 'bg-purple-600 text-white'
@@ -231,7 +243,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
               {uniqueCategories.map(cat => (
                 <button
                   key={cat}
-                  onClick={() => toggleFilter(cat, selectedCategories, setSelectedCategories)}
+                  onClick={() => toggleFilter(cat, 'selectedCategories')}
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     selectedCategories.includes(cat)
                       ? 'bg-purple-600 text-white'
@@ -253,7 +265,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                 {uniqueStatuses.map(status => (
                   <button
                     key={status}
-                    onClick={() => toggleFilter(status, selectedStatuses, setSelectedStatuses)}
+                    onClick={() => toggleFilter(status, 'selectedStatuses')}
                     className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedStatuses.includes(status)
                         ? 'bg-purple-600 text-white'
@@ -273,7 +285,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                 {uniquePriorities.map(prio => (
                   <button
                     key={prio}
-                    onClick={() => toggleFilter(prio, selectedPriorities, setSelectedPriorities)}
+                    onClick={() => toggleFilter(prio, 'selectedPriorities')}
                     className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedPriorities.includes(prio)
                         ? 'bg-purple-600 text-white'
@@ -289,7 +301,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
             {/* Year Range - Dual Thumb Slider */}
             <div>
               <label className="block text-xs text-neutral-400 mb-1.5">
-                Ano: {yearRange[0]} - {yearRange[1]}
+                Ano de lançamento: {safeYearRange[0]} - {safeYearRange[1]}
               </label>
               <div className="relative pt-2 pb-1">
                 {/* Track background */}
@@ -299,8 +311,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                 <div 
                   className="absolute top-1/2 h-1 bg-purple-600 rounded-full -translate-y-1/2"
                   style={{
-                    left: `${((yearRange[0] - yearBounds[0]) / (yearBounds[1] - yearBounds[0])) * 100}%`,
-                    right: `${100 - ((yearRange[1] - yearBounds[0]) / (yearBounds[1] - yearBounds[0])) * 100}%`
+                    left: `${((safeYearRange[0] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`,
+                    right: `${100 - ((safeYearRange[1] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`
                   }}
                 ></div>
                 
@@ -309,15 +321,15 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                   type="range"
                   min={yearBounds[0]}
                   max={yearBounds[1]}
-                  value={yearRange[0]}
+                  value={safeYearRange[0]}
                   onChange={(e) => {
                     const newMin = parseInt(e.target.value)
-                    if (newMin <= yearRange[1]) {
-                      setYearRange([newMin, yearRange[1]])
+                    if (newMin <= safeYearRange[1]) {
+                      setTableState(prev => ({ ...prev, yearRange: [newMin, safeYearRange[1]] }))
                     }
                   }}
                   className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: yearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3 }}
+                  style={{ zIndex: safeYearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3 }}
                 />
                 
                 {/* Max slider */}
@@ -325,15 +337,15 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                   type="range"
                   min={yearBounds[0]}
                   max={yearBounds[1]}
-                  value={yearRange[1]}
+                  value={safeYearRange[1]}
                   onChange={(e) => {
                     const newMax = parseInt(e.target.value)
-                    if (newMax >= yearRange[0]) {
-                      setYearRange([yearRange[0], newMax])
+                    if (newMax >= safeYearRange[0]) {
+                      setTableState(prev => ({ ...prev, yearRange: [safeYearRange[0], newMax] }))
                     }
                   }}
                   className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: yearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4 }}
+                  style={{ zIndex: safeYearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4 }}
                 />
               </div>
             </div>

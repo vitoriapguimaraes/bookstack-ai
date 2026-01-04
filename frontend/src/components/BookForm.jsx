@@ -86,16 +86,17 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   ...prev,
                   author: suggestion.author || prev.author,
                   year: suggestion.year || prev.year,
+                  book_class: suggestion.book_class || prev.book_class,
                   type: suggestion.type || prev.type,
                   category: suggestion.category || prev.category,
                   motivation: suggestion.motivation || prev.motivation,
                   original_title: suggestion.original_title || prev.original_title,
-                  google_rating: suggestion.google_rating || null
+                  google_rating: suggestion.google_rating || null,
+                  cover_image: suggestion.cover_url || prev.cover_image
               }))
               
-              // Armazena URL da capa sugerida
               if (suggestion.cover_url) {
-                  setSuggestedCoverUrl(suggestion.cover_url)
+                  setSuggestedCoverUrl(null)
               }
               
               // Armazena nota do Google Books
