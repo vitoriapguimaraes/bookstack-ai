@@ -147,6 +147,7 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     
     # Update fields manually to avoid overwriting ID or cover if not passed
     book.title = book_data.title
+    book.original_title = book_data.original_title
     book.author = book_data.author
     book.year = book_data.year
     book.type = book_data.type
@@ -156,6 +157,7 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     book.book_class = book_data.book_class
     book.category = book_data.category
     book.rating = book_data.rating
+    book.google_rating = book_data.google_rating
     book.motivation = book_data.motivation
     book.date_read = book_data.date_read
     

@@ -200,7 +200,9 @@ def get_google_books_data(title: str):
                 "author": ", ".join(book_info.get("authors", [])) or None,
                 "year": None,
                 "description": book_info.get("description", ""),
-                "cover_url": None
+                "cover_url": None,
+                "average_rating": book_info.get("averageRating"),  # Nota média (0-5)
+                "ratings_count": book_info.get("ratingsCount")     # Número de avaliações
             }
             
             # Ano de publicação
@@ -225,36 +227,157 @@ def get_google_books_data(title: str):
     
     return None
 
+def get_openlibrary_rating(title: str, author: str = None):
+    """Busca rating do livro na Open Library API."""
+    try:
+        # Busca por título (e autor se disponível)
+        search_query = title
+        if author:
+            search_query = f"{title} {author}"
+        
+        url = "https://openlibrary.org/search.json"
+        params = {
+            "q": search_query,
+            "limit": 1
+        }
+        
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get("numFound", 0) > 0:
+            book = data["docs"][0]
+            
+            # Open Library usa "ratings_average" (escala 1-5)
+            rating = book.get("ratings_average")
+            rating_count = book.get("ratings_count", 0)
+            
+            if rating and rating > 0:
+                return {
+                    "average_rating": round(rating, 2),
+                    "ratings_count": rating_count,
+                    "source": "Open Library"
+                }
+    except Exception as e:
+        print(f"Erro ao buscar no Open Library: {e}")
+    
+    return None
+
+def get_hybrid_rating(title: str, author: str = None, original_title: str = None):
+    """
+    Busca rating de forma híbrida:
+    1. Tenta título em português no Google Books
+    2. Se não encontrar, tenta título original no Google Books
+    3. Se não encontrar, tenta título em português no Open Library
+    4. Se não encontrar, tenta título original no Open Library
+    """
+    # Tenta Google Books com título em português
+    google_data = get_google_books_data(title)
+    if google_data and google_data.get("average_rating"):
+        return {
+            "average_rating": google_data["average_rating"],
+            "ratings_count": google_data.get("ratings_count", 0),
+            "source": "Google Books (PT)"
+        }
+    
+    # Tenta Google Books com título original (se disponível)
+    if original_title:
+        google_data_original = get_google_books_data(original_title)
+        if google_data_original and google_data_original.get("average_rating"):
+            return {
+                "average_rating": google_data_original["average_rating"],
+                "ratings_count": google_data_original.get("ratings_count", 0),
+                "source": "Google Books (Original)"
+            }
+    
+    # Tenta Open Library com título em português
+    openlibrary_data = get_openlibrary_rating(title, author)
+    if openlibrary_data:
+        openlibrary_data["source"] = "Open Library (PT)"
+        return openlibrary_data
+    
+    # Tenta Open Library com título original (se disponível)
+    if original_title:
+        openlibrary_data_original = get_openlibrary_rating(original_title, author)
+        if openlibrary_data_original:
+            openlibrary_data_original["source"] = "Open Library (Original)"
+            return openlibrary_data_original
+    
+    return None
+
 def get_ai_classification(title: str, description: str = ""):
-    """Usa Groq AI para classificar categoria, tipo e motivação."""
+    """Usa Groq AI para classificar categoria, tipo e motivação de forma personalizada."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         print("Erro: GROQ_API_KEY não encontrada.")
         return None
     
-    categories_list = list(CATEGORY_WEIGHTS.keys())
+    # Mapeamento de classes para categorias
+    class_categories_str = "\n".join([
+        f"- {cls}: {', '.join(cats)}" 
+        for cls, cats in CLASS_CATEGORIES.items()
+    ])
     
     client = Groq(api_key=api_key)
-    prompt = f"""
-    Dado o livro '{title}' com a seguinte descrição:
-    "{description[:500]}"
-    
-    Classifique o livro e retorne um JSON com:
-    - type (string: "Técnico" ou "Não Técnico")
-    - category (string: escolha UMA das categorias abaixo que melhor se encaixa)
-    - motivation (string: uma frase curta e pessoal sobre por que ler este livro)
-    
-    Categorias disponíveis:
-    {', '.join(categories_list[:20])}
-    
-    Responda APENAS o JSON válido.
-    """
+    prompt = f"""Você é um assistente literário especializado que conhece profundamente o perfil da leitora.
+
+PERFIL DA LEITORA:
+Vitória é uma mulher de 30 anos, pansexual e profissional de tecnologia (Cientista de Dados e Desenvolvedora) com raízes na Engenharia Ambiental. Seu estilo de leitura é marcado pela busca de equilíbrio entre a densidade técnica e a sensibilidade humana. Ela não lê apenas para aprender uma sintaxe, mas para entender como a tecnologia e o comportamento humano se moldam. Como estudante contínua, ela valoriza o rigor técnico, mas sua lente de mundo é inclusiva, ética e focada em impacto coletivo.
+
+LIVRO A ANALISAR:
+Título: "{title}"
+Descrição: "{description[:800]}"
+
+TAREFA:
+Analise este livro e retorne um JSON com:
+
+1. "book_class" (string): Escolha UMA das 6 classes abaixo:
+   - Tecnologia & IA
+   - Desenvolvimento Pessoal
+   - Negócios & Carreira
+   - Ciência & Conhecimento
+   - Ficção & Literatura
+   - Engenharia & Arquitetura
+
+2. "category" (string): Escolha UMA categoria específica dentro da classe escolhida:
+{class_categories_str}
+
+3. "type" (string): "Técnico" ou "Não Técnico"
+   - Técnico: Programação, Data Science, Engenharia, Arquitetura de Software
+   - Não Técnico: Desenvolvimento pessoal, ficção, negócios, comportamento
+
+4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para Vitória AGORA, aos 30 anos.
+
+DIRETRIZES PARA A MOTIVAÇÃO:
+- Informar o 'O quê': Resumir a tese central da obra de forma direta, sem rodeios
+- Identificar a Motivação Técnica: Como fortalece sua base como dev/cientista de dados
+- Identificar a Motivação Pessoal/Social: Conectar com sua fase de vida (maturidade, liderança, transição) e valores (respeito, autenticidade, impacto coletivo)
+- Tom: Reflexivo, autêntico, levemente instigante. Fuja de clichês de 'gurus de produtividade'
+
+ESTRUTURA IDEAL DA MOTIVAÇÃO:
+"Este livro explora [eixo central] e faz total sentido para o momento da Vitória porque, enquanto oferece [benefício prático/técnico], também provoca uma reflexão necessária sobre [aspecto humano/comportamental/social], alinhando-se à sua busca por uma tecnologia mais consciente e uma liderança autêntica."
+
+IMPORTANTE:
+- Seja específico e relevante ao perfil dela
+- Evite generalizações vazias
+- Conecte tecnologia com humanidade
+- Reconheça sua maturidade e experiência
+
+Responda APENAS com um JSON válido no formato:
+{{
+  "book_class": "...",
+  "category": "...",
+  "type": "...",
+  "motivation": "..."
+}}
+"""
     
     try:
         response = client.chat.completions.create(
             model="llama-3.1-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            response_format={ "type": "json_object" }
+            response_format={ "type": "json_object" },
+            temperature=0.7  # Um pouco de criatividade, mas não demais
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
@@ -263,18 +386,22 @@ def get_ai_classification(title: str, description: str = ""):
 
 def get_book_details_hybrid(title: str):
     """
-    Solução híbrida: Google Books API + Groq AI
+    Solução híbrida: Google Books API + Open Library + Groq AI
     
     1. Google Books → author, year, description, cover_url
-    2. Groq AI → type, category, motivation
+    2. Hybrid Rating (Google + Open Library) → average_rating, ratings_count
+    3. Groq AI → book_class, category, type, motivation
     """
     result = {
         "author": None,
         "year": None,
+        "book_class": "Desenvolvimento Pessoal",  # Default
         "type": "Não Técnico",
         "category": "Geral",
         "motivation": None,
-        "cover_url": None
+        "cover_url": None,
+        "google_rating": None,
+        "google_ratings_count": None
     }
     
     # 1. Busca dados factuais no Google Books
@@ -287,9 +414,16 @@ def get_book_details_hybrid(title: str):
     else:
         description = ""
     
-    # 2. Usa IA para classificação personalizada
+    # 2. Busca rating de forma híbrida (Google Books + Open Library)
+    rating_data = get_hybrid_rating(title, result.get("author"))
+    if rating_data:
+        result["google_rating"] = rating_data["average_rating"]
+        result["google_ratings_count"] = rating_data.get("ratings_count", 0)
+    
+    # 3. Usa IA para classificação personalizada
     ai_data = get_ai_classification(title, description)
     if ai_data:
+        result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")
         result["category"] = ai_data.get("category", "Geral")
         result["motivation"] = ai_data.get("motivation")

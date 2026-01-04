@@ -16,15 +16,16 @@ const CLASS_CATEGORIES = {
 
 export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
-    title: '', author: '', status: 'A Ler', book_class: 'Desenvolvimento Pessoal', category: 'Geral',
+    title: '', original_title: '', author: '', status: 'A Ler', book_class: 'Desenvolvimento Pessoal', category: 'Geral',
     priority: '2 - Média', availability: 'Estante', type: 'Não Técnico',
-    year: new Date().getFullYear(), rating: 0, order: null, 
+    year: new Date().getFullYear(), rating: 0, order: null, google_rating: null,
     motivation: '', cover_image: null, date_read: ''
   })
   const [coverFile, setCoverFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null)
+  const [googleRating, setGoogleRating] = useState(null) // {rating: 4.5, count: 1234}
 
   useEffect(() => {
     if (bookToEdit) {
@@ -70,12 +71,21 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   year: suggestion.year || prev.year,
                   type: suggestion.type || prev.type,
                   category: suggestion.category || prev.category,
-                  motivation: suggestion.motivation || prev.motivation
+                  motivation: suggestion.motivation || prev.motivation,
+                  google_rating: suggestion.google_rating || null
               }))
               
               // Armazena URL da capa sugerida
               if (suggestion.cover_url) {
                   setSuggestedCoverUrl(suggestion.cover_url)
+              }
+              
+              // Armazena nota do Google Books
+              if (suggestion.google_rating) {
+                  setGoogleRating({
+                      rating: suggestion.google_rating,
+                      count: suggestion.google_ratings_count || 0
+                  })
               }
           }
       } catch (err) {
@@ -169,12 +179,28 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                       value={formData.title} 
                       onChange={handleChange} 
                       className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
-                      placeholder="Ex: O Senhor dos Anéis" 
+                      placeholder="Ex: Hábitos Atômicos"
                    />
                 </div>
 
-                {/* Status - 1 col */}
-                <div>
+                {/* Título Original - 3 cols */}
+                <div className="col-span-3">
+                   <label className="block text-xs font-medium text-neutral-300 mb-1">
+                      Título Original 
+                      <span className="text-neutral-500 ml-1">(opcional)</span>
+                   </label>
+                   <input 
+                      name="original_title" 
+                      value={formData.original_title || ''} 
+                      onChange={handleChange} 
+                      className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
+                      placeholder="Ex: Atomic Habits"
+                   />
+                   <p className="text-xs text-neutral-500 mt-1">🌐 Melhora busca de ratings</p>
+                </div>
+
+                {/* Status - 3 cols */}
+                <div className="col-span-3">
                    <label className="block text-xs font-medium text-neutral-300 mb-1">Status</label>
                    <select 
                       name="status" 
@@ -251,6 +277,16 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                       onChange={handleChange} 
                       className="w-full rounded bg-neutral-800 border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" 
                    />
+                   {googleRating ? (
+                      <div className="mt-1.5 text-xs text-amber-400 flex items-center gap-1">
+                         <span>⭐ Google: {googleRating.rating.toFixed(1)}/5</span>
+                         <span className="text-neutral-500">({googleRating.count.toLocaleString()} avaliações)</span>
+                      </div>
+                   ) : formData.google_rating ? (
+                      <div className="mt-1.5 text-xs text-amber-400">
+                         ⭐ Google: {formData.google_rating.toFixed(1)}/5
+                      </div>
+                   ) : null}
                 </div>
 
                 {/* Data de Leitura - Only show if "Lido" */}
