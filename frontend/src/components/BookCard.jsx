@@ -4,11 +4,9 @@ import axios from 'axios'
 const api = axios.create()
 
 export default function BookCard({ book, compact = false, onEdit, onDelete }) {
-  // Use proxy for external URLs (Google Books), direct path for local files
+  // All covers are now external URLs from Google Books API, served via proxy
   const coverUrl = book.cover_image 
-      ? (book.cover_image.startsWith('http') 
-          ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-          : `http://127.0.0.1:8000${book.cover_image}`)
+      ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
       : `https://placehold.co/300x450/1a1a1a/6b21a8?text=${encodeURIComponent(book.title)}`
   
   const statusConfig = {

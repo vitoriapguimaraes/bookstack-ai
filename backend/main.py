@@ -1,14 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response
 from sqlmodel import Session, select
 from typing import List
 from database import create_db_and_tables, get_session
 from models import Book
 from utils import calculate_book_score, get_book_details_hybrid
-import shutil
-import os
 import requests
 from pydantic import BaseModel
 
@@ -25,9 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Servir arquivos estáticos (imagens)
-# O diretório 'static' deve estar na mesma pasta que main.py (ou seja, backend/static)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.on_event("startup")
 def on_startup():
@@ -59,31 +54,7 @@ def read_book(book_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
-@app.post("/books/{book_id}/cover", response_model=Book)
-async def upload_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
-    book = session.get(Book, book_id)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    
-    # Garantir que o diretório existe
-    os.makedirs("static/covers", exist_ok=True)
-    
-    # Salvar arquivo
-    # Usamos o ID do livro para garantir nome único, ou mantemos o nome original?
-    # Melhor usar ID para evitar colisão e problemas de caracteres
-    file_extension = file.filename.split(".")[-1]
-    filename = f"cover_{book_id}.{file_extension}"
-    file_path = f"static/covers/{filename}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    # Salvar caminho no banco (caminho URL relativo)
-    book.cover_image = f"/static/covers/{filename}"
-    session.add(book)
-    session.commit()
-    session.refresh(book)
-    return book
+
 
 @app.delete("/books/{book_id}")
 def delete_book(book_id: int, session: Session = Depends(get_session)):
@@ -108,6 +79,7 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     book.priority = book_data.priority
     book.status = book_data.status
     book.availability = book_data.availability
+    book.book_class = book_data.book_class
     book.category = book_data.category
     book.rating = book_data.rating
     book.motivation = book_data.motivation

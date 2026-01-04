@@ -9,12 +9,17 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedClasses, setSelectedClasses] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [selectedStatuses, setSelectedStatuses] = useState([])
   const [selectedPriorities, setSelectedPriorities] = useState([])
   const [yearRange, setYearRange] = useState([1800, 2030])
 
   // Get unique values for filters
+  const uniqueClasses = useMemo(() => {
+    return [...new Set(books.map(b => b.book_class).filter(Boolean))].sort()
+  }, [books])
+
   const uniqueCategories = useMemo(() => {
     return [...new Set(books.map(b => b.category).filter(Boolean))].sort()
   }, [books])
@@ -44,6 +49,11 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
         if (!matchTitle && !matchAuthor) return false
       }
 
+      // Class filter
+      if (selectedClasses.length > 0 && !selectedClasses.includes(book.book_class)) {
+        return false
+      }
+
       // Category filter
       if (selectedCategories.length > 0 && !selectedCategories.includes(book.category)) {
         return false
@@ -66,7 +76,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
 
       return true
     })
-  }, [books, searchTerm, selectedCategories, selectedStatuses, selectedPriorities, yearRange])
+  }, [books, searchTerm, selectedClasses, selectedCategories, selectedStatuses, selectedPriorities, yearRange])
 
   const sortedBooks = useMemo(() => {
     return [...filteredBooks].sort((a, b) => {
@@ -129,13 +139,14 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
 
   const clearAllFilters = () => {
     setSearchTerm('')
+    setSelectedClasses([])
     setSelectedCategories([])
     setSelectedStatuses([])
     setSelectedPriorities([])
     setYearRange(yearBounds)
   }
 
-  const hasActiveFilters = searchTerm || selectedCategories.length > 0 || 
+  const hasActiveFilters = searchTerm || selectedClasses.length > 0 || selectedCategories.length > 0 || 
     selectedStatuses.length > 0 || selectedPriorities.length > 0 ||
     yearRange[0] !== yearBounds[0] || yearRange[1] !== yearBounds[1]
 
@@ -148,8 +159,9 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
     { key: 'priority', label: 'Prior.', width: 'w-28' },
     { key: 'score', label: 'Score', width: 'w-16' },
     { key: 'status', label: 'Status', width: 'w-24' },
-    { key: 'availability', label: 'Disp.', width: 'w-20' },
+    { key: 'book_class', label: 'Classe', width: 'w-40' },
     { key: 'category', label: 'Categoria', width: 'w-32' },
+    { key: 'availability', label: 'Disp.', width: 'w-20' },
     { key: 'rating', label: '★', width: 'w-12' },
     { key: 'date_read', label: 'Lido', width: 'w-20' },
   ]
@@ -182,6 +194,26 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
               />
+            </div>
+          </div>
+
+          {/* Classes - Full Width Row */}
+          <div>
+            <label className="block text-xs text-neutral-400 mb-1.5">Classes</label>
+            <div className="flex flex-wrap gap-1.5 bg-neutral-800 border border-neutral-700 rounded p-2">
+              {uniqueClasses.map(cls => (
+                <button
+                  key={cls}
+                  onClick={() => toggleFilter(cls, selectedClasses, setSelectedClasses)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    selectedClasses.includes(cls)
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                  }`}
+                >
+                  {cls}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -361,11 +393,14 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                         {book.status}
                      </span>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400 truncate max-w-[80px]" title={book.availability}>
-                      {book.availability || '-'}
+                  <td className="px-3 py-2 text-xs text-purple-300 max-w-[160px] truncate" title={book.book_class}>
+                      {book.book_class || '-'}
                   </td>
                   <td className="px-3 py-2 text-xs text-neutral-400 max-w-[128px] truncate" title={book.category}>
                      {book.category}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400 truncate max-w-[80px]" title={book.availability}>
+                      {book.availability || '-'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-400 font-bold text-center">
                      {book.rating || '-'}
