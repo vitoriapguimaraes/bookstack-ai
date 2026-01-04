@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Layers, CheckCircle } from 'lucide-react'
+import { BookOpen, Layers, CheckCircle, ArrowUp } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import BookCard from './components/BookCard'
 import BooksTable from './components/BooksTable'
@@ -83,6 +83,40 @@ function App() {
   const reading = filteredBooks.filter(b => b.status === 'Lendo')
   const toRead = filteredBooks.filter(b => b.status === 'A Ler')
   const read = filteredBooks.filter(b => b.status === 'Lido')
+
+
+  // Scroll to Top Logic
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+        // Tenta pegar o elemento principal de scroll (pode ser window ou o main)
+        const mainElement = document.querySelector('main')
+        if (mainElement && mainElement.scrollTop > 300) {
+            setShowScrollTop(true)
+        } else if (window.scrollY > 300) {
+             setShowScrollTop(true)
+        } else {
+            setShowScrollTop(false)
+        }
+    }
+
+    // Adiciona listener no window e no main (caso o scroll seja interno)
+    window.addEventListener('scroll', handleScroll)
+    const mainElement = document.querySelector('main')
+    if (mainElement) mainElement.addEventListener('scroll', handleScroll)
+
+    return () => {
+        window.removeEventListener('scroll', handleScroll)
+        if (mainElement) mainElement.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  const scrollToTop = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      const mainElement = document.querySelector('main')
+      if (mainElement) mainElement.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <div className="min-h-screen bg-black text-slate-100 font-sans flex">
@@ -197,6 +231,17 @@ function App() {
             )}
         </div>
       </main>
+
+      {/* Button Scroll to Top */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+        title="Voltar ao topo"
+      >
+        <ArrowUp size={20} />
+      </button>
     </div>
   )
 }

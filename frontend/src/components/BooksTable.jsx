@@ -157,19 +157,20 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
     yearRange[0] !== yearBounds[0] || yearRange[1] !== yearBounds[1]
 
   const columns = [
-    { key: 'order', label: '#', width: 'w-12' },
-    { key: 'title', label: 'Título', width: 'w-64' },
-    { key: 'author', label: 'Autor', width: 'w-40' },
-    { key: 'year', label: 'Ano', width: 'w-16' },
-    { key: 'type', label: 'Tipo', width: 'w-24' },
-    { key: 'priority', label: 'Prior.', width: 'w-28' },
-    { key: 'score', label: 'Score', width: 'w-16' },
-    { key: 'status', label: 'Status', width: 'w-24' },
-    { key: 'book_class', label: 'Classe', width: 'w-40' },
-    { key: 'category', label: 'Categoria', width: 'w-32' },
-    { key: 'availability', label: 'Disp.', width: 'w-20' },
-    { key: 'rating', label: '★', width: 'w-12' },
-    { key: 'date_read', label: 'Lido', width: 'w-20' },
+    { key: 'order', label: '#', width: 'w-[3%]' },
+    { key: 'title', label: 'Título', width: 'w-[18%]' },
+    { key: 'author', label: 'Autor', width: 'w-[10%]' },
+    { key: 'year', label: 'Ano', width: 'w-[4%]' },
+    { key: 'type', label: 'Tipo', width: 'w-[5%]' },
+    { key: 'priority', label: 'Prior.', width: 'w-[5%]' },
+    { key: 'score', label: 'Score', width: 'w-[4%]' },
+    { key: 'status', label: 'Status', width: 'w-[6%]' },
+    { key: 'book_class', label: 'Classe', width: 'w-[10%]' },
+    { key: 'category', label: 'Categoria', width: 'w-[8%]' },
+    { key: 'availability', label: 'Disp.', width: 'w-[5%]' },
+    { key: 'google_rating', label: '★ Google', width: 'w-[6%]' },
+    { key: 'rating', label: '★', width: 'w-[4%]' },
+    { key: 'date_read', label: 'Lido', width: 'w-[8%]' },
   ]
 
   return (
@@ -347,14 +348,14 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
       {/* Table */}
       <div className="bg-neutral-900 rounded-lg shadow border border-neutral-800 w-full">
         <div className="overflow-x-auto">
-          <table className="w-full divide-y divide-neutral-800">
+          <table className="w-full table-fixed divide-y divide-neutral-800">
             <thead className="bg-neutral-950">
               <tr>
-                {columns.map(({ key, label }) => (
+                {columns.map(({ key, label, width }) => (
                   <th
                     key={key}
                     onClick={() => requestSort(key)}
-                    className="px-3 py-2.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider cursor-pointer hover:bg-neutral-800 transition-colors whitespace-nowrap"
+                    className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider cursor-pointer hover:bg-neutral-800 transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
                   >
                     <div className="flex items-center gap-1">
                       {label}
@@ -362,7 +363,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                     </div>
                   </th>
                 ))}
-                <th className="px-3 py-2.5 text-right text-[10px] font-medium text-neutral-400 uppercase tracking-wider whitespace-nowrap">Ações</th>
+                <th className="w-[4%] px-3 py-2.5 text-right text-[10px] font-medium text-neutral-400 uppercase tracking-wider whitespace-nowrap overflow-hidden">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-neutral-900 divide-y divide-neutral-800">
@@ -407,6 +408,9 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit }) {
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400 truncate max-w-[80px]" title={book.availability}>
                       {book.availability || '-'}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-400 text-center">
+                      {book.google_rating ? book.google_rating.toFixed(1) : '-'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-400 font-bold text-center">
                      {book.rating || '-'}

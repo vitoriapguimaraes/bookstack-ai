@@ -73,16 +73,16 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
      )
   }
 
-  // Main Card - Horizontal Minimalist
+  // Main Card - Informative Design
   return (
-    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-32">
+    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-40">
       {/* Cover Image */}
-      <div className="w-20 flex-shrink-0 bg-neutral-950 relative overflow-hidden">
+      <div className="w-28 flex-shrink-0 bg-neutral-950 relative overflow-hidden">
          <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
          
          {/* Order badge - bottom left on cover */}
          {book.order && (
-           <div className="absolute bottom-1 left-1 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg">
+           <div className="absolute bottom-2 left-2 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">
              #{book.order}
            </div>
          )}
@@ -90,53 +90,81 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
       
       {/* Content */}
       <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-         <div>
-            <div className="flex items-start justify-between gap-2 mb-1">
-               <h3 className="font-semibold text-white text-sm leading-tight line-clamp-2 flex-1" title={book.title}>
-                  {book.title}
-               </h3>
-               <div className="flex flex-col gap-1 items-end">
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded ${status.bg} ${status.color} ${status.border} border font-medium uppercase tracking-wide whitespace-nowrap`}>
-                     {book.status}
-                  </span>
-                  {/* Score badge below status */}
-                  {book.score > 0 && (
-                     <div className="bg-purple-600/20 border border-purple-500/30 text-purple-300 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">
-                        Score: {book.score.toFixed(0)}
-                     </div>
-                  )}
+         {/* Header: Title + Status */}
+         <div className="flex-1">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+               <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white text-sm leading-snug mb-1" title={book.title}>
+                     {book.title}
+                  </h3>
+                  <p className="text-xs text-neutral-400">{book.author}</p>
                </div>
+               <span className={`text-[10px] px-1.5 py-0.5 rounded ${status.bg} ${status.color} ${status.border} border font-medium uppercase tracking-wide whitespace-nowrap h-fit flex-shrink-0`}>
+                  {book.status}
+               </span>
             </div>
-            <p className="text-xs text-neutral-400 truncate">{book.author}</p>
+            
+            {/* Classification: Class + Category */}
+            <div className="flex items-center gap-1.5 text-[11px] mb-2">
+               <span className="text-purple-300 font-medium" title={book.book_class}>
+                  {book.book_class}
+               </span>
+               <span className="text-neutral-600">›</span>
+               <span className="text-neutral-400" title={book.category}>
+                  {book.category}
+               </span>
+            </div>
          </div>
          
+         {/* Footer: Metrics + Actions */}
          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-neutral-500 truncate max-w-[120px]" title={book.category}>
-               {book.category}
-            </span>
-            
             <div className="flex items-center gap-2">
-               {book.rating > 0 && (
-                  <div className="flex items-center gap-1">
-                     <Star size={12} fill="#fbbf24" className="text-amber-400" />
-                     <span className="text-xs text-amber-400 font-medium">{book.rating}</span>
+               {/* Score */}
+               {book.score > 0 && (
+                  <div className="flex items-center gap-1 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                     <span className="text-xs text-purple-400 font-bold">{book.score.toFixed(0)}</span>
+                     <span className="text-[9px] text-neutral-500">Score</span>
                   </div>
                )}
                
-               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                     onClick={handleEditClick} 
-                     className="p-1 hover:bg-purple-500/20 hover:text-purple-400 text-neutral-500 rounded transition-colors"
-                     title="Editar">
-                     <Pencil size={14} />
-                  </button>
-                  <button 
-                     onClick={handleDelete} 
-                     className="p-1 hover:bg-red-500/20 hover:text-red-400 text-neutral-500 rounded transition-colors"
-                     title="Excluir">
-                     <Trash2 size={14} />
-                  </button>
-               </div>
+               {/* Ratings Comparison - Always show both when available */}
+               {(book.google_rating || book.rating > 0) && (
+                  <div className="flex items-center gap-2">
+                     {/* Google Rating */}
+                     {book.google_rating && (
+                        <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                           <Star size={10} fill="#fbbf24" className="text-amber-400" />
+                           <span className="text-xs text-amber-400 font-medium">{book.google_rating.toFixed(1)}</span>
+                           <span className="text-[9px] text-neutral-500">Google</span>
+                        </div>
+                     )}
+                     
+                     {/* Personal Rating */}
+                     {book.rating > 0 && (
+                        <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                           <Star size={12} fill="#fbbf24" className="text-amber-400" />
+                           <span className="text-xs text-amber-400 font-bold">{book.rating}</span>
+                           <span className="text-[9px] text-neutral-500">Minha</span>
+                        </div>
+                     )}
+                  </div>
+               )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+               <button 
+                  onClick={handleEditClick} 
+                  className="p-1.5 hover:bg-purple-500/20 hover:text-purple-400 text-neutral-500 rounded transition-colors"
+                  title="Editar">
+                  <Pencil size={16} />
+               </button>
+               <button 
+                  onClick={handleDelete} 
+                  className="p-1.5 hover:bg-red-500/20 hover:text-red-400 text-neutral-500 rounded transition-colors"
+                  title="Excluir">
+                  <Trash2 size={16} />
+               </button>
             </div>
          </div>
       </div>
