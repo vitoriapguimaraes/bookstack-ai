@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Layers, CheckCircle, ArrowUp, Download, Upload, Info, X } from 'lucide-react'
+import { BookOpen, Layers, CheckCircle, ArrowUp, ArrowDown, Download, Upload, Info, X, Loader2 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import BookCard from './components/BookCard'
 import BooksTable from './components/BooksTable'
@@ -13,9 +13,15 @@ const api = axios.create()
 function App() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState(null)
-  const [tab, setTab] = useState('mural') // 'mural', 'table', 'analytics'
+  const [tab, setTab] = useState('mural')
   const [editingBook, setEditingBook] = useState(null)
+  const [showCsvInfo, setShowCsvInfo] = useState(false)
+  
+  // Scroll States
+  const [isAtTop, setIsAtTop] = useState(true)
+  const [isAtBottom, setIsAtBottom] = useState(false)
   
   // States for Sidebar Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -24,6 +30,13 @@ function App() {
   useEffect(() => {
     fetchBooks()
   }, [])
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    const mainElement = document.querySelector('main')
+    if (mainElement) mainElement.scrollTo(0, 0)
+  }, [tab])
 
   const fetchBooks = async () => {
     try {
@@ -86,20 +99,16 @@ function App() {
 
 
   // Scroll to Top Logic
-  const [showScrollTop, setShowScrollTop] = useState(false)
-  const [showCsvInfo, setShowCsvInfo] = useState(false)
+
 
   useEffect(() => {
     const handleScroll = () => {
-        // Tenta pegar o elemento principal de scroll (pode ser window ou o main)
-        const mainElement = document.querySelector('main')
-        if (mainElement && mainElement.scrollTop > 300) {
-            setShowScrollTop(true)
-        } else if (window.scrollY > 300) {
-             setShowScrollTop(true)
-        } else {
-            setShowScrollTop(false)
-        }
+        const scrolled = window.scrollY
+        setIsAtTop(scrolled < 100)
+        
+        // Detect bottom
+        const isBottom = window.innerHeight + scrolled >= document.documentElement.scrollHeight - 50
+        setIsAtBottom(isBottom)
     }
 
     // Adiciona listener no window e no main (caso o scroll seja interno)
@@ -120,8 +129,28 @@ function App() {
   }
 
   // Export/Import Handlers
-  const handleExport = () => {
-      window.location.href = '/api/books_export/'
+  const handleExport = async () => {
+      try {
+          setExporting(true)
+          const response = await api.get('/api/books_export/', { responseType: 'blob' })
+          
+          // Create download link
+          const url = window.URL.createObjectURL(new Blob([response.data]))
+          const link = document.createElement('a')
+          link.href = url
+          link.setAttribute('download', 'biblioteca_backup.csv')
+          document.body.appendChild(link)
+          link.click()
+          
+          // Cleanup
+          link.remove()
+          window.URL.revokeObjectURL(url)
+      } catch (err) {
+          console.error("Erro no export:", err)
+          alert("Falha ao exportar arquivo.")
+      } finally {
+          setExporting(false)
+      }
   }
 
   const handleImportClick = () => {
@@ -265,11 +294,12 @@ function App() {
                         
                         <button 
                             onClick={handleExport}
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-sm font-medium transition-colors border border-neutral-700"
+                            disabled={exporting}
+                            className={`flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-sm font-medium transition-colors border border-neutral-700 ${exporting ? 'opacity-70 cursor-wait' : ''}`}
                             title="Baixar backup da biblioteca (CSV)"
                         >
-                            <Download size={16} />
-                            Exportar CSV
+                            {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                            {exporting ? 'Carregando...' : 'Exportar CSV'}
                         </button>
                     </div>
                 </div>
@@ -284,7 +314,7 @@ function App() {
             )}
 
             {!loading && tab === 'admin' && (
-            <div className="max-w-2xl mx-auto pb-20 animate-fade-in">
+            <div className="max-w-7xl mx-auto pb-5 animate-fade-in">
                 <BookForm 
                     bookToEdit={editingBook} 
                     onSuccess={handleFormSuccess} 
@@ -296,14 +326,32 @@ function App() {
       </main>
 
       {/* Button Scroll to Top */}
+      {/* Button Scroll to Top */}
       <button
-        onClick={scrollToTop}
-        className={`fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50 ${
-          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        onClick={isAtTop ? undefined : scrollToTop}
+        disabled={isAtTop}
+        className={`fixed bottom-20 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
+          isAtTop 
+            ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
+            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
         }`}
         title="Voltar ao topo"
       >
         <ArrowUp size={20} />
+      </button>
+
+      {/* Button Scroll to Bottom */}
+      <button
+        onClick={isAtBottom ? undefined : () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
+        disabled={isAtBottom}
+        className={`fixed bottom-8 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
+           isAtBottom 
+            ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
+            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
+        }`}
+        title="Ir para o final"
+      >
+        <ArrowDown size={20} />
       </button>
 
       {/* CSV Info Modal */}

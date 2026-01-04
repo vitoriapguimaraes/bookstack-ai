@@ -14,7 +14,7 @@ def export_missing():
         
         print(f"Exportando {len(books)} livros para {file_name}...")
         
-        with open(file_name, mode='w', newline='', encoding='utf-8') as f:
+        with open(file_name, mode='w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f)
             writer.writerow(['id', 'title', 'original_title']) # Header
             

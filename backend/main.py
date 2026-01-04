@@ -243,21 +243,40 @@ def get_dashboard_stats(session: Session = Depends(get_session)):
 @app.get("/proxy/image")
 async def proxy_image(url: str):
     """
-    Proxy endpoint to fetch images from external URLs (like Google Books)
-    This bypasses CORS restrictions
+    Proxy endpoint to fetch images with local caching.
     """
+    import os
+    import hashlib
+    from pathlib import Path
+
+    CACHE_DIR = Path("image_cache")
+    CACHE_DIR.mkdir(exist_ok=True)
+
     try:
+        # Create hash for filename
+        url_hash = hashlib.md5(url.encode()).hexdigest()
+        cache_path = CACHE_DIR / f"{url_hash}.jpg"
+
+        # Check cache
+        if cache_path.exists():
+            with open(cache_path, "rb") as f:
+                return Response(content=f.read(), media_type="image/jpeg")
+
+        # Fetch from web
         response = requests.get(url, timeout=10, headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
         response.raise_for_status()
         
-        # Return the image with appropriate content type
+        # Save to cache
+        with open(cache_path, "wb") as f:
+            f.write(response.content)
+            
         content_type = response.headers.get('content-type', 'image/jpeg')
         return Response(content=response.content, media_type=content_type)
+
     except Exception as e:
         print(f"Error proxying image: {e}")
-        # Return a 1x1 transparent pixel or 404
         return Response(status_code=404)
 
 @app.get("/books_export/", response_class=StreamingResponse)
@@ -304,8 +323,12 @@ def export_books_csv(session: Session = Depends(get_session)):
     
     output.seek(0)
     
-    return StreamingResponse(
-        iter([output.getvalue()]),
+    # Add BOM for Excel compatibility
+    bom = codecs.BOM_UTF8.decode('utf-8')
+    csv_content = bom + output.getvalue()
+    
+    return Response(
+        content=csv_content,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=biblioteca_backup.csv"}
     )
@@ -343,15 +366,15 @@ async def import_books_csv(file: UploadFile = File(...), session: Session = Depe
             
             # Map CSV fields to Book model
             book_data = {
-                "title": row['title'],
-                "author": row.get('author', "Desconhecido"),
-                "status": row.get('status', 'A Ler'),
+                "title": row['title'].strip(),
+                "author": row.get('author', "Desconhecido").strip() if row.get('author') else "Desconhecido",
+                "status": row.get('status', 'A Ler').strip() if row.get('status') else 'A Ler',
                 "priority": row.get('priority', '1 - Baixa'),
                 "type": row.get('type', 'Não Técnico'),
-                "book_class": row.get('book_class', 'Desenvolvimento Pessoal'),
-                "category": row.get('category', 'Geral'),
+                "book_class": row.get('book_class', 'Desenvolvimento Pessoal').strip() if row.get('book_class') else 'Desenvolvimento Pessoal',
+                "category": row.get('category', 'Geral').strip() if row.get('category') else 'Geral',
                 "availability": row.get('availability', 'Estante'),
-                "original_title": row.get('original_title')
+                "original_title": row.get('original_title').strip() if row.get('original_title') else None
             }
             
             # Handle numeric fields if present

@@ -45,19 +45,22 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
             </div>
           )}
           
-          <div className="flex items-center gap-3 p-2">
-             <img src={coverUrl} alt={book.title} className="w-12 h-16 object-cover rounded" />
-             <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm text-white truncate" title={book.title}>{book.title}</h4>
-                <p className="text-xs text-neutral-400 truncate">{book.author}</p>
+          <div className="flex items-stretch gap-3 p-2">
+             <img src={coverUrl} alt={book.title} className="w-16 h-24 object-cover rounded" loading="lazy" decoding="async" />
+             <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                <div>
+                    <h4 className="font-medium text-sm text-white line-clamp-3 leading-tight mb-0.5" title={book.title}>{book.title}</h4>
+                    <p className="text-xs text-neutral-400 truncate">{book.author}</p>
+                </div>
                 {book.rating > 0 && (
-                   <div className="flex items-center gap-1 mt-1">
+                   <div className="flex items-center gap-1 w-max bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 mt-1">
                       <Star size={10} fill="#fbbf24" className="text-amber-400" />
-                      <span className="text-xs text-amber-400">{book.rating}</span>
+                      <span className="text-xs text-amber-400 font-bold">{book.rating}</span>
+                      <span className="text-[9px] text-neutral-500">Minha</span>
                    </div>
                 )}
              </div>
-             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity self-start">
                 <button onClick={handleEditClick} className="p-1 hover:text-purple-400 text-neutral-500"><Pencil size={14} /></button>
                 <button onClick={handleDelete} className="p-1 hover:text-red-400 text-neutral-500"><Trash2 size={14} /></button>
              </div>
@@ -68,10 +71,10 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
 
   // Main Card - Informative Design
   return (
-    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-50">
+    <div className="group relative bg-neutral-900 rounded-lg overflow-hidden hover:bg-neutral-800 transition-all duration-200 border border-neutral-800 hover:border-purple-500/30 flex h-56">
       {/* Cover Image */}
-      <div className="w-28 flex-shrink-0 bg-neutral-950 relative overflow-hidden">
-         <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
+      <div className="w-36 flex-shrink-0 bg-neutral-950 relative overflow-hidden">
+         <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
          
          {/* Order badge - bottom left on cover */}
          {book.order && (
@@ -87,7 +90,7 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
          <div className="flex-1">
             <div className="flex items-start justify-between gap-2 mb-1.5">
                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white text-sm leading-snug mb-1" title={book.title}>
+                  <h3 className="font-semibold text-white text-sm leading-snug mb-1 line-clamp-3" title={book.title}>
                      {book.title}
                   </h3>
                   <p className="text-xs text-neutral-400">{book.author}</p>
