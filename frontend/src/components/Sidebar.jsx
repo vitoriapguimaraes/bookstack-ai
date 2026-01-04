@@ -1,10 +1,13 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Search, User } from 'lucide-react'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
 
-export default function Sidebar({ currentTab, setTab, onAddBook, filters, onFilterChange }) {
+export default function Sidebar({ onAddBook }) {
+  const navigate = useNavigate()
+  
   const menuItems = [
-    { id: 'mural', label: 'Mural', icon: LayoutGrid },
-    { id: 'table', label: 'Tabela', icon: Layers },
-    { id: 'analytics', label: 'Análises', icon: BarChart2 },
+    { id: 'mural', label: 'Mural', icon: LayoutGrid, path: '/mural/lendo' },
+    { id: 'table', label: 'Tabela', icon: Layers, path: '/table' },
+    { id: 'analytics', label: 'Análises', icon: BarChart2, path: '/analytics' },
   ]
 
   return (
@@ -20,16 +23,17 @@ export default function Sidebar({ currentTab, setTab, onAddBook, filters, onFilt
       <nav className="flex-1 flex flex-col gap-2 w-full px-3">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = currentTab === item.id
           return (
-            <button
+            <NavLink
               key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
-                isActive
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                  : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
-              }`}
+              to={item.path}
+              className={({ isActive }) =>
+                `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
+                  isActive
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
+                }`
+              }
               title={item.label}
             >
               <Icon size={20} />
@@ -37,7 +41,7 @@ export default function Sidebar({ currentTab, setTab, onAddBook, filters, onFilt
               <span className="absolute left-full ml-3 px-2 py-1 bg-neutral-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
                 {item.label}
               </span>
-            </button>
+            </NavLink>
           )
         })}
       </nav>
