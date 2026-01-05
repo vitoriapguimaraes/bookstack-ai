@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowUp, ArrowDown } from 'lucide-react'
 import Sidebar from './components/Sidebar'
-import MuralView from './views/MuralView'
-import TableView from './views/TableView'
-import AnalyticsView from './views/AnalyticsView'
-import FormView from './views/FormView'
-import HomeView from './views/HomeView'
-import SettingsLayout from './views/settings/SettingsLayout'
-import OverviewSettings from './views/settings/OverviewSettings'
-import AISettings from './views/settings/AISettings'
-import FormulaSettings from './views/settings/FormulaSettings'
-import ListSettings from './views/settings/ListSettings'
-import PreferencesSettings from './views/settings/PreferencesSettings'
+import Mural from './pages/Mural'
+import BooksList from './pages/BooksList'
+import Analytics from './pages/Analytics'
+import BookFormPage from './pages/BookForm'
+import Home from './pages/Home'
+import SettingsLayout from './pages/Settings/SettingsLayout'
+import OverviewSettings from './pages/Settings/OverviewSettings'
+import AISettings from './pages/Settings/AISettings'
+import FormulaSettings from './pages/Settings/FormulaSettings'
+import ListSettings from './pages/Settings/ListSettings'
+import PreferencesSettings from './pages/Settings/PreferencesSettings'
+import ScrollToTopBottom from './components/ScrollToTopBottom'
 
 import axios from 'axios'
 
@@ -27,10 +27,6 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editingBook, setEditingBook] = useState(null)
-  
-  // Scroll States
-  const [isAtTop, setIsAtTop] = useState(true)
-  const [isAtBottom, setIsAtBottom] = useState(false)
 
   // Table Persistence State
   const [tableState, setTableState] = useState({
@@ -93,54 +89,7 @@ function App() {
     navigate(-1) // Go back to previous route
   }
 
-  // Scroll to Top Logic
-  useEffect(() => {
-    const handleScroll = () => {
-        const scrolled = window.scrollY
-        setIsAtTop(scrolled < 100)
-        
-        // Detect bottom - also check if page is scrollable
-        const scrollHeight = document.documentElement.scrollHeight
-        const clientHeight = window.innerHeight
-        const isScrollable = scrollHeight > clientHeight
-        const isBottom = !isScrollable || (scrolled + clientHeight >= scrollHeight - 50)
-        setIsAtBottom(isBottom)
-    }
 
-    // Adiciona listener no window e no main (caso o scroll seja interno)
-    window.addEventListener('scroll', handleScroll)
-    const mainElement = document.querySelector('main')
-    if (mainElement) mainElement.addEventListener('scroll', handleScroll)
-    
-    // Initial check
-    handleScroll()
-
-    return () => {
-        window.removeEventListener('scroll', handleScroll)
-        if (mainElement) mainElement.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
-  
-  // Recalculate scroll state when route changes
-  useEffect(() => {
-    const handleScroll = () => {
-        const scrolled = window.scrollY
-        setIsAtTop(scrolled < 100)
-        
-        const scrollHeight = document.documentElement.scrollHeight
-        const clientHeight = window.innerHeight
-        const isScrollable = scrollHeight > clientHeight
-        const isBottom = !isScrollable || (scrolled + clientHeight >= scrollHeight - 50)
-        setIsAtBottom(isBottom)
-    }
-    
-    // Delay to ensure DOM has updated
-    setTimeout(handleScroll, 100)
-  }, [location.pathname])
-
-  const scrollToTop = () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
 
   return (
     <div className="min-h-screen font-sans flex transition-colors duration-300">
@@ -167,11 +116,11 @@ function App() {
             {!loading && (
               <Routes>
                 {/* Home Dashboard */}
-                <Route path="/" element={<HomeView books={books} />} />
+                <Route path="/" element={<Home books={books} />} />
                 
                 {/* Mural routes with nested status routes */}
                 <Route path="/mural/:status" element={
-                  <MuralView 
+                  <Mural 
                     books={books}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
@@ -183,7 +132,7 @@ function App() {
                 
                 {/* Table route */}
                 <Route path="/table" element={
-                  <TableView 
+                  <BooksList 
                     books={books}
                     onUpdate={fetchBooks}
                     onDelete={handleDelete}
@@ -195,7 +144,7 @@ function App() {
                 
                 {/* Analytics route */}
                 <Route path="/analytics" element={
-                  <AnalyticsView books={books} />
+                  <Analytics books={books} />
                 } />
                 
                 {/* Settings Routes */}
@@ -210,7 +159,7 @@ function App() {
 
                 {/* Book Form routes */}
                 <Route path="/create" element={
-                  <FormView 
+                  <BookFormPage 
                     editingBook={null}
                     onFormSuccess={handleFormSuccess}
                     onCancel={() => { 
@@ -220,7 +169,7 @@ function App() {
                   />
                 } />
                 <Route path="/edit" element={
-                  <FormView 
+                  <BookFormPage 
                     editingBook={editingBook}
                     onFormSuccess={handleFormSuccess}
                     onCancel={() => { 
@@ -235,7 +184,7 @@ function App() {
       </main>
 
       {/* Button Scroll to Top */}
-
+      <ScrollToTopBottom />
 
     </div>
   )

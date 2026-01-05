@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BookOpen, Library, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers } from 'lucide-react'
-import BookCard from '../components/BookCard'
-import ScrollToTopBottom from '../components/ScrollToTopBottom'
+import BookCard from '../../components/BookCard'
+import ScrollToTopBottom from '../../components/ScrollToTopBottom'
 
 const ITEMS_PER_PAGE_ACTIVE = 12
 const ITEMS_PER_PAGE_COMPLETED = 24

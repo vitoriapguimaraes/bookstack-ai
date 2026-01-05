@@ -1,4 +1,4 @@
-import BookForm from '../components/BookForm'
+import BookForm from '../../components/BookForm'
 
 export default function FormView({ editingBook, onFormSuccess, onCancel }) {
   return (

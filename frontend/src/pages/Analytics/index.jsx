@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import Analytics from '../components/Analytics'
-import ScrollToTopBottom from '../components/ScrollToTopBottom'
+import Analytics from '../../components/Analytics'
+import ScrollToTopBottom from '../../components/ScrollToTopBottom'
 
 export default function AnalyticsView({ books }) {
   const scrollContainerRef = useRef(null)

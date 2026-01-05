@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { ArrowUpDown, Pencil, Trash2, Search, X, Check, Edit3, Trash } from 'lucide-react'
 import axios from 'axios'
-import BulkEditModal from './BulkEditModal'
+import BulkEditModal from '../BulkEditModal'
 
 const api = axios.create()
 

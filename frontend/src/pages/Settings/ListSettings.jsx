@@ -1,4 +1,4 @@
-import ClassCategoryRow from '../../components/settings/ClassCategoryRow'
+import ClassCategoryRow from '../../components/Settings/ClassCategoryRow'
 
 export default function ListSettings() {
     const classCategories = {

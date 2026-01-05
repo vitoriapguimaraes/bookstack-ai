@@ -1,6 +1,6 @@
 import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home } from 'lucide-react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function Sidebar({ onAddBook }) {
   const navigate = useNavigate()

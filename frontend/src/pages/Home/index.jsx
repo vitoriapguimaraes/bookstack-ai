@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Star, Activity, Layers, Library, Camera } from 'lucide-react'
-import { useAnalyticsData } from '../components/analytics/useAnalyticsData'
-import BookshelfShowcase from '../components/showcase/BookshelfShowcase'
-import ShowcaseExporter from '../components/showcase/ShowcaseExporter'
+import { useAnalyticsData } from '../../components/Analytics/useAnalyticsData'
+import BookshelfShowcase from '../../components/Showcase/BookshelfShowcase'
+import ShowcaseExporter from '../../components/Showcase/ShowcaseExporter'
 
 export default function HomeView({ books }) {
   const navigate = useNavigate()

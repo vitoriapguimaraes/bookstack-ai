@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Star, Pencil, Trash2, Info, X } from 'lucide-react'
 import axios from 'axios'
-import { useTheme } from '../context/ThemeContext'
+import { useTheme } from '../../context/ThemeContext'
 
 const api = axios.create()
 

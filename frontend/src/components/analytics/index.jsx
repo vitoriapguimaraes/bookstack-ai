@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react'
 import { Book, Star, BookOpen, Library, Activity, Download, Layers, Loader2 } from 'lucide-react'
-import { KpiCard } from './analytics/KpiCard'
-import { DistributionChart } from './analytics/DistributionChart'
-import { TimelineChart } from './analytics/TimelineChart'
-import { InsightsGrid } from './analytics/InsightsGrid'
-import { useAnalyticsData } from './analytics/useAnalyticsData'
-import { getClassBaseHSL, hslToString } from './analytics/analyticsUtils'
+import { KpiCard } from './KpiCard'
+import { DistributionChart } from './DistributionChart'
+import { TimelineChart } from './TimelineChart'
+import { InsightsGrid } from './InsightsGrid'
+import { useAnalyticsData } from './useAnalyticsData'
+import { getClassBaseHSL, hslToString } from './analyticsUtils'
 import html2canvas from 'html2canvas'
 
 

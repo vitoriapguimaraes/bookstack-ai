@@ -1,4 +1,4 @@
-import { getClassBaseHSL, hslToString } from '../../components/analytics/analyticsUtils'
+import { getClassBaseHSL, hslToString } from '../../components/Analytics/analyticsUtils'
 
 export default function ClassCategoryRow({ cls, cats }) {
     const baseHSL = getClassBaseHSL(cls)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 
 export default function ScrollToTopBottom({ containerRef }) {
@@ -6,36 +6,59 @@ export default function ScrollToTopBottom({ containerRef }) {
     const [isBottom, setIsBottom] = useState(false)
 
     useEffect(() => {
-        const container = containerRef?.current
-        if (!container) return
-
+        const getTarget = () => containerRef?.current || window
+        const target = getTarget()
+        
         const handleScroll = () => {
-            const scrollTop = container.scrollTop
-            const scrollHeight = container.scrollHeight
-            const clientHeight = container.clientHeight
+            let scrollTop, scrollHeight, clientHeight
+
+            if (target === window) {
+                scrollTop = window.scrollY
+                scrollHeight = document.documentElement.scrollHeight
+                clientHeight = window.innerHeight
+            } else {
+                scrollTop = target.scrollTop
+                scrollHeight = target.scrollHeight
+                clientHeight = target.clientHeight
+            }
 
             // Check if at top
-            setIsTop(scrollTop <= 20)
+            setIsTop(scrollTop <= 100)
 
             // Check if at bottom (allow small margin of error)
-            setIsBottom(scrollTop + clientHeight >= scrollHeight - 20)
+            const isScrollable = scrollHeight > clientHeight
+            const isAtBottom = !isScrollable || (scrollTop + clientHeight >= scrollHeight - 50)
+            setIsBottom(isAtBottom)
         }
 
-        container.addEventListener('scroll', handleScroll)
+        target.addEventListener('scroll', handleScroll)
+        // Also listen on document body/html just in case for window
+        if (target === window) {
+           document.addEventListener('scroll', handleScroll)
+        }
+        
         // Initial check
         handleScroll()
         
-        return () => container.removeEventListener('scroll', handleScroll)
+        return () => {
+            target.removeEventListener('scroll', handleScroll)
+            if (target === window) {
+                document.removeEventListener('scroll', handleScroll)
+            }
+        }
     }, [containerRef])
 
     const scrollToTop = () => {
-        containerRef?.current?.scrollTo({ top: 0, behavior: 'smooth' })
+        const target = containerRef?.current || window
+        target.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     const scrollToBottom = () => {
-        const container = containerRef?.current
-        if (container) {
-            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+        const target = containerRef?.current || window
+        if (target === window) {
+             window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+        } else {
+            target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' })
         }
     }
 
