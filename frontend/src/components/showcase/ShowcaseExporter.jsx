@@ -19,7 +19,7 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
     try {
       const canvas = await html2canvas(exportRef.current, {
         scale: 2,
-        backgroundColor: null, // Use element's background (gradient)
+        backgroundColor: '#ffffff', // Ensure solid background
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -83,21 +83,61 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
       <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-neutral-800 flex-shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-              Exportar
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+              Exportar Imagem
             </h2>
-            <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
-              Gere uma imagem otimizada para compartilhar
-            </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+             {/* Dynamic Header Actions */}
+             {!showPreview ? (
+                <>
+                   <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className={`flex items-center gap-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                  >
+                    {isExporting ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={14} />
+                        Gerar
+                      </>
+                    )}
+                  </button>
+                </>
+             ) : (
+                <>
+                  <button
+                    onClick={() => setShowPreview(false)}
+                    className="px-3 py-1.5 text-sm text-slate-600 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Download size={14} />
+                    Baixar
+                  </button>
+                </>
+             )}
+             
+            <div className="w-px h-6 bg-slate-200 dark:bg-neutral-800 mx-1"></div>
+            
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Preview Area */}
@@ -105,10 +145,10 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
           {!showPreview ? (
             <>
               {/* Template Preview Wrapper */}
-              <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 mb-6 flex justify-center overflow-auto max-h-[60vh]">
+              <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 flex justify-center overflow-auto max-h-[65vh]">
                 <div
                   ref={exportRef}
-                  className="bg-gradient-to-br from-purple-50 to-blue-50 relative flex-shrink-0"
+                  className="bg-white relative flex-shrink-0"
                   style={{ width: '1200px', minHeight: '630px', height: 'auto' }}
                 >
                   {/* Template Content */}
@@ -125,13 +165,17 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100">
-                        <BookOpen size={22} className="text-purple-600" />
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl font-black text-slate-800 leading-tight">
+                      <div className="bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100 whitespace-nowrap">
+                        <div className="inline-block align-middle mr-3">
+                           <BookOpen size={22} className="text-purple-600 block" />
+                        </div>
+                        <div className="inline-block align-middle">
+                          <span className="text-2xl font-black text-slate-800 leading-none align-middle mr-2 inline-block">
                             {stats?.kpi?.total || books.length}
                           </span>
-                          <span className="text-sm font-semibold text-slate-400">livros</span>
+                          <span className="text-sm font-semibold text-slate-400 align-middle inline-block">
+                            livros
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -179,60 +223,20 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
                 </div>
               </div>
 
-              {/* Export Button */}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-slate-600 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleExport}
-                  disabled={isExporting}
-                  className={`flex items-center gap-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
-                >
-                  {isExporting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <Download size={16} />
-                      Gerar Imagem
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Actions moved to Header */}
             </>
           ) : (
             <>
               {/* Preview Image */}
-              <div className="mb-6 bg-slate-100 dark:bg-neutral-800 p-4 rounded-lg flex justify-center">
+              <div className="bg-slate-100 dark:bg-neutral-800 p-4 rounded-lg flex justify-center items-center h-[65vh]">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="max-w-full h-auto rounded-lg shadow-lg border border-slate-200"
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-slate-200"
                 />
               </div>
 
-              {/* Download Button */}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="px-4 py-2 text-slate-600 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white transition-colors"
-                >
-                  Voltar
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  <Download size={16} />
-                  Baixar Imagem
-                </button>
-              </div>
+              {/* Actions moved to Header */}
             </>
           )}
         </div>
