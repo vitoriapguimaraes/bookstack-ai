@@ -71,12 +71,7 @@ function App() {
     navigate(-1) // Go back to previous route
   }
 
-
-
-
   // Scroll to Top Logic
-
-
   useEffect(() => {
     const handleScroll = () => {
         const scrolled = window.scrollY
@@ -124,8 +119,6 @@ function App() {
   const scrollToTop = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-
-
 
   return (
     <div className="min-h-screen font-sans flex transition-colors duration-300">
@@ -208,39 +201,6 @@ function App() {
       </main>
 
       {/* Button Scroll to Top */}
-      {/* Scroll Buttons - Only visible in Mural/Table views */}
-      {(location.pathname.startsWith('/mural') || location.pathname === '/table') && (
-        <>
-          {/* Button Scroll to Top */}
-          <button
-            onClick={isAtTop ? undefined : scrollToTop}
-            disabled={isAtTop}
-            className={`fixed bottom-20 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
-              isAtTop 
-                ? 'bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-neutral-600 cursor-not-allowed shadow-none' 
-                : 'bg-pastel-purple hover:bg-purple-300 text-slate-900 shadow-lg'
-            }`}
-            title="Voltar ao topo"
-          >
-            <ArrowUp size={20} />
-          </button>
-
-          {/* Button Scroll to Bottom */}
-          <button
-            onClick={isAtBottom ? undefined : () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
-            disabled={isAtBottom}
-            className={`fixed bottom-8 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
-               isAtBottom 
-                ? 'bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-neutral-600 cursor-not-allowed shadow-none' 
-                : 'bg-pastel-purple hover:bg-purple-300 text-slate-900 shadow-lg'
-            }`}
-            title="Ir para o final"
-          >
-            <ArrowDown size={20} />
-          </button>
-        </>
-      )}
-
 
 
     </div>

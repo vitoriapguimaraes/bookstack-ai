@@ -1,15 +1,18 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon } from 'lucide-react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2 } from 'lucide-react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 
 export default function Sidebar({ onAddBook }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   
   const menuItems = [
-    { id: 'mural', label: 'Mural', icon: LayoutGrid, path: '/mural/lendo' },
-    { id: 'table', label: 'Tabela', icon: Layers, path: '/table' },
-    { id: 'analytics', label: 'Análises', icon: BarChart2, path: '/analytics' },
+    { id: 'lendo', label: 'Lendo', icon: BookOpen, path: '/mural/lendo', color: 'bg-pastel-purple' },
+    { id: 'fila', label: 'Fila', icon: Library, path: '/mural/a-ler', color: 'bg-pastel-orange' },
+    { id: 'lidos', label: 'Lidos', icon: CheckCircle2, path: '/mural/lido', color: 'bg-pastel-green' },
+    { id: 'table', label: 'Tabela', icon: Layers, path: '/table', color: 'bg-pastel-purple' },
+    { id: 'analytics', label: 'Análises', icon: BarChart2, path: '/analytics', color: 'bg-pastel-purple' },
   ]
 
   return (
@@ -32,7 +35,7 @@ export default function Sidebar({ onAddBook }) {
               className={({ isActive }) =>
                 `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
                   isActive
-                    ? 'bg-pastel-purple text-slate-900 shadow-md'
+                    ? `${item.color} text-slate-900 shadow-md`
                     : 'text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
                 }`
               }
