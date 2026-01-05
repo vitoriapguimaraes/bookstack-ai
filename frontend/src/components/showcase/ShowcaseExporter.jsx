@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
-import { X, Download, Loader2 } from 'lucide-react'
+import { X, Download, Loader2, BookOpen, Star } from 'lucide-react'
 import html2canvas from 'html2canvas'
 
-export default function ShowcaseExporter({ books, onClose }) {
+export default function ShowcaseExporter({ books, selectedYears, filterClass, stats, activeBook, onClose }) {
   const [isExporting, setIsExporting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -14,17 +14,17 @@ export default function ShowcaseExporter({ books, onClose }) {
     setIsExporting(true)
 
     // Wait for layout to settle
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, 300))
 
     try {
       const canvas = await html2canvas(exportRef.current, {
         scale: 2,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: null, // Use element's background (gradient)
         useCORS: true,
-        width: 1200,
-        height: 630,
-        windowWidth: 1200,
-        windowHeight: 630,
+        allowTaint: true,
+        logging: false,
+        height: exportRef.current.scrollHeight, 
+        windowHeight: exportRef.current.scrollHeight 
       })
 
       const dataUrl = canvas.toDataURL('image/png')
@@ -47,25 +47,49 @@ export default function ShowcaseExporter({ books, onClose }) {
     link.click()
   }
 
-  // Get top 12 books with covers
-  const displayBooks = books
-    .filter(b => b.status === 'Lido' && b.cover_url)
-    .slice(0, 12)
+  // Get books with covers for display - NO LIMIT
+  const displayBooks = books.filter(b => b.cover_image)
 
-  const totalRead = books.filter(b => b.status === 'Lido').length
+  // Dynamic Grid Configuration
+  const getGridConfig = () => {
+      const count = displayBooks.length
+      if (count > 24) return "grid-cols-8 gap-2"
+      if (count > 12) return "grid-cols-7 gap-3"
+      return "grid-cols-6 gap-4"
+  }
+
+  // Generate filter summary
+  const filterSummary = () => {
+    const parts = []
+    if (selectedYears && selectedYears.length > 0) {
+      if (selectedYears.length > 3) {
+        // Sort numerically to find min and max even if array is unordered
+        const sortedYears = [...selectedYears].sort((a, b) => a - b)
+        const min = sortedYears[0]
+        const max = sortedYears[sortedYears.length - 1]
+        parts.push(`${min} - ${max}`)
+      } else {
+        parts.push(selectedYears.join(', '))
+      }
+    }
+    if (filterClass && filterClass !== 'all') {
+      parts.push(filterClass)
+    }
+    return parts.length > 0 ? parts.join(' • ') : 'Todos os livros lidos'
+  }
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-neutral-800">
           <div>
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-              Exportar para LinkedIn
+              Exportar
             </h2>
             <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
-              Gere uma imagem otimizada (1200x630px) para compartilhar
+              Gere uma imagem otimizada para compartilhar
             </p>
           </div>
           <button
@@ -80,56 +104,74 @@ export default function ShowcaseExporter({ books, onClose }) {
         <div className="p-6">
           {!showPreview ? (
             <>
-              {/* Template Preview */}
-              <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 mb-6">
+              {/* Template Preview Wrapper */}
+              <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 mb-6 flex justify-center overflow-auto max-h-[60vh]">
                 <div
                   ref={exportRef}
-                  className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg overflow-hidden"
-                  style={{ width: '1200px', height: '630px', transform: 'scale(0.5)', transformOrigin: 'top left' }}
+                  className="bg-gradient-to-br from-purple-50 to-blue-50 relative flex-shrink-0"
+                  style={{ width: '1200px', minHeight: '630px', height: 'auto' }}
                 >
                   {/* Template Content */}
-                  <div className="w-full h-full p-12 flex flex-col">
+                  <div className="w-full min-h-full p-8 pb-12 flex flex-col">
                     
                     {/* Header */}
-                    <div className="mb-8">
-                      <h1 className="text-6xl font-bold text-slate-800 mb-2">
-                        Minha Jornada de Leitura
-                      </h1>
-                      <p className="text-3xl text-slate-600">
-                        {totalRead} livros lidos • {new Date().getFullYear()}
-                      </p>
+                    <div className="mb-6 flex items-center justify-between border-b border-slate-200/60 pb-4">
+                      <div className="flex items-baseline gap-3">
+                        <h1 className="text-4xl font-black text-slate-800 tracking-tight">
+                          Minha Estante Virtual
+                        </h1>
+                        <span className="text-2xl font-light text-slate-400">
+                          {filterSummary()}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100">
+                        <BookOpen size={22} className="text-purple-600" />
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-slate-800 leading-tight">
+                            {stats?.kpi?.total || books.length}
+                          </span>
+                          <span className="text-sm font-semibold text-slate-400">livros</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Books Grid */}
-                    <div className="flex-1 grid grid-cols-6 gap-4">
-                      {displayBooks.map((book, idx) => (
-                        <div
-                          key={idx}
-                          className="aspect-[2/3] rounded-lg overflow-hidden shadow-lg"
-                        >
-                          {book.cover_url ? (
-                            <img
-                              src={book.cover_url}
-                              alt={book.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center p-2">
-                              <span className="text-white text-xs font-bold text-center line-clamp-3">
-                                {book.title}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                    <div className={`flex-1 grid ${getGridConfig()}`}>
+                      {displayBooks.map((book, idx) => {
+                        const coverUrl = book.cover_image 
+                          ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+                          : null
+                        
+                        return (
+                          <div
+                            key={idx}
+                            className="aspect-[2/3] rounded-md overflow-hidden shadow-md bg-white"
+                          >
+                            {coverUrl ? (
+                              <img
+                                src={coverUrl}
+                                alt={book.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center p-2">
+                                <span className="text-purple-900 text-[10px] font-bold text-center line-clamp-3 leading-tight">
+                                  {book.title}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
 
                     {/* Footer */}
-                    <div className="mt-8 flex items-center justify-between">
-                      <div className="text-2xl font-semibold text-slate-700">
+                    <div className="mt-6 pt-4 border-t border-slate-200/50 flex items-center justify-between">
+                      <div className="text-xl font-bold text-slate-700">
                         bookstack-ai
                       </div>
-                      <div className="text-xl text-slate-500">
+                      <div className="text-sm font-medium text-slate-400">
                         Gerado em {new Date().toLocaleDateString('pt-BR')}
                       </div>
                     </div>
@@ -167,11 +209,11 @@ export default function ShowcaseExporter({ books, onClose }) {
           ) : (
             <>
               {/* Preview Image */}
-              <div className="mb-6">
+              <div className="mb-6 bg-slate-100 dark:bg-neutral-800 p-4 rounded-lg flex justify-center">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="w-full rounded-lg shadow-lg"
+                  className="max-w-full h-auto rounded-lg shadow-lg border border-slate-200"
                 />
               </div>
 

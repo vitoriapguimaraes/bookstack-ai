@@ -73,7 +73,7 @@ export default function Sidebar({ onAddBook }) {
          {/* Add Button */}
          <button 
             onClick={onAddBook}
-            className="w-full aspect-square flex items-center justify-center bg-pastel-green hover:bg-green-300 text-slate-900 rounded-lg transition-all shadow-lg shadow-green-500/20 group relative"
+            className="w-full aspect-square flex items-center justify-center bg-pastel-purple hover:bg-purple-400 text-slate-900 hover:text-white rounded-lg transition-all shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/40 hover:scale-105 group relative"
             title="Novo Livro"
          >
             <PlusCircle size={20} />

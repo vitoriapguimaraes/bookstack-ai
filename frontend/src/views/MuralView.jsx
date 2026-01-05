@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { BookOpen, Library, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { BookOpen, Library, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers } from 'lucide-react'
 import BookCard from '../components/BookCard'
+import ScrollToTopBottom from '../components/ScrollToTopBottom'
 
 const ITEMS_PER_PAGE_ACTIVE = 12
 const ITEMS_PER_PAGE_COMPLETED = 24
@@ -9,11 +10,21 @@ const ITEMS_PER_PAGE_COMPLETED = 24
 export default function MuralView({ books, onEdit, onDelete }) {
   const navigate = useNavigate()
   const { status } = useParams()
+  const [yearlyGoal, setYearlyGoal] = useState(20)
+  const scrollContainerRef = useRef(null)
   
   // Default to 'reading' if no status in URL
   const activeStatus = status || 'reading'
   
   const [currentPage, setCurrentPage] = useState(1)
+
+  // Load yearly goal from localStorage
+  useEffect(() => {
+    const savedGoal = localStorage.getItem('yearlyReadingGoal')
+    if (savedGoal) {
+      setYearlyGoal(parseInt(savedGoal))
+    }
+  }, [])
 
   // Reset pagination when status changes
   useEffect(() => {
@@ -55,10 +66,14 @@ export default function MuralView({ books, onEdit, onDelete }) {
       }
   }
 
+  // Calculate current year progress
+  const currentYearBooks = books.filter(b => b.status === 'Lido' && b.year === new Date().getFullYear()).length
+  const progressPercentage = Math.min((currentYearBooks / yearlyGoal) * 100, 100)
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] animate-fade-in">
       {/* Header with Integrated Status Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 flex-shrink-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
              Mural de Livros
@@ -109,8 +124,32 @@ export default function MuralView({ books, onEdit, onDelete }) {
         </div>
       </div>
 
+      {/* Meta 2026 Card - Only show on 'reading' tab */}
+      {activeStatus === 'reading' && (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-slate-200 dark:border-neutral-700 mb-4 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Layers size={18} className="text-orange-600 dark:text-orange-400" />
+              <span className="text-base font-semibold text-slate-800 dark:text-white">Meta {new Date().getFullYear()}</span>
+            </div>
+            <div className="text-2xl font-bold text-slate-800 dark:text-white">
+              {currentYearBooks}/{yearlyGoal}
+            </div>
+          </div>
+          <div className="w-full bg-slate-200 dark:bg-neutral-700 rounded-full h-2">
+            <div
+              className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-neutral-400 mt-2">
+            {progressPercentage.toFixed(0)}% da meta anual concluída
+          </p>
+        </div>
+      )}
+
       {/* Content Grid - Flex Grow to take available space */}
-      <section className="flex-1 overflow-y-auto min-h-0 pr-2">
+      <section ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pr-2">
         {paginatedBooks.length > 0 ? (
            <div className={`grid gap-4 ${
                   activeStatus === 'read' 
@@ -172,6 +211,7 @@ export default function MuralView({ books, onEdit, onDelete }) {
               </button>
           </div>
       )}
+      <ScrollToTopBottom containerRef={scrollContainerRef} />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { InsightsGrid } from './analytics/InsightsGrid'
 import { useAnalyticsData } from './analytics/useAnalyticsData'
 import { getClassBaseHSL, hslToString } from './analytics/analyticsUtils'
 import html2canvas from 'html2canvas'
-import ScrollToTopBottom from './ScrollToTopBottom'
+
 
 export default function Analytics({ books }) {
   const [timelineType, setTimelineType] = useState('total')
@@ -15,6 +15,7 @@ export default function Analytics({ books }) {
   const [isExporting, setIsExporting] = useState(false)
   
   const reportRef = useRef(null)
+
 
   const stats = useAnalyticsData(books)
 
@@ -242,7 +243,7 @@ export default function Analytics({ books }) {
           </button>
       </div>
 
-      <ScrollToTopBottom />
+
     </div>
   )
 }

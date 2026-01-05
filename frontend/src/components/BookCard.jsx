@@ -8,13 +8,30 @@ const api = axios.create()
 export default function BookCard({ book, compact = false, onEdit, onDelete }) {
   const { theme } = useTheme()
   const [showMotivation, setShowMotivation] = useState(false)
+  const [shouldRender, setShouldRender] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
+  // Handle animation states
+  useEffect(() => {
+    if (showMotivation) {
+      setShouldRender(true)
+      setIsClosing(false)
+    } else if (shouldRender) {
+      setIsClosing(true)
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+        setIsClosing(false)
+      }, 500) // Match fade-out duration
+      return () => clearTimeout(timer)
+    }
+  }, [showMotivation, shouldRender])
   
-  // Auto-close popover after 8 seconds
+  // Auto-close popover after 5 seconds
   useEffect(() => {
     if (showMotivation) {
       const timer = setTimeout(() => {
         setShowMotivation(false)
-      }, 8000) // 8 seconds
+      }, 5000) // 5 seconds
       
       return () => clearTimeout(timer)
     }
@@ -112,9 +129,9 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
              </div>
           </div>
            
-           {/* Motivation Popover - Compact Card */}
-           {showMotivation && book.motivation && (
-             <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 animate-fade-in ring-1 ring-black/5">
+            {/* Motivation Popover - Compact Card */}
+            {shouldRender && book.motivation && (
+              <div className={`absolute right-0 top-full mt-2 w-64 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 ring-1 ring-black/5 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
                <div className="flex justify-between items-start mb-2">
                  <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                    <Info size={12} /> Motivação
@@ -229,8 +246,8 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
        </div>
        
        {/* Motivation Popover - Regular Card */}
-       {showMotivation && book.motivation && (
-         <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 animate-fade-in ring-1 ring-black/5">
+       {shouldRender && book.motivation && (
+         <div className={`absolute right-0 top-full mt-2 w-72 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 ring-1 ring-black/5 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
            <div className="flex justify-between items-start mb-2">
              <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                <Info size={14} /> Motivação

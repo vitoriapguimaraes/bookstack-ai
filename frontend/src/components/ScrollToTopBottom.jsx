@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 
-export default function ScrollToTopBottom() {
+export default function ScrollToTopBottom({ containerRef }) {
     const [isTop, setIsTop] = useState(true)
     const [isBottom, setIsBottom] = useState(false)
 
     useEffect(() => {
+        const container = containerRef?.current
+        if (!container) return
+
         const handleScroll = () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-            const scrollHeight = document.documentElement.scrollHeight
-            const clientHeight = document.documentElement.clientHeight
+            const scrollTop = container.scrollTop
+            const scrollHeight = container.scrollHeight
+            const clientHeight = container.clientHeight
 
             // Check if at top
             setIsTop(scrollTop <= 20)
@@ -18,19 +21,22 @@ export default function ScrollToTopBottom() {
             setIsBottom(scrollTop + clientHeight >= scrollHeight - 20)
         }
 
-        window.addEventListener('scroll', handleScroll)
+        container.addEventListener('scroll', handleScroll)
         // Initial check
         handleScroll()
         
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+        return () => container.removeEventListener('scroll', handleScroll)
+    }, [containerRef])
 
     const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        containerRef?.current?.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     const scrollToBottom = () => {
-        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+        const container = containerRef?.current
+        if (container) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+        }
     }
 
     return (

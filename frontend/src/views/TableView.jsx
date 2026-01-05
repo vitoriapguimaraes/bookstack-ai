@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Download, Upload, Info, Loader2 } from 'lucide-react'
 import BooksTable from '../components/BooksTable'
 import axios from 'axios'
@@ -9,6 +9,7 @@ const api = axios.create()
 export default function TableView({ books, onUpdate, onDelete, onEdit, tableState, setTableState }) {
   const [exporting, setExporting] = useState(false)
   const [showCsvInfo, setShowCsvInfo] = useState(false)
+  const scrollContainerRef = useRef(null)
   
   const handleExport = async () => {
     try {
@@ -58,7 +59,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
   }
   
   return (
-    <div className="pb-20 animate-fade-in">
+    <div ref={scrollContainerRef} className="animate-fade-in h-[calc(100vh-4rem)] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Gerenciar Biblioteca</h2>
@@ -141,7 +142,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
         </div>
       )}
       
-      <ScrollToTopBottom />
+      <ScrollToTopBottom containerRef={scrollContainerRef} />
     </div>
   )
 }

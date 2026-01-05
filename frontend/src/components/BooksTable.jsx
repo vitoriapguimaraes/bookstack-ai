@@ -364,7 +364,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
           </div>
 
           {/* Status, Priority, Availability, Year - Single Row */}
-          <div className="grid gap-2 grid-cols-1 md:grid-cols-4 lg:grid-cols-[0.7fr_1.5fr_1.5fr_1fr]">
+          <div className="grid gap-2 grid-cols-1 md:grid-cols-4 lg:grid-cols-[0.65fr_1.5fr_1.5fr_1fr]">
             {/* Status */}
             <div>
               <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Status</label>
