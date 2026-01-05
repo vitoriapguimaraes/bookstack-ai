@@ -8,9 +8,9 @@ export default function Sidebar({ onAddBook }) {
   const { theme, toggleTheme } = useTheme()
   
   const menuItems = [
-    { id: 'lendo', label: 'Lendo', icon: BookOpen, path: '/mural/lendo', color: 'bg-pastel-purple' },
-    { id: 'fila', label: 'Fila', icon: Library, path: '/mural/a-ler', color: 'bg-pastel-orange' },
-    { id: 'lidos', label: 'Lidos', icon: CheckCircle2, path: '/mural/lido', color: 'bg-pastel-green' },
+    { id: 'reading', label: 'Lendo', icon: BookOpen, path: '/mural/reading', color: 'bg-pastel-purple' },
+    { id: 'to-read', label: 'Fila', icon: Library, path: '/mural/to-read', color: 'bg-pastel-orange' },
+    { id: 'read', label: 'Lidos', icon: CheckCircle2, path: '/mural/read', color: 'bg-pastel-green' },
     { id: 'table', label: 'Tabela', icon: Layers, path: '/table', color: 'bg-pastel-purple' },
     { id: 'analytics', label: 'Análises', icon: BarChart2, path: '/analytics', color: 'bg-pastel-purple' },
   ]

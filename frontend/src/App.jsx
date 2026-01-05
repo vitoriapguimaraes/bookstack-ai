@@ -150,8 +150,8 @@ function App() {
             
             {!loading && (
               <Routes>
-                {/* Default redirect to mural/lendo */}
-                <Route path="/" element={<Navigate to="/mural/lendo" replace />} />
+                {/* Default redirect to mural/reading */}
+                <Route path="/" element={<Navigate to="/mural/reading" replace />} />
                 
                 {/* Mural routes with nested status routes */}
                 <Route path="/mural/:status" element={
@@ -161,7 +161,7 @@ function App() {
                     onDelete={handleDelete}
                   />
                 } />
-                <Route path="/mural" element={<Navigate to="/mural/lendo" replace />} />
+                <Route path="/mural" element={<Navigate to="/mural/reading" replace />} />
                 
                 {/* Table route */}
                 <Route path="/table" element={

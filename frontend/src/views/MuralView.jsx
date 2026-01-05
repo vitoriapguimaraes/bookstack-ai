@@ -10,8 +10,8 @@ export default function MuralView({ books, onEdit, onDelete }) {
   const navigate = useNavigate()
   const { status } = useParams()
   
-  // Default to 'lendo' if no status in URL
-  const activeStatus = status || 'lendo'
+  // Default to 'reading' if no status in URL
+  const activeStatus = status || 'reading'
   
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -23,9 +23,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
   // Filter books by status
   const getFilteredBooks = () => {
       switch(activeStatus) {
-          case 'lendo': return books.filter(b => b.status === 'Lendo')
-          case 'a-ler': return books.filter(b => b.status === 'A Ler')
-          case 'lido': return books.filter(b => b.status === 'Lido')
+          case 'reading': return books.filter(b => b.status === 'Lendo')
+          case 'to-read': return books.filter(b => b.status === 'A Ler')
+          case 'read': return books.filter(b => b.status === 'Lido')
           default: return []
       }
   }
@@ -33,7 +33,7 @@ export default function MuralView({ books, onEdit, onDelete }) {
   const filteredBooks = getFilteredBooks().sort((a,b) => (a.order||999) - (b.order||999))
   
   // Dynamic Items Per Page
-  const itemsPerPage = activeStatus === 'lido' ? ITEMS_PER_PAGE_COMPLETED : ITEMS_PER_PAGE_ACTIVE
+  const itemsPerPage = activeStatus === 'read' ? ITEMS_PER_PAGE_COMPLETED : ITEMS_PER_PAGE_ACTIVE
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage)
@@ -48,9 +48,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
   
   const getStatusLabel = (s) => {
       switch(s) {
-          case 'lendo': return 'Lendo Agora'
-          case 'a-ler': return 'Próximos da Fila'
-          case 'lido': return 'Já Lidos'
+          case 'reading': return 'Lendo Agora'
+          case 'to-read': return 'Próximos da Fila'
+          case 'read': return 'Já Lidos'
           default: return ''
       }
   }
@@ -64,8 +64,8 @@ export default function MuralView({ books, onEdit, onDelete }) {
              Mural de Livros
              <span className="text-2xl font-normal text-slate-300 dark:text-neutral-600">|</span>
              <span className={`text-3xl ${
-                 activeStatus === 'lendo' ? 'text-purple-600 dark:text-purple-400' :
-                 activeStatus === 'a-ler' ? 'text-amber-600 dark:text-amber-500' :
+                 activeStatus === 'reading' ? 'text-purple-600 dark:text-purple-400' :
+                 activeStatus === 'to-read' ? 'text-amber-600 dark:text-amber-500' :
                  'text-emerald-600 dark:text-emerald-500'
              }`}>
                  {getStatusLabel(activeStatus)}
@@ -77,9 +77,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
         {/* Right-aligned Status Options */}
         <div className="flex gap-2 bg-slate-100 dark:bg-neutral-900 p-1 rounded-lg border border-slate-200 dark:border-neutral-800">
           <button
-            onClick={() => handleStatusChange('lendo')}
+            onClick={() => handleStatusChange('reading')}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeStatus === 'lendo'
+              activeStatus === 'reading'
                 ? 'bg-white dark:bg-neutral-800 text-purple-600 dark:text-purple-400 shadow-sm border border-slate-200 dark:border-neutral-700'
                 : 'text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -87,9 +87,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
             <BookOpen size={14} /> Lendo
           </button>
           <button
-            onClick={() => handleStatusChange('a-ler')}
+            onClick={() => handleStatusChange('to-read')}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeStatus === 'a-ler'
+              activeStatus === 'to-read'
                 ? 'bg-white dark:bg-neutral-800 text-amber-600 dark:text-amber-500 shadow-sm border border-slate-200 dark:border-neutral-700'
                 : 'text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -97,9 +97,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
             <Library size={14} /> Fila
           </button>
           <button
-            onClick={() => handleStatusChange('lido')}
+            onClick={() => handleStatusChange('read')}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeStatus === 'lido'
+              activeStatus === 'read'
                 ? 'bg-white dark:bg-neutral-800 text-emerald-600 dark:text-emerald-500 shadow-sm border border-slate-200 dark:border-neutral-700'
                 : 'text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -113,12 +113,12 @@ export default function MuralView({ books, onEdit, onDelete }) {
       <section className="flex-1 overflow-y-auto min-h-0 pr-2">
         {paginatedBooks.length > 0 ? (
            <div className={`grid gap-4 ${
-                  activeStatus === 'lido' 
+                  activeStatus === 'read' 
                   ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
                   : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
               }`}>
                 {paginatedBooks.map(book => (
-                    <BookCard key={book.id} book={book} compact={activeStatus === 'lido'} onEdit={onEdit} onDelete={onDelete} />
+                    <BookCard key={book.id} book={book} compact={activeStatus === 'read'} onEdit={onEdit} onDelete={onDelete} />
                 ))}
             </div>
         ) : (
