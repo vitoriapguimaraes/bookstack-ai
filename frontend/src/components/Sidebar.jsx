@@ -23,20 +23,33 @@ export default function Sidebar({ onAddBook }) {
       <nav className="flex-1 flex flex-col gap-2 w-full px-3">
         {menuItems.map((item) => {
           const Icon = item.icon
+          const isHome = item.id === 'home'
           return (
             <NavLink
               key={item.id}
               to={item.path}
               className={({ isActive }) =>
-                `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
-                  isActive
-                    ? `${item.color} text-slate-900 shadow-md`
-                    : 'text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
-                }`
+                isHome
+                  ? `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
+                      isActive
+                        ? 'bg-white dark:bg-neutral-800 shadow-lg'
+                        : 'bg-slate-50 dark:bg-neutral-900 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
+                    }`
+                  : `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
+                      isActive
+                        ? `${item.color} text-slate-900 shadow-md`
+                        : 'text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
+                    }`
               }
               title={item.label}
             >
-              <Icon size={20} />
+              {isHome ? (
+                <div className="w-full h-full p-2 flex items-center justify-center">
+                  <img src="/logo_bookstack-ai.png" alt="Home" className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <Icon size={20} />
+              )}
               {/* Tooltip */}
               <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
                 {item.label}
