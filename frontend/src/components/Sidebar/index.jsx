@@ -1,8 +1,8 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home } from 'lucide-react'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home, X } from 'lucide-react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 
-export default function Sidebar({ onAddBook }) {
+export default function Sidebar({ onAddBook, isOpen, onClose }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
@@ -16,86 +16,130 @@ export default function Sidebar({ onAddBook }) {
     { id: 'analytics', label: 'Análises', icon: BarChart2, path: '/analytics', color: 'bg-pastel-purple' },
   ]
 
+  const handleLinkClick = () => {
+      // Close sidebar on mobile when a link is clicked
+      if (window.innerWidth < 768 && onClose) {
+          onClose()
+      }
+  }
+
   return (
-    <aside className="w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-10 transition-colors duration-300">
+    <>
+        {/* Mobile Overlay */}
+        {isOpen && (
+            <div 
+                className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
+                onClick={onClose}
+            ></div>
+        )}
 
-      {/* Main Navigation */}
-      <nav className="flex-1 flex flex-col gap-2 w-full px-3">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          const isHome = item.id === 'home'
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              className={({ isActive }) =>
-                isHome
-                  ? `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
-                      isActive
-                        ? 'bg-white dark:bg-neutral-800 shadow-lg'
-                        : 'bg-slate-50 dark:bg-neutral-900 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
-                    }`
-                  : `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
-                      isActive
-                        ? `${item.color} text-slate-900 shadow-md`
-                        : 'text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
-                    }`
-              }
-              title={item.label}
+        <aside className={`w-64 md:w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-50 transition-all duration-300 shadow-2xl md:shadow-none
+            ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+          
+          {/* Mobile Close Button */}
+          <div className="md:hidden w-full flex justify-end px-4 mb-4">
+              <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200">
+                  <X size={24} />
+              </button>
+          </div>
+
+          {/* Main Navigation */}
+          <nav className="flex-1 flex flex-col gap-2 w-full px-3 overflow-y-auto md:overflow-visible">
+            {menuItems.map((item) => {
+              const Icon = item.icon
+              const isHome = item.id === 'home'
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  onClick={handleLinkClick}
+                  className={({ isActive }) =>
+                    isHome
+                      ? `w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 rounded-lg transition-all group relative ${
+                          isActive
+                            ? 'bg-slate-100 dark:bg-neutral-800 shadow-sm md:shadow-lg'
+                            : 'hover:bg-slate-50 dark:hover:bg-neutral-800'
+                        }`
+                      : `w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 rounded-lg transition-all group relative ${
+                          isActive
+                            ? `${item.color} text-slate-900 shadow-sm md:shadow-md`
+                            : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
+                        }`
+                  }
+                  title={item.label}
+                >
+                  {isHome ? (
+                    <>
+                         <div className="w-8 h-8 md:w-full md:h-full md:p-2 flex items-center justify-center shrink-0">
+                             <img src="/logo_bookstack-ai.png" alt="Home" className="w-full h-full object-contain" />
+                         </div>
+                         <span className="md:hidden font-bold text-slate-700 dark:text-neutral-200">Início</span>
+                    </>
+                  ) : (
+                    <>
+                        <Icon size={24} className="md:w-[20px] md:h-[20px] shrink-0" />
+                        <span className="md:hidden font-medium">{item.label}</span>
+                    </>
+                  )}
+                  
+                  {/* Tooltip (Desktop Only) */}
+                  <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                    {item.label}
+                  </span>
+                </NavLink>
+              )
+            })}
+          </nav>
+    
+           {/* Theme Toggle & Add */}
+           <div className="w-full px-3 flex flex-col gap-4 mb-6 mt-auto">
+             {/* Theme Toggle */}
+             <button 
+                onClick={toggleTheme}
+                className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
+             >
+                {theme === 'dark' ? <Sun size={24} className="md:w-[20px] md:h-[20px]" /> : <Moon size={24} className="md:w-[20px] md:h-[20px]"/>}
+                <span className="md:hidden font-medium">Alternar Tema</span>
+             </button>
+    
+             {/* Add Button */}
+             <button 
+                onClick={() => {
+                    onAddBook()
+                    if(window.innerWidth < 768 && onClose) onClose()
+                }}
+                className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 bg-pastel-purple hover:bg-purple-400 text-slate-900 hover:text-white rounded-lg transition-all shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/40 group relative"
+             >
+                <PlusCircle size={24} className="md:w-[20px] md:h-[20px]" />
+                <span className="md:hidden font-bold">Novo Livro</span>
+                <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                  Novo Livro
+                </span>
+             </button>
+          </div>
+    
+          {/* User Avatar - Settings Link */}
+          <div className="w-full px-3">
+            <div 
+                onClick={() => {
+                    navigate('/settings')
+                    if(window.innerWidth < 768 && onClose) onClose()
+                }}
+                className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-2 rounded-full md:rounded-full bg-slate-200 dark:bg-neutral-800 text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:bg-slate-300 dark:hover:bg-neutral-700 transition-all border border-slate-300 dark:border-neutral-700 relative group" 
             >
-              {isHome ? (
-                <div className="w-full h-full p-2 flex items-center justify-center">
-                  <img src="/logo_bookstack-ai.png" alt="Home" className="w-full h-full object-contain" />
-                </div>
-              ) : (
-                <Icon size={20} />
-              )}
-              {/* Tooltip */}
-              <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-                {item.label}
+              <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-neutral-700 flex items-center justify-center shrink-0">
+                  VF
+              </div>
+              <span className="md:hidden font-medium">Configurações</span>
+              
+              <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                    Configurações
               </span>
-            </NavLink>
-          )
-        })}
-      </nav>
-
-       {/* Theme Toggle & Add */}
-       <div className="w-full px-3 flex flex-col gap-4 mb-6">
-         {/* Theme Toggle */}
-         <button 
-            onClick={toggleTheme}
-            className="w-full aspect-square flex items-center justify-center bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
-            title={theme === 'dark' ? 'Mudar para Claro' : 'Mudar para Escuro'}
-         >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-         </button>
-
-         {/* Add Button */}
-         <button 
-            onClick={onAddBook}
-            className="w-full aspect-square flex items-center justify-center bg-pastel-purple hover:bg-purple-400 text-slate-900 hover:text-white rounded-lg transition-all shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/40 hover:scale-105 group relative"
-            title="Novo Livro"
-         >
-            <PlusCircle size={20} />
-            <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-              Novo Livro
-            </span>
-         </button>
-      </div>
-
-      {/* User Avatar - Settings Link */}
-      <div className="w-full px-3">
-        <div 
-            onClick={() => navigate('/settings')}
-            className="w-full aspect-square rounded-full bg-slate-200 dark:bg-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:scale-105 hover:bg-slate-300 dark:hover:bg-neutral-700 transition-all border border-slate-300 dark:border-neutral-700 relative group" 
-            title="Configurações"
-        >
-          VF
-          <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-                Configurações
-          </span>
-        </div>
-      </div>
-    </aside>
+            </div>
+          </div>
+        </aside>
+    </>
   )
 }
+

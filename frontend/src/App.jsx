@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import MobileHeader from './components/Layout/MobileHeader'
 import Mural from './pages/Mural'
 import BooksList from './pages/BooksList'
 import Analytics from './pages/Analytics'
@@ -15,6 +16,7 @@ import PreferencesSettings from './pages/Settings/PreferencesSettings'
 import ScrollToTopBottom from './components/ScrollToTopBottom'
 
 import axios from 'axios'
+import { ThemeProvider } from './context/ThemeContext'
 
 // Configura o Axios (sem baseURL fixa para usar o proxy do Vite)
 const api = axios.create()
@@ -54,6 +56,10 @@ function App() {
       localStorage.setItem('muralState', JSON.stringify(muralState))
   }, [muralState])
   
+  // --- Mobile Menu State ---
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // --- Theme Context ---
   // States for Sidebar Filters
   useEffect(() => {
     fetchBooks()
@@ -89,21 +95,32 @@ function App() {
     navigate(-1) // Go back to previous route
   }
 
+  const handleOpenForm = () => {
+    setEditingBook(null)
+    navigate('/create')
+  }
 
 
   return (
-    <div className="min-h-screen font-sans flex transition-colors duration-300">
-      {/* Sidebar Navigation */}
-      <Sidebar 
-        onAddBook={() => { 
-          setEditingBook(null)
-          navigate('/create')
-        }}
-      />
-      
-      {/* Main Content Area */}
-      <main className="flex-1 ml-20 p-8 transition-all duration-300">
-        <div className="w-full">
+    <ThemeProvider>
+      <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
+        
+        {/* Mobile Header (Visible < md) */}
+        <MobileHeader 
+            onMenuClick={() => setIsMobileMenuOpen(true)} 
+            onAddBook={() => handleOpenForm()} // Opens form mode=new
+        />
+
+        {/* Sidebar (Desktop Fixed / Mobile Drawer) */}
+        <Sidebar 
+            onAddBook={() => handleOpenForm()} 
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* Main Content Area */}
+        <main className={`flex-1 transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0`}>
+          <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
                     <p>⚠️ {error}</p>
@@ -187,6 +204,7 @@ function App() {
       <ScrollToTopBottom />
 
     </div>
+    </ThemeProvider>
   )
 }
 

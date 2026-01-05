@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { ArrowUpDown, Pencil, Trash2, Search, X, Check, Edit3, Trash } from 'lucide-react'
 import axios from 'axios'
 import BulkEditModal from '../BulkEditModal'
+import MobileBookItem from './MobileBookItem'
 
 const api = axios.create()
 
@@ -484,8 +485,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-200 dark:border-neutral-800 w-full">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-200 dark:border-neutral-800 w-full">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed divide-y divide-slate-200 dark:divide-neutral-800">
             <thead className="bg-slate-50 dark:bg-neutral-950">
@@ -575,7 +576,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                   <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500 dark:text-neutral-400">
                      {book.date_read || '-'}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-right text-xs font-medium">
+                  <td className="px-3 py-2 whitespace-nowrap text-right text-right text-xs font-medium">
                     <div className="flex justify-end gap-1.5">
                       <button 
                           onClick={() => onEdit(book)}
@@ -596,6 +597,20 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3 pb-20">
+         {sortedBooks.map(book => (
+            <MobileBookItem 
+                key={book.id} 
+                book={book} 
+                onEdit={onEdit} 
+                onDelete={handleDelete}
+                isSelected={selectedBooks.includes(book.id)}
+                onSelect={toggleSelectBook}
+            />
+         ))}
       </div>
 
       {/* Floating Bulk Action Bar */}
