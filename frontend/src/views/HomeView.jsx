@@ -8,8 +8,14 @@ import ShowcaseExporter from '../components/showcase/ShowcaseExporter'
 export default function HomeView({ books }) {
   const navigate = useNavigate()
   const [yearlyGoal, setYearlyGoal] = useState(20)
-  const [selectedYears, setSelectedYears] = useState([])
-  const [filterClass, setFilterClass] = useState('all')
+  const [selectedYears, setSelectedYears] = useState(() => {
+    const saved = localStorage.getItem('bookstack_bookshelf_filters')
+    return saved ? JSON.parse(saved).selectedYears : []
+  })
+  const [filterClass, setFilterClass] = useState(() => {
+    const saved = localStorage.getItem('bookstack_bookshelf_filters')
+    return saved ? JSON.parse(saved).filterClass : 'all'
+  })
   const [showExporter, setShowExporter] = useState(false)
 
   useEffect(() => {
@@ -26,12 +32,21 @@ export default function HomeView({ books }) {
     return uniqueYears
   }, [books])
 
-  // Initialize with most recent year
+  // Initialize with most recent year ONLY if no saved filters
   useEffect(() => {
-    if (availableYears.length > 0 && selectedYears.length === 0) {
+    const hasSavedFilters = localStorage.getItem('bookstack_bookshelf_filters')
+    if (!hasSavedFilters && availableYears.length > 0 && selectedYears.length === 0) {
       setSelectedYears([availableYears[0]])
     }
   }, [availableYears])
+
+  // Persist filters
+  useEffect(() => {
+    localStorage.setItem('bookstack_bookshelf_filters', JSON.stringify({
+       selectedYears,
+       filterClass
+    }))
+  }, [selectedYears, filterClass])
 
   // Get available classes
   const availableClasses = useMemo(() => {
