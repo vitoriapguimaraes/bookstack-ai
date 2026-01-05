@@ -49,8 +49,13 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
   }, [books])
 
   const uniqueCategories = useMemo(() => {
-    return [...new Set(books.map(b => b.category).filter(Boolean))].sort()
-  }, [books])
+    // Dynamic: If classes are selected, only show categories from those classes
+    let source = books
+    if (selectedClasses.length > 0) {
+        source = books.filter(b => selectedClasses.includes(b.book_class))
+    }
+    return [...new Set(source.map(b => b.category).filter(Boolean))].sort()
+  }, [books, selectedClasses])
 
   const uniqueStatuses = useMemo(() => {
     return [...new Set(books.map(b => b.status).filter(Boolean))].sort()
@@ -491,10 +496,20 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     onClick={() => key !== 'select' && requestSort(key)}
                     className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider ${key !== 'select' ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-neutral-800' : ''} transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
                   >
-                    <div className="flex items-center gap-1">
-                      {label}
-                      <ArrowUpDown size={10} />
-                    </div>
+                    {key === 'select' ? (
+                        <input 
+                            type="checkbox"
+                            className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                            checked={sortedBooks.length > 0 && selectedBooks.length === sortedBooks.length}
+                            onChange={toggleSelectAll}
+                            title="Selecionar todos os filtrados"
+                        />
+                    ) : (
+                        <div className="flex items-center gap-1">
+                          {label}
+                          <ArrowUpDown size={10} />
+                        </div>
+                    )}
                   </th>
                 ))}
                 <th className="w-[4%] px-3 py-2.5 text-right text-[10px] font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider whitespace-nowrap overflow-hidden">Ações</th>
@@ -506,7 +521,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                   <td className="px-3 py-2 whitespace-nowrap">
                       <input 
                         type="checkbox" 
-                        className="rounded border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-purple-600 checked:bg-purple-600 focus:ring-purple-500 focus:ring-offset-white dark:focus:ring-offset-neutral-900 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         checked={selectedBooks.includes(book.id)}
                         onChange={() => toggleSelectBook(book.id)}
                     />
