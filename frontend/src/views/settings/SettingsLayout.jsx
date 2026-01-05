@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { Brain, Calculator, List, Settings, Info } from 'lucide-react'
+import { Brain, Calculator, List, Settings, Info, User } from 'lucide-react'
 
 export default function SettingsLayout() {
   return (
@@ -19,6 +19,7 @@ export default function SettingsLayout() {
         <TabLink to="ai" label="IA & Prompts" icon={Brain} />
         <TabLink to="formula" label="Fórmula de Score" icon={Calculator} />
         <TabLink to="lists" label="Listas de Referência" icon={List} />
+        <TabLink to="preferences" label="Preferências" icon={User} />
       </nav>
 
       {/* Child Content */}

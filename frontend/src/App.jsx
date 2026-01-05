@@ -6,11 +6,13 @@ import MuralView from './views/MuralView'
 import TableView from './views/TableView'
 import AnalyticsView from './views/AnalyticsView'
 import FormView from './views/FormView'
+import HomeView from './views/HomeView'
 import SettingsLayout from './views/settings/SettingsLayout'
 import OverviewSettings from './views/settings/OverviewSettings'
 import AISettings from './views/settings/AISettings'
 import FormulaSettings from './views/settings/FormulaSettings'
 import ListSettings from './views/settings/ListSettings'
+import PreferencesSettings from './views/settings/PreferencesSettings'
 
 import axios from 'axios'
 
@@ -150,8 +152,8 @@ function App() {
             
             {!loading && (
               <Routes>
-                {/* Default redirect to mural/reading */}
-                <Route path="/" element={<Navigate to="/mural/reading" replace />} />
+                {/* Home Dashboard */}
+                <Route path="/" element={<HomeView books={books} />} />
                 
                 {/* Mural routes with nested status routes */}
                 <Route path="/mural/:status" element={
@@ -187,6 +189,7 @@ function App() {
                     <Route path="ai" element={<AISettings />} />
                     <Route path="formula" element={<FormulaSettings />} />
                     <Route path="lists" element={<ListSettings />} />
+                    <Route path="preferences" element={<PreferencesSettings />} />
                 </Route>
 
                 {/* Book Form routes */}

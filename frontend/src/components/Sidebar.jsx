@@ -1,4 +1,4 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2 } from 'lucide-react'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home } from 'lucide-react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 
@@ -8,6 +8,7 @@ export default function Sidebar({ onAddBook }) {
   const { theme, toggleTheme } = useTheme()
   
   const menuItems = [
+    { id: 'home', label: 'Início', icon: Home, path: '/', color: 'bg-pastel-blue' },
     { id: 'reading', label: 'Lendo', icon: BookOpen, path: '/mural/reading', color: 'bg-pastel-purple' },
     { id: 'to-read', label: 'Fila', icon: Library, path: '/mural/to-read', color: 'bg-pastel-orange' },
     { id: 'read', label: 'Lidos', icon: CheckCircle2, path: '/mural/read', color: 'bg-pastel-green' },
@@ -17,12 +18,6 @@ export default function Sidebar({ onAddBook }) {
 
   return (
     <aside className="w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-10 transition-colors duration-300">
-      {/* Brand Icon */}
-      <div className="mb-8">
-        <div className="w-14 h-14 bg-pastel-purple rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
-          <BookOpen className="text-slate-900 w-7 h-7" />
-        </div>
-      </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 flex flex-col gap-2 w-full px-3">
