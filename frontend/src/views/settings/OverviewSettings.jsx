@@ -13,24 +13,6 @@ export default function OverviewSettings() {
   return (
     <div className="w-full animate-fade-in">
 
-      {/* Info box */}
-      <div className="w-full mb-6">
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 bg-neutral-50 dark:bg-neutral-900">
-          <div className="flex gap-4">
-            <Info className="w-5 h-5 text-neutral-500 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-1">
-                Transparência do sistema
-              </h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-2">
-                Esta seção existe para que você possa auditar exatamente
-                como decisões automatizadas são tomadas.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Feature cards */}
       <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
         <FeatureCard
@@ -67,6 +49,18 @@ export default function OverviewSettings() {
             "Categorias",
             "Classes",
             "Pesos"
+          ]}
+        />
+
+        <FeatureCard
+          icon={Target}
+          title="Preferências do Usuário"
+          description="Configure suas metas e personalizações."
+          onClick={() => navigate("/settings/preferences")}
+          features={[
+            "Meta de Leitura",
+            "Personalização",
+            "Conta"
           ]}
         />
       </div>
