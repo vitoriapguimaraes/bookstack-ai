@@ -1,133 +1,109 @@
-import { useState, useEffect } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { Book, Star, BookOpen, Library } from 'lucide-react'
-import axios from 'axios'
+import { useState } from 'react'
+import { Book, Star, BookOpen, Library, Activity } from 'lucide-react'
+import { KpiCard } from './analytics/KpiCard'
+import { DistributionChart } from './analytics/DistributionChart'
+import { TimelineChart } from './analytics/TimelineChart'
+import { InsightsGrid } from './analytics/InsightsGrid'
+import { useAnalyticsData } from './analytics/useAnalyticsData'
+import { getClassBaseHSL, hslToString } from './analytics/analyticsUtils'
 
-const api = axios.create()
+export default function Analytics({ books }) {
+  const [timelineType, setTimelineType] = useState('total')
+  const [timelinePeriod, setTimelinePeriod] = useState('yearly') // 'monthly' | 'yearly'
 
-export default function Analytics() {
-  const [stats, setStats] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const stats = useAnalyticsData(books)
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await api.get('/api/dashboard/stats')
-        setStats(res.data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchStats()
-  }, [])
-
-  if (loading) return <div className="p-10 text-center animate-pulse">Carregando dados...</div>
-  if (!stats) return <div className="p-10 text-center text-red-500">Erro ao carregar análises.</div>
-
-  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1']
+  if (!books) return <div className="p-10 text-center animate-pulse text-neutral-500">Carregando dados...</div>
+  if (!stats) return <div className="p-10 text-center text-neutral-500">Nenhum livro encontrado para análise.</div>
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20">
-      <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Painel de Leitura</h1>
-      
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
-             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-600 dark:text-blue-300">
-                 <Library size={24} />
-             </div>
-             <div>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">Total na Biblioteca</p>
-                 <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.total}</p>
-             </div>
-         </div>
-
-         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
-             <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg text-green-600 dark:text-green-300">
-                 <BookOpen size={24} />
-             </div>
-             <div>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">Livros Lidos</p>
-                 <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.by_status['Lido'] || 0}</p>
-             </div>
-         </div>
-
-         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
-             <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg text-orange-600 dark:text-orange-300">
-                 <Book size={24} />
-             </div>
-             <div>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">Fila de Leitura</p>
-                 <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.by_status['A Ler'] || 0}</p>
-             </div>
-         </div>
-
-         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
-             <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg text-yellow-600 dark:text-yellow-300">
-                 <Star size={24} />
-             </div>
-             <div>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">Nota Média</p>
-                 <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.rating_avg}</p>
-             </div>
+    <div className="space-y-6 pb-32 animate-fade-in">
+      <div className="flex items-center justify-between mb-8">
+         <div>
+           <h1 className="text-3xl font-bold text-white">Análise da Biblioteca</h1>
+           <p className="text-slate-400 text-sm mt-1">Visualize indicadores e tendências do seu histórico de leitura.</p>
          </div>
       </div>
+      
+      {/* KPI Cards - Grid of 5 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+         <KpiCard title="Total" value={stats.kpi.total} icon={Library} color="text-blue-500" />
+         <KpiCard title="Lidos" value={stats.kpi.lidos} icon={BookOpen} color="text-emerald-500" />
+         <KpiCard title="Na Fila" value={stats.kpi.aLer} icon={Book} color="text-amber-500" />
+         <KpiCard title="Nota Média" value={stats.kpi.avgRating.toFixed(1)} icon={Star} color="text-rose-500" />
+         <KpiCard title="Índice Médio" value={stats.kpi.avgScore.toFixed(0)} icon={Activity} color="text-violet-500" />
+      </div>
+      
+      {/* Historical Insights Section */}
+      <InsightsGrid insights={stats.insights} />
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Categories Chart */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 h-96">
-              <h3 className="text-lg font-semibold mb-6 text-slate-700 dark:text-slate-200">Livros por Categoria (Top 6)</h3>
-              <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.by_category} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" width={150} tick={{fontSize: 12, fill: '#888'}} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        cursor={{fill: 'transparent'}}
-                      />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                        {stats.by_category.map((entry, index) => (
-                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Bar>
-                  </BarChart>
-              </ResponsiveContainer>
+      {/* Timeline Section */}
+      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl h-[500px] flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 flex-shrink-0">
+             <div className="flex items-center gap-4">
+                <h3 className="text-lg font-light text-neutral-200">Histórico de Leitura</h3>
+                <div className="flex bg-neutral-800 rounded p-0.5">
+                    {['yearly', 'monthly'].map(p => (
+                       <button
+                         key={p}
+                         onClick={() => setTimelinePeriod(p)}
+                         className={`px-3 py-1 text-[10px] uppercase tracking-wider transition-all rounded ${
+                            timelinePeriod === p
+                            ? 'bg-neutral-600 text-white font-medium shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                         }`}
+                       >
+                         {p === 'monthly' ? 'Ano/Mês' : 'Ano'}
+                       </button>
+                    ))}
+                </div>
+             </div>
+             <div className="flex bg-neutral-800 rounded p-1 gap-1">
+                {['total', 'type', 'class', 'category'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTimelineType(t)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
+                      timelineType === t
+                        ? 'bg-neutral-700 text-white shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'
+                    }`}
+                  >
+                    {t === 'total' ? 'Total' : t === 'type' ? 'Tipo' : t === 'class' ? 'Classe' : 'Categoria'}
+                  </button>
+                ))}
+             </div>
           </div>
           
-          {/* Motivation/Progress Card (Placeholder for now, or maybe Reading Now list?) */}
-           <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-8 rounded-xl shadow-lg text-white flex flex-col justify-between">
-              <div>
-                  <h3 className="text-xl font-bold mb-2">Continue Lendo! 🚀</h3>
-                  <p className="opacity-90">
-                      Você já leu <strong>{((stats.by_status['Lido']||0) / stats.total * 100).toFixed(0)}%</strong> da sua biblioteca.
-                  </p>
-                  <div className="w-full bg-white/20 rounded-full h-3 mt-4">
-                      <div 
-                        className="bg-white h-3 rounded-full transition-all duration-1000" 
-                        style={{ width: `${((stats.by_status['Lido']||0) / stats.total * 100)}%` }}
-                      ></div>
-                  </div>
-              </div>
-              
-              <div className="mt-8">
-                  <p className="text-sm opacity-75 uppercase tracking-wider font-semibold">Status Atual</p>
-                  <div className="flex gap-4 mt-2">
-                      <div className="text-center">
-                          <span className="block text-3xl font-bold">{stats.by_status['Lendo'] || 0}</span>
-                          <span className="text-xs opacity-75">Em andamento</span>
-                      </div>
-                      <div className="w-px bg-white/30"></div>
-                      <div className="text-center">
-                          <span className="block text-3xl font-bold">{stats.by_status['A Ler'] || 0}</span>
-                          <span className="text-xs opacity-75">Na fila</span>
-                      </div>
-                  </div>
-              </div>
+          <div className="flex-1 min-h-0 w-full">
+             <TimelineChart stats={stats} timelineType={timelineType} timelinePeriod={timelinePeriod} />
           </div>
       </div>
+
+      {/* Distributions (Charts) */}
+      <DistributionChart 
+          title="Por Tipo" 
+          dataLidos={stats.dist.lidos.type} 
+          dataNaoLidos={stats.dist.naoLidos.type} 
+          chartType="bar"
+          getColor={(entry) => entry.name === 'Técnico' ? '#06b6d4' : '#f43f5e'}
+      />
+
+      <DistributionChart 
+          title="Por Classe" 
+          dataLidos={stats.dist.lidos.class} 
+          dataNaoLidos={stats.dist.naoLidos.class} 
+          chartType="bar"
+          getColor={(entry) => hslToString(getClassBaseHSL(entry.name))}
+      />
+
+      <DistributionChart 
+          title="Por Categoria (Top 10)" 
+          dataLidos={stats.dist.lidos.category.slice(0, 10)} 
+          dataNaoLidos={stats.dist.naoLidos.category.slice(0, 10)} 
+          chartType="bar"
+          getColor={(entry) => stats.meta.categoryColors[entry.name]}
+      />
     </div>
   )
 }

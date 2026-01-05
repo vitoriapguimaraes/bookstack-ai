@@ -21,6 +21,13 @@ export default function MuralView({ books, onEdit, onDelete }) {
   
   return (
     <div className="pb-20 animate-fade-in">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-white">Mural de Livros</h2>
+          <p className="text-slate-400 text-sm mt-1">Acompanhe visualmente o progresso das suas leituras.</p>
+        </div>
+      </div>
+
       {/* Status Tabs */}
       <div className="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800 mb-8 -mx-8 px-8 py-4">
         <div className="flex gap-2">
