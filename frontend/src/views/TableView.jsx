@@ -58,7 +58,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
   
   return (
     <div className="pb-20 animate-fade-in">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Gerenciar Biblioteca</h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Visualize e gerencie todos os seus livros em formato de lista.</p>

@@ -18,7 +18,7 @@ export default function Analytics({ books }) {
 
   return (
     <div className="space-y-6 pb-32 animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
          <div>
            <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Análise da Biblioteca</h1>
            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Visualize indicadores e tendências do seu histórico de leitura.</p>

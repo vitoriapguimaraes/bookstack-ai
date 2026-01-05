@@ -6,6 +6,12 @@ import MuralView from './views/MuralView'
 import TableView from './views/TableView'
 import AnalyticsView from './views/AnalyticsView'
 import FormView from './views/FormView'
+import SettingsLayout from './views/settings/SettingsLayout'
+import OverviewSettings from './views/settings/OverviewSettings'
+import AISettings from './views/settings/AISettings'
+import FormulaSettings from './views/settings/FormulaSettings'
+import ListSettings from './views/settings/ListSettings'
+
 import axios from 'axios'
 
 // Configura o Axios (sem baseURL fixa para usar o proxy do Vite)
@@ -174,6 +180,15 @@ function App() {
                   <AnalyticsView books={books} />
                 } />
                 
+                {/* Settings Routes */}
+                <Route path="/settings" element={<SettingsLayout />}>
+                    <Route index element={<Navigate to="overview" replace />} />
+                    <Route path="overview" element={<OverviewSettings />} />
+                    <Route path="ai" element={<AISettings />} />
+                    <Route path="formula" element={<FormulaSettings />} />
+                    <Route path="lists" element={<ListSettings />} />
+                </Route>
+
                 {/* Book Form routes */}
                 <Route path="/create" element={
                   <FormView 

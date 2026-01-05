@@ -75,10 +75,17 @@ export default function Sidebar({ onAddBook }) {
          </button>
       </div>
 
-      {/* User Avatar */}
+      {/* User Avatar - Settings Link */}
       <div className="w-full px-3">
-        <div className="w-full aspect-square rounded-full bg-slate-200 dark:bg-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:scale-105 transition-transform border border-slate-300 dark:border-neutral-700" title="Vitória">
+        <div 
+            onClick={() => navigate('/settings')}
+            className="w-full aspect-square rounded-full bg-slate-200 dark:bg-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:scale-105 hover:bg-slate-300 dark:hover:bg-neutral-700 transition-all border border-slate-300 dark:border-neutral-700 relative group" 
+            title="Configurações"
+        >
           VF
+          <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                Configurações
+          </span>
         </div>
       </div>
     </aside>

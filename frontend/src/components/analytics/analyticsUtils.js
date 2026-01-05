@@ -1,13 +1,15 @@
 export const getClassBaseHSL = (cls) => {
     // Pastel Palette: Lower saturation, Higher lightness (for light mode friendly / soft dark mode)
     const map = {
-        'Desenvolvimento Pessoal': { h: 189, s: 70, l: 75 }, // Soft Cyan
-        'Literatura & Cultura': { h: 265, s: 70, l: 80 },    // Soft Violet
-        'Tecnologia & IA': { h: 150, s: 60, l: 70 },         // Soft Emerald
-        'Negócios & Finanças': { h: 45, s: 80, l: 75 },      // Soft Amber
-        'Produtividade': { h: 340, s: 80, l: 80 },           // Soft Rose
-        'Espiritualidade': { h: 240, s: 70, l: 80 },         // Soft Indigo
-        'Biografias': { h: 320, s: 70, l: 75 },              // Soft Pink
+        'Desenvolvimento Pessoal': { h: 185, s: 75, l: 75 }, // Cyan
+        'Literatura & Cultura': { h: 270, s: 70, l: 80 },    // Violet
+        'Tecnologia & IA': { h: 145, s: 65, l: 70 },         // Green
+        'Negócios & Finanças': { h: 45, s: 85, l: 75 },      // Amber
+        'Engenharia & Arquitetura': { h: 220, s: 70, l: 80 }, // Blue
+        'Conhecimento & Ciências': { h: 340, s: 80, l: 80 },  // Pink/Rose (Distinct from others)
+        'Produtividade': { h: 15, s: 80, l: 80 },            // Coral/Red
+        'Espiritualidade': { h: 245, s: 70, l: 80 },         // Indigo
+        'Biografias': { h: 320, s: 70, l: 75 },              // Soft Magenta
     }
     return map[cls] || { h: 0, s: 0, l: 80 } // Soft Gray
 }
