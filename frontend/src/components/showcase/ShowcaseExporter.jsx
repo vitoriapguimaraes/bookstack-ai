@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Download, Loader2, BookOpen, Star } from 'lucide-react'
+import { X, Download, Loader2, BookOpen, Star, Sparkles } from 'lucide-react'
 import html2canvas from 'html2canvas'
 
 export default function ShowcaseExporter({ books, selectedYears, filterClass, stats, activeBook, onClose }) {
@@ -105,7 +105,7 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
                       </>
                     ) : (
                       <>
-                        <Download size={14} />
+                        <Sparkles size={14} />
                         Gerar
                       </>
                     )}
@@ -165,27 +165,26 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
                         </span>
                       </div>
                       
-                      <div className="bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100 whitespace-nowrap">
-                        <div className="inline-block align-middle mr-3">
-                           <BookOpen size={22} className="text-purple-600 block" />
-                        </div>
-                        <div className="inline-block align-middle">
-                          <span className="text-2xl font-black text-slate-800 leading-none align-middle mr-2 inline-block">
-                            {stats?.kpi?.total || books.length}
-                          </span>
-                          <span className="text-sm font-semibold text-slate-400 align-middle inline-block">
-                            livros
-                          </span>
-                        </div>
+                      <div className="bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100 flex items-center gap-3">
+                         <div className="flex items-baseline gap-1.5">
+                           <span className="text-2xl font-black text-slate-800 leading-none">
+                             {stats?.kpi?.total || books.length}
+                           </span>
+                           <span className="text-sm font-semibold text-slate-400">
+                             livros
+                           </span>
+                         </div>
                       </div>
                     </div>
 
                     {/* Books Grid */}
                     <div className={`flex-1 grid ${getGridConfig()}`}>
                       {displayBooks.map((book, idx) => {
-                        const coverUrl = book.cover_image 
-                          ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-                          : null
+                        const coverUrl = book.cover_image && book.cover_image.startsWith('/')
+                          ? book.cover_image
+                          : book.cover_image 
+                            ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+                            : null
                         
                         return (
                           <div
@@ -212,8 +211,15 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
 
                     {/* Footer */}
                     <div className="mt-6 pt-4 border-t border-slate-200/50 flex items-center justify-between">
-                      <div className="text-xl font-bold text-slate-700">
-                        bookstack-ai
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src="/logo_bookstack-ai.png" 
+                          alt="Logo" 
+                          className="h-8 w-auto object-contain opacity-80"
+                        />
+                        <div className="text-xl font-bold text-slate-700">
+                          bookstack-ai
+                        </div>
                       </div>
                       <div className="text-sm font-medium text-slate-400">
                         Gerado em {new Date().toLocaleDateString('pt-BR')}

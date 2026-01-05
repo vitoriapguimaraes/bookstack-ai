@@ -1,6 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+import shutil
+import time
+from pathlib import Path
 from sqlmodel import Session, select
 from typing import List, Optional
 from database import create_db_and_tables, get_session
@@ -24,6 +28,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount uploads directory to serve static files (images)
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 def reorder_books(session: Session, operation: str, **kwargs):
@@ -138,7 +147,41 @@ def delete_book(book_id: int, session: Session = Depends(get_session)):
         reorder_books(session, 'delete', deleted_order=deleted_order)
     
     session.commit()
+    session.commit()
     return {"ok": True}
+
+@app.post("/books/{book_id}/cover")
+async def upload_book_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
+    book = session.get(Book, book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # Ensure uploads directory exists
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    
+    # Generate unique filename (timestamp) to avoid caching issues
+    file_extension = Path(file.filename).suffix
+    if not file_extension:
+        file_extension = ".jpg" # Default fallback
+        
+    filename = f"cover_{book_id}_{int(time.time())}{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Update book record
+        # Save relative path that will be served via proxy or static mount
+        book.cover_image = f"/uploads/{filename}"
+        session.add(book)
+        session.commit()
+        session.refresh(book)
+        
+        return {"filename": filename, "cover_url": book.cover_image}
+    except Exception as e:
+        print(f"Error uploading file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload image")
 
 @app.put("/books/{book_id}", response_model=Book)
 def update_book(book_id: int, book_data: Book, session: Session = Depends(get_session)):

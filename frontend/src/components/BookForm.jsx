@@ -69,7 +69,14 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
-      setCoverFile(e.target.files[0])
+      const file = e.target.files[0]
+      setCoverFile(file)
+      
+      // Create local preview immediately
+      setFormData(prev => ({
+          ...prev, 
+          cover_image: URL.createObjectURL(file)
+      }))
     }
   }
 

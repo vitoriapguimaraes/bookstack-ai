@@ -41,8 +41,22 @@ function App() {
       selectedStatuses: [],
       selectedPriorities: [],
       selectedAvailabilities: [],
+      selectedPriorities: [],
+      selectedAvailabilities: [],
       yearRange: null 
   })
+
+  // Mural Persistence State
+  // Mural Persistence State
+  const [muralState, setMuralState] = useState(() => {
+      const saved = localStorage.getItem('muralState')
+      return saved ? JSON.parse(saved) : { reading: 1, 'to-read': 1, read: 1 }
+  })
+
+  // Persist Mural State
+  useEffect(() => {
+      localStorage.setItem('muralState', JSON.stringify(muralState))
+  }, [muralState])
   
   // States for Sidebar Filters
   useEffect(() => {
@@ -161,6 +175,8 @@ function App() {
                     books={books}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    muralState={muralState}
+                    setMuralState={setMuralState}
                   />
                 } />
                 <Route path="/mural" element={<Navigate to="/mural/reading" replace />} />

@@ -7,12 +7,14 @@ export default function BookshelfShowcase({ books, onExport }) {
   return (
     <div className="flex flex-col h-full">
       {/* Grid de Capas */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-5 gap-4 px-4 pt-4 pb-8 transition-opacity duration-300">
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4 px-4 pt-4 pb-8 transition-opacity duration-300">
           {displayBooks.map((book) => {
-            const coverUrl = book.cover_image 
-              ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-              : null
+            const coverUrl = book.cover_image && book.cover_image.startsWith('/')
+                ? book.cover_image
+                : book.cover_image
+                  ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+                  : null
             
             return (
               <div

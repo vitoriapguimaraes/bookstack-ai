@@ -7,16 +7,30 @@ import ScrollToTopBottom from '../components/ScrollToTopBottom'
 const ITEMS_PER_PAGE_ACTIVE = 12
 const ITEMS_PER_PAGE_COMPLETED = 24
 
-export default function MuralView({ books, onEdit, onDelete }) {
+export default function MuralView({ books, onEdit, onDelete, muralState, setMuralState }) {
   const navigate = useNavigate()
   const { status } = useParams()
   const [yearlyGoal, setYearlyGoal] = useState(20)
   const scrollContainerRef = useRef(null)
   
   // Default to 'reading' if no status in URL
+  // Default to 'reading' if no status in URL
   const activeStatus = status || 'reading'
   
-  const [currentPage, setCurrentPage] = useState(1)
+  // Get current page from lifted state, default to 1
+  const currentPage = muralState ? muralState[activeStatus] : 1
+
+  const setCurrentPage = (newPageFuncOrValue) => {
+      // Handle both value and function updates
+      const newPage = typeof newPageFuncOrValue === 'function' 
+          ? newPageFuncOrValue(currentPage)
+          : newPageFuncOrValue
+          
+      setMuralState(prev => ({
+          ...prev,
+          [activeStatus]: newPage
+      }))
+  }
 
   // Load yearly goal from localStorage
   useEffect(() => {
@@ -25,11 +39,9 @@ export default function MuralView({ books, onEdit, onDelete }) {
       setYearlyGoal(parseInt(savedGoal))
     }
   }, [])
-
-  // Reset pagination when status changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [activeStatus])
+  
+  // NOTE: Removed useEffect that resets page on status change, 
+  // because we now want to persist per-status page in App state.
   
   // Filter books by status
   const getFilteredBooks = () => {
@@ -41,7 +53,16 @@ export default function MuralView({ books, onEdit, onDelete }) {
       }
   }
 
-  const filteredBooks = getFilteredBooks().sort((a,b) => (a.order||999) - (b.order||999))
+  const filteredBooks = getFilteredBooks().sort((a,b) => {
+    if (activeStatus === 'read') {
+      // Sort by date_read descending (newest first)
+      if (!a.date_read) return 1
+      if (!b.date_read) return -1
+      return b.date_read.localeCompare(a.date_read)
+    }
+    // Default sorting by order
+    return (a.order||999) - (b.order||999)
+  })
   
   // Dynamic Items Per Page
   const itemsPerPage = activeStatus === 'read' ? ITEMS_PER_PAGE_COMPLETED : ITEMS_PER_PAGE_ACTIVE

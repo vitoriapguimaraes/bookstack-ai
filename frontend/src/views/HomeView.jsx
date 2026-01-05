@@ -73,7 +73,11 @@ export default function HomeView({ books }) {
       result = result.filter(b => b.book_class === filterClass)
     }
 
-    return result
+    return result.sort((a, b) => {
+      if (!a.date_read) return 1
+      if (!b.date_read) return -1
+      return b.date_read.localeCompare(a.date_read)
+    })
   }, [books, selectedYears, filterClass])
 
   // Use filtered books for stats
