@@ -1,8 +1,10 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle } from 'lucide-react'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 
 export default function Sidebar({ onAddBook }) {
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
   
   const menuItems = [
     { id: 'mural', label: 'Mural', icon: LayoutGrid, path: '/mural/lendo' },
@@ -11,11 +13,11 @@ export default function Sidebar({ onAddBook }) {
   ]
 
   return (
-    <aside className="w-20 bg-neutral-950 border-r border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-10">
+    <aside className="w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-10 transition-colors duration-300">
       {/* Brand Icon */}
       <div className="mb-8">
-        <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
-          <BookOpen className="text-white w-7 h-7" />
+        <div className="w-14 h-14 bg-pastel-purple rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <BookOpen className="text-slate-900 w-7 h-7" />
         </div>
       </div>
 
@@ -30,15 +32,15 @@ export default function Sidebar({ onAddBook }) {
               className={({ isActive }) =>
                 `w-full aspect-square flex items-center justify-center rounded-lg transition-all group relative ${
                   isActive
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
+                    ? 'bg-pastel-purple text-slate-900 shadow-md'
+                    : 'text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-700 dark:hover:text-white'
                 }`
               }
               title={item.label}
             >
               <Icon size={20} />
               {/* Tooltip */}
-              <span className="absolute left-full ml-3 px-2 py-1 bg-neutral-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
+              <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
                 {item.label}
               </span>
             </NavLink>
@@ -46,15 +48,25 @@ export default function Sidebar({ onAddBook }) {
         })}
       </nav>
 
-      {/* Add Button */}
-      <div className="mb-6 w-full px-3">
+       {/* Theme Toggle & Add */}
+       <div className="w-full px-3 flex flex-col gap-4 mb-6">
+         {/* Theme Toggle */}
+         <button 
+            onClick={toggleTheme}
+            className="w-full aspect-square flex items-center justify-center bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
+            title={theme === 'dark' ? 'Mudar para Claro' : 'Mudar para Escuro'}
+         >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+         </button>
+
+         {/* Add Button */}
          <button 
             onClick={onAddBook}
-            className="w-full aspect-square flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-lg transition-all shadow-lg shadow-purple-500/30 group relative"
+            className="w-full aspect-square flex items-center justify-center bg-pastel-green hover:bg-green-300 text-slate-900 rounded-lg transition-all shadow-lg shadow-green-500/20 group relative"
             title="Novo Livro"
          >
             <PlusCircle size={20} />
-            <span className="absolute left-full ml-3 px-2 py-1 bg-neutral-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
+            <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
               Novo Livro
             </span>
          </button>
@@ -62,7 +74,7 @@ export default function Sidebar({ onAddBook }) {
 
       {/* User Avatar */}
       <div className="w-full px-3">
-        <div className="w-full aspect-square rounded-full bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-lg cursor-pointer hover:scale-105 transition-transform" title="Vitória">
+        <div className="w-full aspect-square rounded-full bg-slate-200 dark:bg-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:scale-105 transition-transform border border-slate-300 dark:border-neutral-700" title="Vitória">
           VF
         </div>
       </div>

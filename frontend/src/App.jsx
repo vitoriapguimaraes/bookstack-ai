@@ -128,7 +128,7 @@ function App() {
 
 
   return (
-    <div className="min-h-screen bg-black text-slate-100 font-sans flex">
+    <div className="min-h-screen font-sans flex transition-colors duration-300">
       {/* Sidebar Navigation */}
       <Sidebar 
         onAddBook={() => { 
@@ -141,7 +141,7 @@ function App() {
       <main className="flex-1 ml-20 p-8 transition-all duration-300">
         <div className="w-full">
             {error && (
-                <div className="bg-red-900/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-6">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
                     <p>⚠️ {error}</p>
                     <p className="text-sm">Dica: Rode `uvicorn main:app --reload` na pasta backend.</p>
                 </div>
@@ -217,8 +217,8 @@ function App() {
             disabled={isAtTop}
             className={`fixed bottom-20 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
               isAtTop 
-                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
-                : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
+                ? 'bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-neutral-600 cursor-not-allowed shadow-none' 
+                : 'bg-pastel-purple hover:bg-purple-300 text-slate-900 shadow-lg'
             }`}
             title="Voltar ao topo"
           >
@@ -231,8 +231,8 @@ function App() {
             disabled={isAtBottom}
             className={`fixed bottom-8 right-8 p-3 rounded-full transition-all duration-300 z-50 ${
                isAtBottom 
-                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed shadow-none' 
-                : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg'
+                ? 'bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-neutral-600 cursor-not-allowed shadow-none' 
+                : 'bg-pastel-purple hover:bg-purple-300 text-slate-900 shadow-lg'
             }`}
             title="Ir para o final"
           >

@@ -282,13 +282,13 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
   return (
     <div className="space-y-4">
       {/* Filters Bar */}
-      <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-800">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 border border-slate-200 dark:border-neutral-800 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-white">📋 Filtros</h3>
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">📋 Filtros</h3>
           {hasActiveFilters && (
             <button 
               onClick={clearAllFilters}
-              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+              className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 flex items-center gap-1"
             >
               <X size={14} /> Limpar Filtros
             </button>
@@ -299,18 +299,18 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
           {/* Search - Full Width */}
           <div>
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-neutral-500 w-4 h-4" />
+              <Search className="absolute left-3 top-2.5 text-slate-400 dark:text-neutral-500 w-4 h-4" />
               <input
                 type="text"
                 placeholder="🔍 Buscar por Título ou Autor..."
                 value={searchTerm}
                 onChange={(e) => setTableState(prev => ({...prev, searchTerm: e.target.value}))}
-                className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
+                className="w-full pl-10 pr-10 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
               {searchTerm && (
                 <button
                   onClick={() => setTableState(prev => ({...prev, searchTerm: ''}))}
-                  className="absolute right-3 top-2.5 text-neutral-500 hover:text-white transition-colors"
+                  className="absolute right-3 top-2.5 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-white transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -320,8 +320,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
           {/* Classes - Full Width Row */}
           <div>
-            <label className="block text-xs text-neutral-400 mb-1.5">Classes</label>
-            <div className="flex flex-wrap gap-1.5 bg-neutral-800 border border-neutral-700 rounded p-2">
+            <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Classes</label>
+            <div className="flex flex-wrap gap-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2">
               {uniqueClasses.map(cls => (
                 <button
                   key={cls}
@@ -329,7 +329,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     selectedClasses.includes(cls)
                       ? 'bg-purple-600 text-white'
-                      : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                      : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
                   }`}
                 >
                   {cls}
@@ -340,8 +340,8 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
           {/* Categories - Full Width Row */}
           <div>
-            <label className="block text-xs text-neutral-400 mb-1.5">Categorias</label>
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded p-2">
+            <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Categorias</label>
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-neutral-600">
               {uniqueCategories.map(cat => (
                 <button
                   key={cat}
@@ -349,7 +349,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     selectedCategories.includes(cat)
                       ? 'bg-purple-600 text-white'
-                      : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                      : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
                   }`}
                 >
                   {cat}
@@ -359,10 +359,10 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
           </div>
 
           {/* Status, Priority, Availability, Year - Single Row */}
-          <div className="grid gap-2" style={{gridTemplateColumns: '0.7fr 1.5fr 1.5fr 1fr'}}>
+          <div className="grid gap-2 grid-cols-1 md:grid-cols-4 lg:grid-cols-[0.7fr_1.5fr_1.5fr_1fr]">
             {/* Status */}
             <div>
-              <label className="block text-xs text-neutral-400 mb-1.5">Status</label>
+              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Status</label>
               <div className="flex gap-1.5 flex-wrap">
                 {uniqueStatuses.map(status => (
                   <button
@@ -371,7 +371,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedStatuses.includes(status)
                         ? 'bg-purple-600 text-white'
-                        : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
                     }`}
                   >
                     {status}
@@ -382,7 +382,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
             {/* Priority */}
             <div>
-              <label className="block text-xs text-neutral-400 mb-1.5">Prioridade</label>
+              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Prioridade</label>
               <div className="flex gap-1.5 flex-wrap">
                 {uniquePriorities.map(prio => (
                   <button
@@ -391,7 +391,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedPriorities.includes(prio)
                         ? 'bg-purple-600 text-white'
-                        : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
                     }`}
                   >
                     {prio}
@@ -402,7 +402,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
             {/* Availability */}
             <div>
-              <label className="block text-xs text-neutral-400 mb-1.5">Disponibilidade</label>
+              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Disponibilidade</label>
               <div className="flex gap-1.5 flex-wrap">
                 {uniqueAvailabilities.map(avail => (
                   <button
@@ -411,7 +411,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     className={`text-xs px-3 py-1.5 rounded transition-colors ${
                       selectedAvailabilities.includes(avail)
                         ? 'bg-purple-600 text-white'
-                        : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
                     }`}
                   >
                     {avail}
@@ -422,12 +422,12 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
             {/* Year Range - Dual Thumb Slider */}
             <div>
-              <label className="block text-xs text-neutral-400 mb-1.5">
+              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">
                 Ano de lançamento: {safeYearRange[0]} - {safeYearRange[1]}
               </label>
-              <div className="relative pt-2 pb-1">
+              <div className="relative pt-2 pb-1 px-1">
                 {/* Track background */}
-                <div className="absolute top-1/2 left-0 right-0 h-1 bg-neutral-700 rounded-full -translate-y-1/2"></div>
+                <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 dark:bg-neutral-700 rounded-full -translate-y-1/2"></div>
                 
                 {/* Active range */}
                 <div 
@@ -451,7 +451,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     }
                   }}
                   className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: safeYearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3 }}
+                  style={{ zIndex: safeYearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3, left: 0 }}
                 />
                 
                 {/* Max slider */}
@@ -467,29 +467,29 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     }
                   }}
                   className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: safeYearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4 }}
+                  style={{ zIndex: safeYearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4, left: 0 }}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-3 text-xs text-neutral-500">
+        <div className="mt-3 text-xs text-slate-500 dark:text-neutral-500">
           Mostrando {sortedBooks.length} de {books.length} livros
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-neutral-900 rounded-lg shadow border border-neutral-800 w-full">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-200 dark:border-neutral-800 w-full">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed divide-y divide-neutral-800">
-            <thead className="bg-neutral-950">
+          <table className="w-full table-fixed divide-y divide-slate-200 dark:divide-neutral-800">
+            <thead className="bg-slate-50 dark:bg-neutral-950">
               <tr>
                 {columns.map(({ key, label, width }) => (
                   <th
                     key={key}
                     onClick={() => key !== 'select' && requestSort(key)}
-                    className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider ${key !== 'select' ? 'cursor-pointer hover:bg-neutral-800' : ''} transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
+                    className={`${width} px-3 py-2.5 text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider ${key !== 'select' ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-neutral-800' : ''} transition-colors whitespace-nowrap overflow-hidden text-ellipsis`}
                   >
                     <div className="flex items-center gap-1">
                       {label}
@@ -497,80 +497,80 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
                     </div>
                   </th>
                 ))}
-                <th className="w-[4%] px-3 py-2.5 text-right text-[10px] font-medium text-neutral-400 uppercase tracking-wider whitespace-nowrap overflow-hidden">Ações</th>
+                <th className="w-[4%] px-3 py-2.5 text-right text-[10px] font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider whitespace-nowrap overflow-hidden">Ações</th>
               </tr>
             </thead>
-            <tbody className="bg-neutral-900 divide-y divide-neutral-800">
+            <tbody className="bg-white dark:bg-neutral-900 divide-y divide-slate-100 dark:divide-neutral-800">
               {sortedBooks.map((book) => (
-                <tr key={book.id} className={`hover:bg-neutral-800 transition-colors ${selectedBooks.includes(book.id) ? 'bg-purple-900/10' : ''}`}>
+                <tr key={book.id} className={`hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors ${selectedBooks.includes(book.id) ? 'bg-purple-50 dark:bg-purple-900/10' : ''}`}>
                   <td className="px-3 py-2 whitespace-nowrap">
                       <input 
                         type="checkbox" 
-                        className="rounded border-neutral-700 bg-neutral-800 text-purple-600 focus:ring-purple-500 focus:ring-offset-neutral-900"
+                        className="rounded border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-purple-600 checked:bg-purple-600 focus:ring-purple-500 focus:ring-offset-white dark:focus:ring-offset-neutral-900 cursor-pointer"
                         checked={selectedBooks.includes(book.id)}
                         onChange={() => toggleSelectBook(book.id)}
                     />
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-neutral-400">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-slate-500 dark:text-neutral-400">
                       {book.order || '-'}
                   </td>
-                  <td className="px-3 py-2 text-xs font-medium text-white max-w-[256px] truncate" title={book.title}>
+                  <td className="px-3 py-2 text-xs font-medium text-slate-800 dark:text-white max-w-[256px] truncate" title={book.title}>
                       {book.title}
                   </td>
-                  <td className="px-3 py-2 text-xs text-neutral-300 max-w-[160px] truncate" title={book.author}>
+                  <td className="px-3 py-2 text-xs text-slate-600 dark:text-neutral-300 max-w-[160px] truncate" title={book.author}>
                       {book.author}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500 dark:text-neutral-400">
                       {book.year || '-'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${book.type === 'Técnico' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${book.type === 'Técnico' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300'}`}>
                         {book.type === 'Técnico' ? 'Téc' : 'N-Téc'}
                       </span>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500 dark:text-neutral-400">
                       {book.priority?.split(' - ')[0] || '-'}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-purple-400 text-center">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-purple-600 dark:text-purple-400 text-center">
                      {book.score ? book.score.toFixed(0) : '-'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs">
                      <span className={`px-1.5 inline-flex text-[10px] leading-4 font-semibold rounded-full 
-                        ${book.status === 'Lendo' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 
-                          book.status === 'Lido' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 
-                          'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
+                        ${book.status === 'Lendo' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30' : 
+                          book.status === 'Lido' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30' : 
+                          'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'}`}>
                         {book.status}
                      </span>
                   </td>
-                  <td className="px-3 py-2 text-xs text-purple-300 max-w-[160px] truncate" title={book.book_class}>
+                  <td className="px-3 py-2 text-xs text-slate-500 dark:text-neutral-400 max-w-[160px] truncate" title={book.book_class}>
                       {book.book_class || '-'}
                   </td>
-                  <td className="px-3 py-2 text-xs text-neutral-400 max-w-[128px] truncate" title={book.category}>
+                  <td className="px-3 py-2 text-xs text-slate-500 dark:text-neutral-400 max-w-[128px] truncate" title={book.category}>
                      {book.category}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400 truncate max-w-[80px]" title={book.availability}>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500 dark:text-neutral-400 truncate max-w-[80px]" title={book.availability}>
                       {book.availability || '-'}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-400 text-center">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-500 dark:text-amber-400 text-center">
                       {book.google_rating ? book.google_rating.toFixed(1) : '-'}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-400 font-bold text-center">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-amber-600 dark:text-amber-400 font-bold text-center">
                      {book.rating || '-'}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-400">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500 dark:text-neutral-400">
                      {book.date_read || '-'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-right text-xs font-medium">
                     <div className="flex justify-end gap-1.5">
                       <button 
                           onClick={() => onEdit(book)}
-                          className="text-purple-400 hover:text-purple-300 transition-colors p-1" 
+                          className="text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors p-1" 
                           title="Editar">
                           <Pencil size={14} />
                       </button>
                       <button 
                           onClick={() => handleDelete(book.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors p-1"
+                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors p-1"
                           title="Excluir">
                           <Trash2 size={14} />
                       </button>
@@ -585,16 +585,16 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
       {/* Floating Bulk Action Bar */}
       {selectedBooks.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-neutral-900 border border-neutral-700 rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 z-50 animate-bounce-in">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 z-50 animate-bounce-in">
             <span className="text-white font-bold text-sm bg-purple-600 px-2 py-0.5 rounded-full">
                 {selectedBooks.length} selecionados
             </span>
             
-            <div className="h-4 w-px bg-neutral-700"></div>
+            <div className="h-4 w-px bg-slate-200 dark:bg-neutral-700"></div>
 
             <button 
                 onClick={() => setShowBulkEdit(true)}
-                className="flex items-center gap-2 text-neutral-300 hover:text-white hover:text-purple-400 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-white dark:hover:text-purple-400 transition-colors text-sm font-medium"
             >
                 <Edit3 size={16} />
                 Editar em Massa
@@ -602,7 +602,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
             <button 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 text-neutral-300 hover:text-red-400 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 transition-colors text-sm font-medium"
             >
                 <Trash size={16} />
                 Excluir
@@ -610,7 +610,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
 
              <button 
                 onClick={() => setSelectedBooks([])}
-                className="ml-2 text-neutral-500 hover:text-white transition-colors"
+                className="ml-2 text-slate-400 dark:text-neutral-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 title="Cancelar Seleção"
             >
                 <X size={16} />

@@ -182,17 +182,17 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-neutral-900 rounded-lg shadow-lg border border-neutral-800 w-full animate-fade-in">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-slate-200 dark:border-neutral-800 w-full animate-fade-in text-slate-900 dark:text-white">
        {/* Header Actions */}
-       <div className="flex items-center justify-between p-3 border-b border-neutral-800 bg-neutral-800/50">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+       <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
              {bookToEdit ? 'Gerenciar Livro' : 'Adicionar Livro'}
           </h2>
           <div className="flex gap-2">
              <button 
                 type="submit" 
                 disabled={loading} 
-                className="flex items-center gap-2 px-5 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-500 disabled:opacity-50 transition-colors text-xs font-bold shadow-lg shadow-emerald-900/20"
+                className="flex items-center gap-2 px-5 py-1.5 bg-emerald-600 dark:bg-emerald-600 text-white rounded hover:bg-emerald-500 dark:hover:bg-emerald-500 disabled:opacity-50 transition-colors text-xs font-bold shadow-lg shadow-emerald-900/20"
              >
                 <Save size={16} /> {loading ? 'Salvando...' : 'Salvar Alterações'}
              </button>
@@ -200,7 +200,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                <button 
                   type="button" 
                   onClick={onCancel} 
-                  className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 text-neutral-400 rounded hover:bg-neutral-700 hover:text-white transition-colors text-xs"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 rounded hover:bg-slate-300 dark:hover:bg-neutral-700 hover:text-slate-800 dark:hover:text-white transition-colors text-xs"
                >
                   <X size={16} />
                </button>
@@ -228,30 +228,30 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   </button>
               </div>
 
-              <div className="bg-black/20 p-3 rounded-lg border border-neutral-800/50 space-y-3">
+              <div className="bg-slate-50 dark:bg-black/20 p-3 rounded-lg border border-slate-200 dark:border-neutral-800/50 space-y-3">
                   {/* Title & Original Title */}
                   <div className="space-y-3">
                       <div>
-                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Título Principal</label>
+                         <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Título Principal</label>
                          <input 
                             required 
                             name="title" 
                             value={formData.title} 
                             onChange={handleChange} 
-                            className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold placeholder-neutral-700" 
+                            className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold placeholder-slate-400 dark:placeholder-neutral-700" 
                             placeholder="Ex: Hábitos Atômicos"
                          />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                           <div>
-                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Título Original</label>
+                             <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Título Original</label>
                              <input name="original_title" value={formData.original_title || ''} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 italic placeholder-neutral-700" placeholder="..." />
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs p-2 focus:border-purple-500 italic placeholder-slate-400 dark:placeholder-neutral-700" placeholder="..." />
                           </div>
                           <div>
-                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Autor</label>
+                             <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Autor</label>
                              <input name="author" value={formData.author} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500 placeholder-neutral-700" />
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700" />
                           </div>
                       </div>
                   </div>
@@ -260,12 +260,12 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   <div className="flex gap-3">
                       {/* Cover */}
                       <div className="w-20 flex-shrink-0 space-y-1.5">
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider text-center">Capa</label>
-                          <div className="w-20 h-28 bg-neutral-900 rounded border border-neutral-700 overflow-hidden relative group shadow-lg">
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider text-center">Capa</label>
+                          <div className="w-20 h-28 bg-slate-100 dark:bg-neutral-900 rounded border border-slate-200 dark:border-neutral-700 overflow-hidden relative group shadow-sm dark:shadow-lg">
                               {formData.cover_image ? (
                                   <img src={formData.cover_image} alt="Capa" className="w-full h-full object-cover" />
                               ) : (
-                                  <div className="flex flex-col items-center justify-center h-full text-neutral-700 gap-1">
+                                  <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-neutral-700 gap-1">
                                       <Upload size={16}/>
                                   </div>
                               )}
@@ -274,7 +274,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                              <input type="file" onChange={handleFileChange} accept="image/*" 
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                              />
-                             <button type="button" className="w-full bg-neutral-800 hover:bg-neutral-700 text-[9px] py-1 rounded text-neutral-400 hover:text-white transition-colors border border-neutral-700">
+                             <button type="button" className="w-full bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 text-[9px] py-1 rounded text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-300 dark:border-neutral-700">
                                 Upload
                              </button>
                           </div>
@@ -289,31 +289,31 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                       {/* Classification Grid */}
                       <div className="flex-1 grid grid-cols-2 gap-3 content-start">
                            <div>
-                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Ano</label>
+                               <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Ano</label>
                                <input type="number" name="year" value={formData.year} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500" />
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500" />
                            </div>
                            <div>
-                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Tipo</label>
+                               <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Tipo</label>
                                <select name="type" value={formData.type} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
                                   <option>Não Técnico</option>
                                   <option>Técnico</option>
                                </select>
                            </div>
                            <div className="col-span-2">
-                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Classe Macro</label>
+                               <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Classe Macro</label>
                                <select name="book_class" value={formData.book_class} onChange={handleClassChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
                                   {Object.keys(CLASS_CATEGORIES).map(cls => (
                                     <option key={cls} value={cls}>{cls}</option>
                                   ))}
                                </select>
                            </div>
                            <div className="col-span-2">
-                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Categoria Específica</label>
+                               <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Categoria Específica</label>
                                <select name="category" value={formData.category} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
                                   {(CLASS_CATEGORIES[formData.book_class] || []).map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
                                   ))}
@@ -324,9 +324,9 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
                   {/* Motivation */}
                   <div>
-                      <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Resumo / Motivação</label>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Resumo / Motivação</label>
                       <textarea name="motivation" value={formData.motivation} onChange={handleChange} rows={2}
-                          className="w-full rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-neutral-700 resize-none" 
+                          className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700 resize-none" 
                           placeholder="Sobre o que é este livro?"
                        />
                   </div>
@@ -340,11 +340,11 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   <Layers size={14} /> Meu Gerenciamento
               </h3>
 
-              <div className="bg-neutral-800/30 p-4 rounded-lg border border-neutral-700/50 flex flex-col gap-4 flex-1">
+              <div className="bg-slate-50 dark:bg-neutral-800/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-700/50 flex flex-col gap-4 flex-1">
                   
                   {/* Status Highlight */}
                   <div>
-                       <label className="block text-[10px] font-bold text-white mb-1.5 uppercase">Status Atual</label>
+                       <label className="block text-[10px] font-bold text-slate-500 dark:text-white mb-1.5 uppercase">Status Atual</label>
                        <div className="grid grid-cols-3 gap-1.5">
                            {['A Ler', 'Lendo', 'Lido'].map((s) => (
                                <button
@@ -365,8 +365,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                                       formData.status === s 
                                       ? s === 'Lido' ? 'bg-emerald-600 border-emerald-500 text-white' 
                                       : s === 'Lendo' ? 'bg-purple-600 border-purple-500 text-white'
-                                      : 'bg-neutral-600 border-neutral-500 text-white'
-                                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'
+                                      : 'bg-slate-300 dark:bg-neutral-600 border-slate-400 dark:border-neutral-500 text-slate-800 dark:text-white'
+                                      : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700'
                                   }`}
                                >
                                    {s}
@@ -379,9 +379,9 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
 
                   {/* Availability - Always Visible */}
                   <div>
-                       <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Disponível em</label>
+                       <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Disponível em</label>
                        <select name="availability" value={formData.availability} onChange={handleChange} 
-                           className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                           className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
                            <option value="N/A">N/A</option>
                            <option value="Estante">Estante</option>
                            <option value="Estante Araçatuba">Estante Araçatuba</option>
@@ -398,8 +398,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                   {/* CONDITIONAL FIELDS BASED ON STATUS */}
                   {formData.status === 'Lido' ? (
                       <div className="space-y-4 animate-fade-in">
-                          <div className="bg-emerald-900/10 p-3 rounded-lg border border-emerald-900/30 text-center">
-                              <label className="block text-[10px] font-bold text-emerald-400 mb-2 uppercase tracking-wider">Sua Avaliação</label>
+                          <div className="bg-emerald-900/10 dark:bg-emerald-900/30 p-3 rounded-lg border border-emerald-900/30 dark:border-emerald-500/30 text-center">
+                              <label className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">Sua Avaliação</label>
                               <div className="flex justify-center gap-1.5 mb-1">
                                   {[1,2,3,4,5].map((star) => (
                                       <button 
@@ -407,31 +407,31 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                                           type="button"
                                           onClick={() => setFormData(prev => ({...prev, rating: star}))}
                                           className={`text-xl transition-transform hover:scale-110 ${
-                                              (formData.rating || 0) >= star ? 'text-amber-400' : 'text-neutral-700'
+                                              (formData.rating || 0) >= star ? 'text-amber-400' : 'text-slate-300 dark:text-neutral-700'
                                           }`}
                                       >
                                           ★
                                       </button>
                                   ))}
                               </div>
-                              <p className="text-[10px] text-neutral-400 font-mono">
+                              <p className="text-[10px] text-slate-500 dark:text-neutral-400 font-mono">
                                   {formData.rating ? `${formData.rating}/5 Estrelas` : 'Sem nota'}
                               </p>
                           </div>
 
                           <div>
-                              <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Data de Conclusão</label>
+                              <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Data de Conclusão</label>
                               <input type="text" name="date_read" value={formData.date_read || ''} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-emerald-500 text-center" 
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-emerald-500 text-center" 
                                   placeholder="YYYY/MM" />
                           </div>
                       </div>
                   ) : (
                       <div className="space-y-3 animate-fade-in">
                           <div>
-                               <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Prioridade de Leitura</label>
+                               <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Prioridade de Leitura</label>
                                <select name="priority" value={formData.priority} onChange={handleChange} 
-                                  className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-purple-500">
+                                  className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
                                   <option>1 - Baixa</option>
                                   <option>2 - Média</option>
                                   <option>3 - Média-Alta</option>
@@ -440,11 +440,11 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
                           </div>
 
                           <div>
-                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Ordem na Fila</label>
+                             <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Ordem na Fila</label>
                              <div className="flex items-center gap-2">
-                                 <span className="text-neutral-500 text-sm">#</span>
+                                 <span className="text-slate-500 dark:text-neutral-500 text-sm">#</span>
                                  <input type="number" name="order" value={formData.order || ''} onChange={handleChange} 
-                                    className="w-full rounded bg-neutral-900 border border-neutral-700 text-white text-sm p-1.5 font-bold focus:border-purple-500" 
+                                    className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-sm p-1.5 font-bold focus:border-purple-500" 
                                     placeholder="Auto" />
                              </div>
                           </div>

@@ -23,20 +23,20 @@ export default function MuralView({ books, onEdit, onDelete }) {
     <div className="pb-20 animate-fade-in">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-white">Mural de Livros</h2>
-          <p className="text-slate-400 text-sm mt-1">Acompanhe visualmente o progresso das suas leituras.</p>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Mural de Livros</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Acompanhe visualmente o progresso das suas leituras.</p>
         </div>
       </div>
 
       {/* Status Tabs */}
-      <div className="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800 mb-8 -mx-8 px-8 py-4">
+      <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-neutral-950/95 backdrop-blur-sm border-b border-slate-200 dark:border-neutral-800 mb-8 -mx-8 px-8 py-4">
         <div className="flex gap-2">
           <button
             onClick={() => handleStatusChange('lendo')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeStatus === 'lendo'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                ? 'bg-purple-600 dark:bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-white dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
             }`}
           >
             <BookOpen size={18} className="inline-block mr-1.5" /> Lendo Agora {reading.length > 0 && `(${reading.length})`}
@@ -45,8 +45,8 @@ export default function MuralView({ books, onEdit, onDelete }) {
             onClick={() => handleStatusChange('a-ler')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeStatus === 'a-ler'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
-                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                ? 'bg-amber-600 dark:bg-amber-600 text-white shadow-lg shadow-amber-500/30'
+                : 'bg-white dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
             }`}
           >
             <Library size={18} className="inline-block mr-1.5" /> Próximos da Fila {toRead.length > 0 && `(${toRead.length})`}
@@ -55,8 +55,8 @@ export default function MuralView({ books, onEdit, onDelete }) {
             onClick={() => handleStatusChange('lido')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeStatus === 'lido'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                ? 'bg-emerald-600 dark:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                : 'bg-white dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
             }`}
           >
             <CheckCircle2 size={18} className="inline-block mr-1.5" /> Já Lidos {read.length > 0 && `(${read.length})`}

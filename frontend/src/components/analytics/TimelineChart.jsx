@@ -2,8 +2,12 @@ import React, { useMemo } from 'react'
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
 import { CustomTimelineLegend } from './CustomTimelineLegend'
 import { getClassBaseHSL, hslToString, COLORS } from './analyticsUtils'
+import { useTheme } from '../../context/ThemeContext'
 
 export function TimelineChart({ stats, timelineType, timelinePeriod }) {
+    const { theme } = useTheme()
+    const isDark = theme === 'dark'
+
     // Config for Category grouping and coloring
     const categoryConfig = useMemo(() => {
         if (timelineType !== 'category') return null
@@ -55,11 +59,14 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
 
     if (timelineType === 'total') {
         keys = ['total']
+        legendItems = [
+            { label: 'Total', color: '#d8b4fe', value: stats.kpi.lidos || 0 }
+        ]
     } else if (timelineType === 'type') {
         keys = ['Técnico', 'Não Técnico']
         legendItems = [
-            { label: 'Técnico', color: '#06b6d4', value: stats.dist.lidos.type.find(x => x.name === 'Técnico')?.value || 0 },
-            { label: 'Não Técnico', color: '#f43f5e', value: stats.dist.lidos.type.find(x => x.name === 'Não Técnico')?.value || 0 }
+            { label: 'Técnico', color: '#d8b4fe', value: stats.dist.lidos.type.find(x => x.name === 'Técnico')?.value || 0 },
+            { label: 'Não Técnico', color: '#fca5a5', value: stats.dist.lidos.type.find(x => x.name === 'Não Técnico')?.value || 0 }
         ]
     } else if (timelineType === 'class') {
         keys = stats.timelineMeta.classes
@@ -80,8 +87,8 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
     }
 
     const getColor = (key, index) => {
-        if (timelineType === 'total') return '#8b5cf6'
-        if (timelineType === 'type') return key === 'Técnico' ? '#06b6d4' : '#f43f5e'
+        if (timelineType === 'total') return '#d8b4fe' // pastel-purple
+        if (timelineType === 'type') return key === 'Técnico' ? '#d8b4fe' : '#fca5a5'
         if (timelineType === 'class') return hslToString(getClassBaseHSL(key))
         if (timelineType === 'category') return categoryConfig?.colorMap[key] || COLORS[index % COLORS.length]
         return COLORS[index % COLORS.length]
@@ -90,41 +97,46 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
     const currentData = stats.timeline[timelinePeriod]
     const isYearly = timelinePeriod === 'yearly'
 
+    const gridColor = isDark ? '#262626' : '#e2e8f0' // neutral-800 : slate-200
+    const textColor = isDark ? '#737373' : '#64748b' // neutral-500 : slate-500
+
     return (
-        <div className="flex flex-col md:flex-row w-full h-full">
-            <div className="flex-1 min-w-0">
+        <div className="w-full h-full flex flex-col md:flex-row">
+            <div className="flex-1 min-w-0 h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={currentData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#262626" />
-                        <XAxis
-                            dataKey="date"
-                            tick={{
-                                fontSize: 12,
-                                fill: '#737373',
-                                angle: isYearly ? 0 : -35,
-                                textAnchor: isYearly ? 'middle' : 'end'
-                            }}
-                            axisLine={false}
-                            tickLine={false}
-                            height={isYearly ? 30 : 60}
+                    <BarChart
+                        data={currentData}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        barSize={isYearly ? undefined : 20}
+                        barCategoryGap={isYearly ? 2 : '20%'}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                        <XAxis 
+                            dataKey="date" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 11, fill: textColor }} 
                             dy={10}
-                            dx={isYearly ? 0 : -5}
                             tickFormatter={(val) => {
-                                if (isYearly) return val
+                                if (val.length === 4) return val // Year
                                 const [y, m] = val.split('-')
-                                return `${y}/${m}`
+                                return `${m}/${y}` // Month/Year
                             }}
                         />
-                        <YAxis tick={{ fontSize: 12, fill: '#737373' }} axisLine={false} tickLine={false} />
+                        <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 11, fill: textColor }} 
+                        />
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#171717', border: '1px solid #262626', color: '#fff' }}
-                            cursor={{ fill: '#262626' }}
-                            itemStyle={{ color: '#d4d4d4' }}
-                            labelFormatter={(label) => {
-                                if (isYearly) return label
-                                const [y, m] = label.split('-')
-                                return `${m}/${y}`
+                            cursor={{ fill: 'var(--tooltip-cursor)' }}
+                            contentStyle={{ 
+                                backgroundColor: 'var(--tooltip-bg)', 
+                                borderColor: 'var(--tooltip-border)', 
+                                borderRadius: '4px',
+                                color: 'var(--tooltip-text)'
                             }}
+                            itemStyle={{ color: 'var(--tooltip-text)' }}
                             isAnimationActive={false}
                         />
                         {keys.map((key, index) => (
@@ -133,20 +145,18 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
                                 dataKey={key}
                                 stackId="a"
                                 fill={getColor(key, index)}
+                                radius={[2, 2, 0, 0]}
                                 isAnimationActive={false}
-                                barSize={isYearly ? 60 : 32}
-                                radius={[0, 0, 0, 0]}
+                                background={{ fill: 'transparent' }}
                             />
                         ))}
                     </BarChart>
                 </ResponsiveContainer>
             </div>
-
-            {timelineType !== 'total' && (
-                <div className="w-full md:w-56 flex-shrink-0 pt-4 md:pt-0 md:border-l border-neutral-800">
-                    <CustomTimelineLegend items={legendItems} />
-                </div>
-            )}
+            
+            <div className="w-full md:w-56 flex-shrink-0 pt-4 md:pt-0 md:border-l border-slate-100 dark:border-neutral-800">
+                <CustomTimelineLegend items={legendItems} />
+            </div>
         </div>
     )
 }
