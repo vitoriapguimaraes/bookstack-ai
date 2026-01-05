@@ -26,6 +26,41 @@ export function useAnalyticsData(books) {
         const allClasses = new Set()
         const allCategories = new Set()
 
+        // Fallback Map for Categories often found without a class in DB
+        const FALLBACK_CATEGORY_MAP = {
+            'comunicação': 'Desenvolvimento Pessoal',
+            'bem-estar': 'Desenvolvimento Pessoal',
+            'diversidade e inclusão': 'Literatura & Cultura',
+            'machine learning': 'Tecnologia & IA',
+            // Common variations
+            'análise de dados': 'Tecnologia & IA',
+            'data science': 'Tecnologia & IA',
+            'ia': 'Tecnologia & IA',
+            'visão computacional': 'Tecnologia & IA',
+            'programação': 'Tecnologia & IA',
+            'sistemas de ia & llms': 'Tecnologia & IA',
+            'arquitetura': 'Engenharia & Arquitetura',
+            'engenharia de dados': 'Engenharia & Arquitetura',
+            'mlops': 'Engenharia & Arquitetura',
+            'artesanato de software (clean code)': 'Engenharia & Arquitetura',
+            'conhecimento geral': 'Conhecimento & Ciências',
+            'estatística': 'Conhecimento & Ciências',
+            'cosmologia & fronteiras da ciência': 'Conhecimento & Ciências',
+            'finanças pessoais': 'Negócios & Finanças',
+            'negócios': 'Negócios & Finanças',
+            'liberdade econômica & finanças': 'Negócios & Finanças',
+            'história/ficção': 'Literatura & Cultura',
+            'literatura brasileira': 'Literatura & Cultura',
+            'literatura brasileira clássica': 'Literatura & Cultura',
+            'criatividade': 'Desenvolvimento Pessoal',
+            'inteligência emocional': 'Desenvolvimento Pessoal',
+            'liderança': 'Desenvolvimento Pessoal',
+            'produtividade': 'Desenvolvimento Pessoal',
+            'biohacking & existência': 'Desenvolvimento Pessoal'
+        }
+
+        const normalize = (s) => s ? s.toLowerCase().trim() : ''
+
         const aggregateTimeline = (granularity) => {
             if (lidos.length === 0) return []
 
@@ -186,8 +221,29 @@ export function useAnalyticsData(books) {
         // Map Categories to Classes for color grouping
         const categoryToClass = {}
         books.forEach(b => {
-            if (b.category && b.book_class) {
-                categoryToClass[b.category] = b.book_class
+             // Populate allCategories set with EVERY category found (read or unread)
+             if (b.category) {
+                 allCategories.add(b.category)
+             }
+
+             // 1. Try from book data
+             if (b.category && b.book_class) {
+                 categoryToClass[b.category] = b.book_class
+             } 
+             // 2. Fallback if class is missing but we know the category
+             else if (b.category) {
+                 const normCat = normalize(b.category)
+                 if (FALLBACK_CATEGORY_MAP[normCat]) {
+                     categoryToClass[b.category] = FALLBACK_CATEGORY_MAP[normCat]
+                 }
+             }
+        })
+        
+        // Identify "Orphan" Categories (those without a valid class AND no fallback)
+        const unmappedCategories = new Set()
+        books.forEach(b => {
+            if (b.category && !categoryToClass[b.category]) {
+                unmappedCategories.add(b.category)
             }
         })
 
@@ -208,17 +264,19 @@ export function useAnalyticsData(books) {
         const categoryColors = {}
         const catsByClass = {}
 
-        dist.lidos.category.forEach(cat => {
-            const cls = categoryToClass[cat.name] || 'Outros'
-            if (!catsByClass[cls]) catsByClass[cls] = []
-            catsByClass[cls].push(cat.name)
+        // Collect all categories from both Lidos and Nao Lidos (or use the Set we created earlier)
+        Array.from(allCategories).forEach(catName => {
+             const cls = categoryToClass[catName] || 'Outros'
+             if (!catsByClass[cls]) catsByClass[cls] = []
+             catsByClass[cls].push(catName)
         })
 
+        // Generate colors
         Object.keys(catsByClass).forEach(cls => {
             const cats = catsByClass[cls]
             const baseHSL = getClassBaseHSL(cls)
             cats.forEach((catName, idx) => {
-                const lightnessStep = 7
+                const lightnessStep = 5 
                 const offset = (idx - (cats.length - 1) / 2) * lightnessStep
                 const newL = Math.max(20, Math.min(90, baseHSL.l + offset))
                 categoryColors[catName] = hslToString({ ...baseHSL, l: newL })
@@ -230,7 +288,7 @@ export function useAnalyticsData(books) {
             insights: { oldestRead, newestRead, topAuthor, busiestYear },
             timeline: { monthly: timelineMonthly, yearly: timelineYearly },
             timelineMeta: { classes: Array.from(allClasses), categories: Array.from(allCategories) },
-            meta: { categoryToClass, categoryColors },
+            meta: { categoryToClass, categoryColors, unmappedCategories: Array.from(unmappedCategories) },
             dist
         }
     }, [books])

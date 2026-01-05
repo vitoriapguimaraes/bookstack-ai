@@ -1,14 +1,17 @@
 import React from 'react'
-import { Library, Calendar, TrendingUp, Star } from 'lucide-react'
+import { Hourglass, CalendarCheck, Trophy, Heart } from 'lucide-react'
 
 export function InsightsGrid({ insights }) {
+    // Neutral wrapper style to match KpiCard
+    const iconWrapperClass = "p-3 rounded-lg bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 flex items-center justify-center shrink-0"
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Start of Journey Card */}
             {insights.oldestRead && (
                 <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-5 rounded-xl group hover:border-pastel-blue dark:hover:border-neutral-700 transition-all shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-pastel-blue/20 rounded-lg text-blue-600 dark:text-pastel-blue">
-                        <Library size={24} />
+                    <div className={iconWrapperClass}>
+                        <Hourglass size={24} className="text-pastel-blue" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <h4 className="text-slate-500 dark:text-neutral-400 text-xs uppercase tracking-wider font-medium">Desde</h4>
@@ -25,8 +28,8 @@ export function InsightsGrid({ insights }) {
             {/* Latest Read Card */}
             {insights.newestRead && (
                 <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-5 rounded-xl group hover:border-pastel-purple dark:hover:border-neutral-700 transition-all shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-pastel-purple/20 rounded-lg text-purple-600 dark:text-pastel-purple">
-                        <Calendar size={24} />
+                    <div className={iconWrapperClass}>
+                        <CalendarCheck size={24} className="text-pastel-purple" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <h4 className="text-slate-500 dark:text-neutral-400 text-xs uppercase tracking-wider font-medium">Última Leitura</h4>
@@ -43,8 +46,8 @@ export function InsightsGrid({ insights }) {
             {/* Busiest Year Card */}
             {insights.busiestYear && (
                 <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-5 rounded-xl group hover:border-pastel-green dark:hover:border-neutral-700 transition-all shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-pastel-green/20 rounded-lg text-green-600 dark:text-pastel-green">
-                        <TrendingUp size={24} />
+                    <div className={iconWrapperClass}>
+                        <Trophy size={24} className="text-pastel-green" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <h4 className="text-slate-500 dark:text-neutral-400 text-xs uppercase tracking-wider font-medium">
@@ -63,8 +66,8 @@ export function InsightsGrid({ insights }) {
             {/* Top Author Card */}
             {insights.topAuthor && (
                 <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-5 rounded-xl group hover:border-pastel-pink dark:hover:border-neutral-700 transition-all shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-pastel-pink/20 rounded-lg text-pink-600 dark:text-pastel-pink">
-                        <Star size={24} />
+                    <div className={iconWrapperClass}>
+                        <Heart size={24} className="text-pastel-pink" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <h4 className="text-slate-500 dark:text-neutral-400 text-xs uppercase tracking-wider font-medium">

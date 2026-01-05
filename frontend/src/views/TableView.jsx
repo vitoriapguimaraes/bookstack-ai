@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Download, Upload, Info, Loader2 } from 'lucide-react'
 import BooksTable from '../components/BooksTable'
 import axios from 'axios'
+import ScrollToTopBottom from '../components/ScrollToTopBottom'
 
 const api = axios.create()
 
@@ -139,6 +140,8 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
           </div>
         </div>
       )}
+      
+      <ScrollToTopBottom />
     </div>
   )
 }
