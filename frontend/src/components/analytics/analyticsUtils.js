@@ -11,7 +11,16 @@ export const getClassBaseHSL = (cls) => {
         'Espiritualidade': { h: 245, s: 70, l: 80 },         // Indigo
         'Biografias': { h: 320, s: 70, l: 75 },              // Soft Magenta
     }
-    return map[cls] || { h: 0, s: 0, l: 80 } // Soft Gray
+    
+    if (map[cls]) return map[cls]
+
+    // Fallback: Generate a consistent hue based on the class name
+    let hash = 0
+    for (let i = 0; i < cls.length; i++) {
+        hash = cls.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const h = Math.abs(hash % 360)
+    return { h, s: 65, l: 75 } // Soft pastel default
 }
 
 export const hslToString = ({ h, s, l }) => `hsl(${h}, ${s}%, ${l}%)`

@@ -12,6 +12,7 @@ class UserPreference(SQLModel, table=True):
     yearly_goal: int = Field(default=20)
     custom_prompts: Dict[str, Any] = Field(default={}, sa_type=JSON)
     formula_config: Dict[str, Any] = Field(default={}, sa_type=JSON)
+    class_categories: Dict[str, Any] = Field(default={}, sa_type=JSON)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Profile(SQLModel, table=True):

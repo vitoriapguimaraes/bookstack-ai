@@ -109,8 +109,9 @@ def suggest_book_details(request: TitleRequest, session: Session = Depends(get_s
     pref = session.get(UserPreference, user['id'])
     api_keys = get_decrypted_api_keys(pref)
     custom_prompts = pref.custom_prompts if pref else None
+    class_categories = pref.class_categories if pref else None
     
-    details = get_book_details_hybrid(request.title, api_keys, custom_prompts)
+    details = get_book_details_hybrid(request.title, api_keys, custom_prompts, class_categories)
     if not details:
         raise HTTPException(status_code=500, detail="Failed to get suggestions")
     return details
@@ -331,6 +332,7 @@ def get_preferences(session: Session = Depends(get_session), user: dict = Depend
         yearly_goal=pref.yearly_goal,
         custom_prompts=pref.custom_prompts,
         formula_config=pref.formula_config,
+        class_categories=pref.class_categories,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
@@ -354,6 +356,7 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
     if pref_data.yearly_goal is not None: pref.yearly_goal = pref_data.yearly_goal
     if pref_data.custom_prompts is not None: pref.custom_prompts = pref_data.custom_prompts
     if pref_data.formula_config is not None: pref.formula_config = pref_data.formula_config
+    if pref_data.class_categories is not None: pref.class_categories = pref_data.class_categories
     
     pref.updated_at = datetime.utcnow()
     
@@ -367,6 +370,7 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
         yearly_goal=pref.yearly_goal,
         custom_prompts=pref.custom_prompts,
         formula_config=pref.formula_config,
+        class_categories=pref.class_categories,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
@@ -393,3 +397,40 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
         
     profiles = session.exec(select(Profile)).all()
     return profiles
+
+import hashlib
+CACHE_DIR = Path("image_cache")
+CACHE_DIR.mkdir(exist_ok=True)
+
+@app.get("/proxy/image")
+async def proxy_image(url: str):
+    if not url:
+        raise HTTPException(status_code=400, detail="URL is required")
+    
+    # Gerar hash da URL para usar como nome de arquivo
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    cache_path = CACHE_DIR / url_hash
+    
+    # Se já existe no cache, servimos o arquivo local
+    if cache_path.exists():
+        # Tenta adivinhar o media type ou usa jpeg como padrão
+        content_type = "image/jpeg"
+        if url.lower().endswith('.png'): content_type = "image/png"
+        elif url.lower().endswith('.webp'): content_type = "image/webp"
+        
+        return Response(content=cache_path.read_bytes(), media_type=content_type)
+    
+    try:
+        # Busca a imagem externa
+        response = requests.get(url, stream=True, timeout=10)
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to fetch image")
+        
+        content = response.content
+        # Salva no cache
+        cache_path.write_bytes(content)
+        
+        return Response(content=content, media_type=response.headers.get("Content-Type", "image/jpeg"))
+    except Exception as e:
+        print(f"Erro no proxy de imagem: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error fetching image")

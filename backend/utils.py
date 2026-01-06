@@ -17,7 +17,6 @@ CATEGORY_WEIGHTS = {
     "Comunicação": 5,
     "Bem-estar": 5,
     "Literatura brasileira": 5,
-    "Literatura Brasileira Clássica": 5,
     "História/Ficção": 7,
     "Diversidade e inclusão": 3,
     "Negócios": 2,
@@ -26,7 +25,7 @@ CATEGORY_WEIGHTS = {
     "Estatística": 7,
     "MLOps": 5,
     "Engenharia de dados": 5,
-    "Arquitetura": 1,
+    "Arquitetura de Software": 1,
     "Programação": 3,
     "Machine learning": 7,
     "Visão computacional": 7,
@@ -35,14 +34,13 @@ CATEGORY_WEIGHTS = {
     "Análise de Dados": 5,
     "Liderança & Pensamento Estratégico": 7,
     "Arquitetura da Mente (Mindset)": 7,
-    "Artesanato de Software (Clean Code)": 6,
     "Sistemas de IA & LLMs": 6,
     "Storytelling & Visualização": 5,
     "Biohacking & Existência": 5,
     "Épicos & Ficção Reflexiva": 7,
     "Justiça Social & Interseccionalidade": 3,
-    "Liberdade Econômica & Finanças": 4,
-    "Cosmologia & Fronteiras da Ciência": 7,
+    "Liberdade Econômica": 4,
+    "Cosmologia": 7,
     "Estatística & Incerteza": 7,
     "Engenharia de ML & MLOps": 5,
 }
@@ -59,29 +57,27 @@ CLASS_CATEGORIES = {
         "Sistemas de IA & LLMs"
     ],
     "Engenharia & Arquitetura": [
-        "Arquitetura",
+        "Arquitetura de Software",
         "Arquitetura da Mente (Mindset)",
         "Engenharia de Dados",
         "MLOps",
-        "Engenharia de ML & MLOps",
-        "Artesanato de Software (Clean Code)"
+        "Engenharia de ML & MLOps"
     ],
     "Conhecimento & Ciências": [
         "Conhecimento Geral",
         "Estatística",
         "Estatística & Incerteza",
-        "Cosmologia & Fronteiras da Ciência"
+        "Cosmologia"
     ],
     "Negócios & Finanças": [
         "Finanças Pessoais",
         "Negócios",
-        "Liberdade Econômica & Finanças"
+        "Liberdade Econômica"
     ],
     "Literatura & Cultura": [
         "Diversidade e Inclusão",
         "História/Ficção",
         "Literatura Brasileira",
-        "Literatura Brasileira Clássica",
         "Épicos & Ficção Reflexiva",
         "Justiça Social & Interseccionalidade"
     ],
@@ -400,14 +396,18 @@ def get_groq_classification(prompt, system_prompt, api_keys=None):
     except Exception as e:
         return {"error": f"Erro Groq: {str(e)}"}
 
-def get_ai_classification(title: str, description: str = "", api_keys: dict = None, custom_prompts: dict = None):
+def get_ai_classification(title: str, description: str = "", api_keys: dict = None, custom_prompts: dict = None, class_categories: dict = None):
     """Usa IA (Provider configurável com Fallback) para classificar o livro."""
     
     # Mapeamento de classes para categorias
+    current_mapping = class_categories if class_categories and len(class_categories) > 0 else CLASS_CATEGORIES
+    
     class_categories_str = "\n".join([
         f"- {cls}: {', '.join(cats)}" 
-        for cls, cats in CLASS_CATEGORIES.items()
+        for cls, cats in current_mapping.items()
     ])
+    
+    valid_classes_str = "\n".join([f"   - {cls}" for cls in current_mapping.keys()])
     
     system_prompt = (custom_prompts or {}).get("system_prompt") or "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
     
@@ -433,12 +433,7 @@ PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
 1. "book_class" (string): Escolha UMA das classes abaixo.
    ATENÇÃO: Use EXACTAMENTE a string da classe. NÃO INVENTE ou modifique.
    OPÇÕES VÁLIDAS:
-   - Tecnologia & IA
-   - Desenvolvimento Pessoal
-   - Negócios & Finanças
-   - Conhecimento & Ciências
-   - Literatura & Cultura
-   - Engenharia & Arquitetura
+{valid_classes_str}
 
 2. "category" (string): Escolha UMA categoria específica válida para a classe que você escolheu no passo anterior.
    CRÍTICO: A categoria DEVE pertencer à classe selecionada.
@@ -521,7 +516,7 @@ Responda APENAS com um JSON válido no formato:
     error_summary = " | ".join(errors)
     return {"error": f"Falha em todas as IAs. Detalhes: {error_summary}"}
 
-def get_book_details_hybrid(title: str, api_keys: dict = None, custom_prompts: dict = None):
+def get_book_details_hybrid(title: str, api_keys: dict = None, custom_prompts: dict = None, class_categories: dict = None):
     """
     Solução híbrida: Google Books API + Open Library + Groq AI
     
@@ -558,7 +553,7 @@ def get_book_details_hybrid(title: str, api_keys: dict = None, custom_prompts: d
         result["google_ratings_count"] = rating_data.get("ratings_count", 0)
     
     # 3. Usa IA para classificação personalizada
-    ai_data = get_ai_classification(title, description, api_keys, custom_prompts)
+    ai_data = get_ai_classification(title, description, api_keys, custom_prompts, class_categories)
     if ai_data:
         result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")

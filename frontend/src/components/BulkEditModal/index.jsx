@@ -3,10 +3,10 @@ import { X, Save, AlertTriangle } from 'lucide-react'
 
 const CLASS_CATEGORIES = {
   "Tecnologia & IA": ["Análise de Dados", "Data Science", "IA", "Visão Computacional", "Machine Learning", "Programação", "Sistemas de IA & LLMs"],
-  "Engenharia & Arquitetura": ["Arquitetura", "Arquitetura da Mente (Mindset)", "Engenharia de Dados", "MLOps", "Engenharia de ML & MLOps", "Artesanato de Software (Clean Code)"],
-  "Conhecimento & Ciências": ["Conhecimento Geral", "Estatística", "Estatística & Incerteza", "Cosmologia & Fronteiras da Ciência"],
-  "Negócios & Finanças": ["Finanças Pessoais", "Negócios", "Liberdade Econômica & Finanças"],
-  "Literatura & Cultura": ["Diversidade e Inclusão", "História/Ficção", "Literatura Brasileira", "Literatura Brasileira Clássica", "Épicos & Ficção Reflexiva", "Justiça Social & Interseccionalidade"],
+  "Engenharia & Arquitetura": ["Arquitetura de Software", "Arquitetura da Mente (Mindset)", "Engenharia de Dados", "MLOps", "Engenharia de ML & MLOps"],
+  "Conhecimento & Ciências": ["Conhecimento Geral", "Estatística", "Estatística & Incerteza", "Cosmologia"],
+  "Negócios & Finanças": ["Finanças Pessoais", "Negócios", "Liberdade Econômica"],
+  "Literatura & Cultura": ["Diversidade e Inclusão", "História/Ficção", "Literatura Brasileira", "Épicos & Ficção Reflexiva", "Justiça Social & Interseccionalidade"],
   "Desenvolvimento Pessoal": ["Bem-estar", "Comunicação", "Criatividade", "Desenvolvimento Pessoal", "Inteligência Emocional", "Liderança", "Liderança & Pensamento Estratégico", "Produtividade", "Biohacking & Existência", "Storytelling & Visualização", "Geral"]
 }
 

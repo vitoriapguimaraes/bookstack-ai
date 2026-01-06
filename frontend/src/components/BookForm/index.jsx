@@ -5,13 +5,13 @@ import axios from 'axios'
 const api = axios.create()
 
 // Hierarchical classification mapping
-const CLASS_CATEGORIES = {
+const DEFAULT_CLASS_CATEGORIES = {
   "Tecnologia & IA": ["Análise de Dados", "Data Science", "IA", "Visão Computacional", "Machine Learning", "Programação", "Sistemas de IA & LLMs"],
-  "Engenharia & Arquitetura": ["Arquitetura", "Arquitetura da Mente (Mindset)", "Engenharia de Dados", "MLOps", "Engenharia de ML & MLOps", "Artesanato de Software (Clean Code)"],
-  "Conhecimento & Ciências": ["Conhecimento Geral", "Estatística", "Estatística & Incerteza", "Cosmologia & Fronteiras da Ciência"],
-  "Negócios & Finanças": ["Finanças Pessoais", "Negócios", "Liberdade Econômica & Finanças"],
-  "Literatura & Cultura": ["Diversidade e Inclusão", "História/Ficção", "Literatura Brasileira", "Literatura Brasileira Clássica", "Épicos & Ficção Reflexiva", "Justiça Social & Interseccionalidade"],
-  "Desenvolvimento Pessoal": ["Bem-estar", "Comunicação", "Criatividade", "Desenvolvimento Pessoal", "Inteligência Emocional", "Liderança", "Liderança & Pensamento Estratégico", "Produtividade", "Biohacking & Existência", "Storytelling & Visualização", "Geral"]
+  "Engenharia & Arquitetura": ["Arquitetura de Software", "Engenharia de Dados", "MLOps"],
+  "Conhecimento & Ciências": ["Conhecimento Geral", "Estatística", "Cosmologia"],
+  "Negócios & Finanças": ["Finanças Pessoais", "Negócios", "Liberdade Econômica"],
+  "Literatura & Cultura": ["Diversidade e Inclusão", "História/Ficção", "Literatura Brasileira"],
+  "Desenvolvimento Pessoal": ["Bem-estar", "Comunicação", "Criatividade", "Inteligência Emocional", "Liderança", "Produtividade", "Biohacking & Existência"]
 }
 
 export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingChange }) {
@@ -25,9 +25,11 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingCha
   const [loading, setLoading] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null)
-  const [googleRating, setGoogleRating] = useState(null) // {rating: 4.5, count: 1234}
+  const [googleRating, setGoogleRating] = useState(null)
+  const [classCategories, setClassCategories] = useState(DEFAULT_CLASS_CATEGORIES)
 
   useEffect(() => {
+    fetchPreferences()
     if (bookToEdit) {
       setFormData({
          ...bookToEdit,
@@ -38,6 +40,17 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingCha
       })
     }
   }, [bookToEdit])
+
+  const fetchPreferences = async () => {
+    try {
+        const res = await api.get('/api/preferences/')
+        if (res.data?.class_categories && Object.keys(res.data.class_categories).length > 0) {
+            setClassCategories(res.data.class_categories)
+        }
+    } catch (err) {
+        console.error("Erro ao carregar listas no BookForm:", err)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -63,7 +76,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingCha
 
   const handleClassChange = (e) => {
     const newClass = e.target.value
-    const firstCategory = CLASS_CATEGORIES[newClass][0]
+    const firstCategory = (classCategories[newClass] && classCategories[newClass][0]) || ''
     setFormData(prev => ({ ...prev, book_class: newClass, category: firstCategory }))
   }
 
@@ -292,7 +305,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingCha
                                <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Classe Macro</label>
                                <select name="book_class" value={formData.book_class} onChange={handleClassChange} 
                                   className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
-                                  {Object.keys(CLASS_CATEGORIES).map(cls => (
+                                  {Object.keys(classCategories).map(cls => (
                                     <option key={cls} value={cls}>{cls}</option>
                                   ))}
                                </select>
@@ -301,7 +314,7 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingCha
                                <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">Categoria Específica</label>
                                <select name="category" value={formData.category} onChange={handleChange} 
                                   className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500">
-                                  {(CLASS_CATEGORIES[formData.book_class] || []).map(cat => (
+                                  {(classCategories[formData.book_class] || []).map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
                                   ))}
                                </select>
