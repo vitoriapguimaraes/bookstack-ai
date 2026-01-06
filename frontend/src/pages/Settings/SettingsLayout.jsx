@@ -1,10 +1,17 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Brain, Calculator, List, Settings, Info, User, Sparkles, LayoutDashboard, Sliders } from 'lucide-react'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Brain, Calculator, List, Settings, Info, User, Sparkles, LayoutDashboard, Sliders, LogOut, Shield } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
 export default function SettingsLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { signOut, isAdmin } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/login')
+  }
   
-  // Helper to get current section name for mobile header
   const getCurrentSection = () => {
     const path = location.pathname.split('/').pop()
     const map = {
@@ -20,7 +27,7 @@ export default function SettingsLayout() {
   return (
     <div className="flex flex-col md:flex-row w-full h-full animate-fade-in min-h-[calc(100vh-6rem)]">
       {/* Sidebar Navigation (Desktop) */}
-      <aside className="hidden md:flex flex-col w-80 flex-shrink-0 border-r border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 p-6 lg:p-8">
+      <aside className="hidden md:flex flex-col w-80 flex-shrink-0 border-r border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 p-6 lg:p-8 sticky top-0 h-screen overflow-y-auto">
          <div className="mb-8">
              <div className="flex items-center gap-3 text-slate-800 dark:text-white mb-2">
                 <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg text-purple-600 dark:text-purple-400">
@@ -40,6 +47,16 @@ export default function SettingsLayout() {
                 subtitle="Status do sistema e auditoria"
                 icon={LayoutDashboard} 
             />
+
+            {isAdmin && (
+                <SidebarItem 
+                    to="/admin" 
+                    title="Painel Admin" 
+                    subtitle="Gestão de Usuários"
+                    icon={Shield} 
+                />
+            )}
+
             <div className="h-px bg-slate-100 dark:bg-neutral-800 my-2 mx-2" />
             
             <SidebarItem 
@@ -69,6 +86,23 @@ export default function SettingsLayout() {
                 subtitle="Aparência e perfil de uso"
                 icon={User} 
             />
+                        
+            <button 
+                onClick={handleLogout}
+                className="group flex w-full items-start gap-4 p-3 rounded-xl transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 border border-transparent text-left"
+            >
+                <div className="mt-0.5 p-1.5 rounded-lg transition-colors bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-slate-400 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 group-hover:text-red-500 dark:group-hover:text-red-400">
+                    <LogOut size={18} />
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold transition-colors text-slate-600 dark:text-slate-400 group-hover:text-red-600 dark:group-hover:text-red-300">
+                        Sair da Conta
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 font-medium">
+                        Encerrar sessão atual
+                    </p>
+                </div>
+            </button>
          </nav>
       </aside>
 
@@ -79,6 +113,13 @@ export default function SettingsLayout() {
         <MobileTab to="formula" label="Score" icon={Calculator} />
         <MobileTab to="lists" label="Listas" icon={List} />
         <MobileTab to="preferences" label="Pref." icon={User} />
+        <button 
+            onClick={handleLogout}
+            className="flex items-center justify-center p-2.5 flex-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all text-slate-500 dark:text-neutral-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400"
+            title="Sair"
+        >
+            <LogOut size={20} />
+        </button>
       </div>
 
       {/* Child Content */}

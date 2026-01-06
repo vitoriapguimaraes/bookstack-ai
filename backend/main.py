@@ -4,17 +4,20 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import shutil
 import time
+from datetime import datetime
 from pathlib import Path
 from sqlmodel import Session, select
 from typing import List, Optional
 from database import create_db_and_tables, get_session
 from models import Book
 from utils import calculate_book_score, get_book_details_hybrid
+from auth import get_current_user
 import requests
 import csv
 import io
 import codecs
 from pydantic import BaseModel
+from models_preferences import UserPreference, Profile
 
 class TitleRequest(BaseModel):
     title: str
@@ -35,7 +38,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
-def reorder_books(session: Session, operation: str, **kwargs):
+def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
     """
     Reorganiza a ordem dos livros baseado na operação.
     
@@ -46,9 +49,9 @@ def reorder_books(session: Session, operation: str, **kwargs):
     if operation == 'delete':
         deleted_order = kwargs.get('deleted_order')
         if deleted_order:
-            # Decrementa ordem de todos os livros após o deletado
+            # Decrementa ordem de todos os livros do USUÁRIO após o deletado
             books = session.exec(
-                select(Book).where(Book.order > deleted_order)
+                select(Book).where(Book.order > deleted_order, Book.user_id == user_id)
             ).all()
             for book in books:
                 book.order -= 1
@@ -57,9 +60,9 @@ def reorder_books(session: Session, operation: str, **kwargs):
     elif operation == 'insert':
         new_order = kwargs.get('new_order')
         if new_order:
-            # Incrementa ordem de todos os livros >= nova ordem
+            # Incrementa ordem de todos os livros do USUÁRIO >= nova ordem
             books = session.exec(
-                select(Book).where(Book.order >= new_order)
+                select(Book).where(Book.order >= new_order, Book.user_id == user_id)
             ).all()
             for book in books:
                 book.order += 1
@@ -77,7 +80,8 @@ def reorder_books(session: Session, operation: str, **kwargs):
                     select(Book).where(
                         Book.order > old_order,
                         Book.order <= new_order,
-                        Book.id != book_id  # Excluir o próprio livro
+                        Book.id != book_id,
+                        Book.user_id == user_id
                     )
                 ).all()
                 for book in books:
@@ -89,7 +93,8 @@ def reorder_books(session: Session, operation: str, **kwargs):
                     select(Book).where(
                         Book.order >= new_order,
                         Book.order < old_order,
-                        Book.id != book_id  # Excluir o próprio livro
+                        Book.id != book_id,
+                        Book.user_id == user_id
                     )
                 ).all()
                 for book in books:
@@ -106,18 +111,22 @@ def read_root():
     return {"message": "Reading List API is Running! 🚀"}
 
 @app.get("/books/", response_model=List[Book])
-def read_books(session: Session = Depends(get_session)):
-    books = session.exec(select(Book)).all()
+def read_books(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Filter by user_id
+    books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
     return books
 
 @app.post("/books/", response_model=Book)
-def create_book(book: Book, session: Session = Depends(get_session)):
+def create_book(book: Book, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Set owner
+    book.user_id = user['id']
+    
     # Auto-calculate score
     book.score = calculate_book_score(book)
     
     # Reordenar se tem ordem definida (inserir e empurrar outros)
     if book.order:
-        reorder_books(session, 'insert', new_order=book.order)
+        reorder_books(session, 'insert', user_id=user['id'], new_order=book.order)
     
     session.add(book)
     session.commit()
@@ -125,36 +134,49 @@ def create_book(book: Book, session: Session = Depends(get_session)):
     return book
 
 @app.get("/books/{book_id}", response_model=Book)
-def read_book(book_id: int, session: Session = Depends(get_session)):
+def read_book(book_id: int, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Ownership Check
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+        
     return book
 
 
 
 @app.delete("/books/{book_id}")
-def delete_book(book_id: int, session: Session = Depends(get_session)):
+def delete_book(book_id: int, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Ownership Check
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
     
     deleted_order = book.order  # Salvar ordem antes de deletar
     session.delete(book)
     
     # Reordenar após deletar (recontar ordens)
     if deleted_order:
-        reorder_books(session, 'delete', deleted_order=deleted_order)
+        reorder_books(session, 'delete', user_id=user['id'], deleted_order=deleted_order)
     
     session.commit()
-    session.commit()
+    # session.commit() # Removed duplicate commit
     return {"ok": True}
 
 @app.post("/books/{book_id}/cover")
-async def upload_book_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
+async def upload_book_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+        
+    # Ownership Check
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
 
     # Ensure uploads directory exists
     UPLOAD_DIR.mkdir(exist_ok=True)
@@ -184,10 +206,14 @@ async def upload_book_cover(book_id: int, file: UploadFile = File(...), session:
         raise HTTPException(status_code=500, detail="Failed to upload image")
 
 @app.put("/books/{book_id}", response_model=Book)
-def update_book(book_id: int, book_data: Book, session: Session = Depends(get_session)):
+def update_book(book_id: int, book_data: Book, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Ownership Check
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
     
     old_order = book.order  # Salvar ordem antiga
     
@@ -223,7 +249,7 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
             reorder_books(session, 'delete', deleted_order=old_order)
         elif old_order is not None and new_order is not None:
             # Movendo de uma posição para outra
-            reorder_books(session, 'move', old_order=old_order, new_order=new_order, book_id=book_id)
+            reorder_books(session, 'move', user_id=user['id'], old_order=old_order, new_order=new_order, book_id=book_id)
     
     book.order = new_order
     
@@ -243,8 +269,9 @@ def suggest_book_details(request: TitleRequest):
     return details
 
 @app.get("/dashboard/stats")
-def get_dashboard_stats(session: Session = Depends(get_session)):
-    books = session.exec(select(Book)).all()
+def get_dashboard_stats(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Filter by user
+    books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
     
     total_books = len(books)
     if total_books == 0:
@@ -328,11 +355,11 @@ async def proxy_image(url: str):
         return Response(status_code=404)
 
 @app.get("/books_export/", response_class=StreamingResponse)
-def export_books_csv(session: Session = Depends(get_session)):
+def export_books_csv(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     """
-    Gera e baixa um CSV com todos os livros da biblioteca.
+    Gera e baixa um CSV com todos os livros da biblioteca do usuário.
     """
-    books = session.exec(select(Book)).all()
+    books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
     
     # Criar um buffer em memória para o CSV
     output = io.StringIO()
@@ -382,7 +409,7 @@ def export_books_csv(session: Session = Depends(get_session)):
     )
 
 @app.post("/books_import/")
-async def import_books_csv(file: UploadFile = File(...), session: Session = Depends(get_session)):
+async def import_books_csv(file: UploadFile = File(...), session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     """
     Importa livros via CSV.
     Campos obrigatórios: 'title'
@@ -459,3 +486,57 @@ async def import_books_csv(file: UploadFile = File(...), session: Session = Depe
         raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Failed to fetch image: {str(e)}")
+
+# --- Preferences Endpoints ---
+
+@app.get("/preferences/", response_model=UserPreference)
+def get_preferences(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    user_id = user['id']
+    pref = session.get(UserPreference, user_id)
+    if not pref:
+        # Create default if not exists
+        pref = UserPreference(user_id=user_id)
+        session.add(pref)
+        session.commit()
+        session.refresh(pref)
+    return pref
+
+@app.put("/preferences/", response_model=UserPreference)
+def update_preferences(pref_data: UserPreference, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    user_id = user['id']
+    pref = session.get(UserPreference, user_id)
+    if not pref:
+        pref = UserPreference(user_id=user_id)
+    
+    # Update fields
+    if pref_data.openai_key is not None: pref.openai_key = pref_data.openai_key
+    if pref_data.gemini_key is not None: pref.gemini_key = pref_data.gemini_key
+    if pref_data.yearly_goal is not None: pref.yearly_goal = pref_data.yearly_goal
+    if pref_data.custom_prompts is not None: pref.custom_prompts = pref_data.custom_prompts
+    
+    pref.updated_at = datetime.utcnow()
+    
+    session.add(pref)
+    session.commit()
+    session.refresh(pref)
+    return pref
+
+# --- Admin Endpoints ---
+
+@app.get("/admin/users", response_model=List[Profile])
+def list_users(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Simple Admin Check (Hardcoded for vipistori@gmail.com or via Profiles table role)
+    # 1. Check if requester has admin role in Profiles table
+    requester_profile = session.get(Profile, user['id'])
+    
+    is_admin = False
+    if requester_profile and requester_profile.role == 'admin':
+        is_admin = True
+    elif user.get('email') == 'vipistori@gmail.com': # Fallback hardcode
+        is_admin = True
+        
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    profiles = session.exec(select(Profile)).all()
+    return profiles

@@ -20,3 +20,4 @@ class Book(SQLModel, table=True):
     score: Optional[float] = 0.0
     motivation: Optional[str] = None
     cover_image: Optional[str] = None
+    user_id: Optional[str] = Field(default=None, index=True) # ID do usuário no Supabase

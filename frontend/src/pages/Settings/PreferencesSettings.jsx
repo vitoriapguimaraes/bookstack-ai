@@ -1,52 +1,126 @@
 import { useState, useEffect } from 'react'
-import { Target, Save } from 'lucide-react'
+import { Target, Save, User, Copy, ShieldAlert } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { api } from '../../services/api'
 
 export default function PreferencesSettings() {
+  const { user } = useAuth()
   const [yearlyGoal, setYearlyGoal] = useState(20)
   const [isSaved, setIsSaved] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const savedGoal = localStorage.getItem('yearlyReadingGoal')
-    if (savedGoal) {
-      setYearlyGoal(parseInt(savedGoal))
-    }
+    fetchPreferences()
   }, [])
 
-  const handleSave = () => {
-    localStorage.setItem('yearlyReadingGoal', yearlyGoal.toString())
-    setIsSaved(true)
-    setTimeout(() => setIsSaved(false), 2000)
+  const fetchPreferences = async () => {
+      try {
+          const res = await api.get('/preferences/')
+          if (res.data?.yearly_goal) {
+              setYearlyGoal(res.data.yearly_goal)
+          }
+      } catch (err) {
+          console.error("Erro ao carregar preferências:", err)
+      } finally {
+          setLoading(false)
+      }
+  }
+
+  const handleSave = async () => {
+    try {
+        await api.put('/preferences/', { yearly_goal: yearlyGoal })
+        localStorage.setItem('yearlyReadingGoal', yearlyGoal.toString()) // Keep sync for now
+        setIsSaved(true)
+        setTimeout(() => setIsSaved(false), 2000)
+    } catch (err) {
+        console.error("Erro ao salvar:", err)
+        alert("Erro ao salvar preferências no servidor.")
+    }
+  }
+
+  const handleCopyId = () => {
+    if (user?.id) {
+        navigator.clipboard.writeText(user.id)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
-    <div className="w-full animate-fade-in">
-      <div className="mb-6 hidden md:block">
+    <div className="w-full animate-fade-in space-y-6">
+      <div className="hidden md:block">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Preferências</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Configure suas preferências pessoais
+          Configure suas preferências pessoais e gerencie sua conta
         </p>
+      </div>
+
+      {/* User Account Card */}
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-slate-200 dark:border-neutral-800 p-6">
+          <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <User className="text-blue-600 dark:text-blue-400" size={20} />
+              </div>
+              <div>
+                  <h3 className="text-base md:text-lg font-semibold text-slate-800 dark:text-white leading-tight">
+                      Conta do Usuário
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-neutral-400">
+                      Informações de identificação da sua conta
+                  </p>
+              </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                      Email
+                  </label>
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white font-medium">
+                      {user?.email || 'Email não disponível'}
+                  </div>
+              </div>
+              
+              <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                      User ID (UUID)
+                  </label>
+                  <div className="flex gap-2">
+                      <div className="flex-1 px-4 py-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 font-mono text-sm truncate">
+                          {user?.id || 'ID não disponível'}
+                      </div>
+                      <button 
+                        onClick={handleCopyId}
+                        className="px-4 py-2 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded-lg border border-slate-200 dark:border-neutral-700 transition-colors flex items-center justify-center text-slate-600 dark:text-slate-300"
+                        title="Copiar ID"
+                      >
+                          {copied ? <span className="text-emerald-600 font-bold text-xs">Copiado!</span> : <Copy size={18} />}
+                      </button>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">Necessário para suporte ou migração de dados.</p>
+              </div>
+          </div>
       </div>
 
       {/* Reading Goal Card */}
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-slate-200 dark:border-neutral-800 p-6">
-        <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
-          {/* Column 1 - Title and Description (42%) */}
-          <div className="md:col-span-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+        <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <Target className="text-purple-600 dark:text-purple-400" size={20} />
-              </div>
-              <h3 className="text-base md:text-lg font-semibold text-slate-800 dark:text-white leading-tight">
-                Meta Anual de Leitura
-              </h3>
             </div>
-            <p className="text-sm text-slate-500 dark:text-neutral-400">
-              Defina quantos livros você deseja ler por ano.
-            </p>
-          </div>
+            <div>
+                <h3 className="text-base md:text-lg font-semibold text-slate-800 dark:text-white leading-tight">
+                    Meta Anual de Leitura
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-neutral-400">
+                    Defina quantos livros você deseja ler por ano.
+                </p>
+            </div>
+        </div>
 
-          {/* Column 2 - Current Goal Display (25%) */}
-          <div className="md:col-span-3">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
+          <div className="md:col-span-6">
             <div className="text-center p-4 bg-slate-50 dark:bg-neutral-800/50 rounded-lg border border-slate-200 dark:border-neutral-700">
               <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Meta Atual</p>
               <p className="text-2xl font-bold text-slate-800 dark:text-white">
@@ -58,8 +132,7 @@ export default function PreferencesSettings() {
             </div>
           </div>
 
-          {/* Column 3 - Input and Button (33%) */}
-          <div className="md:col-span-4">
+          <div className="md:col-span-6">
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-slate-700 dark:text-neutral-300 whitespace-nowrap">
@@ -90,13 +163,26 @@ export default function PreferencesSettings() {
           </div>
         </div>
       </div>
-
-      {/* Future preferences placeholder */}
-      <div className="mt-6 p-4 bg-slate-50 dark:bg-neutral-900/50 rounded-lg border border-slate-200 dark:border-neutral-800">
-        <p className="text-sm text-slate-600 dark:text-neutral-400">
-          Mais opções de preferências serão adicionadas em breve.
-        </p>
+      
+      {/* Danger Zone */}
+      <div className="bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-900/30 p-6 opacity-75 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <ShieldAlert className="text-red-600 dark:text-red-400" size={20} />
+              </div>
+              <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">Zona de Perigo</h3>
+          </div>
+          <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-600 dark:text-red-300 font-medium">Resetar Conta</p>
+                <p className="text-xs text-red-500 dark:text-red-400">Apagar todos os livros e começar do zero.</p>
+              </div>
+              <button className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors uppercase tracking-wider">
+                  Em Breve
+              </button>
+          </div>
       </div>
+
     </div>
   )
 }

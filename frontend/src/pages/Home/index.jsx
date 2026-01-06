@@ -114,8 +114,33 @@ export default function HomeView({ books }) {
     setSelectedYears([])
   }
 
-  if (!books || !stats) {
-    return <div className="flex items-center justify-center h-screen text-neutral-500">Carregando...</div>
+  if (books && books.length === 0) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 animate-fade-in">
+            <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-6">
+                <BookOpen size={48} className="text-purple-600 dark:text-purple-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
+                Sua estante está vazia
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 max-w-md mb-8">
+                Parece que você ainda não adicionou nenhum livro ou seus livros antigos precisam ser migrados para sua nova conta.
+            </p>
+            <div className="flex gap-4">
+                <button 
+                    onClick={() => navigate('/create')}
+                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium shadow-lg shadow-purple-500/20 transition-all active:scale-95 flex items-center gap-2"
+                >
+                    <BookOpen size={20} />
+                    Adicionar Primeiro Livro
+                </button>
+            </div>
+        </div>
+    )
+  }
+
+  if (!stats) {
+    return <div className="flex items-center justify-center h-screen text-neutral-500">Carregando estatísticas...</div>
   }
 
   return (
