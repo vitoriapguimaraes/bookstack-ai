@@ -165,7 +165,7 @@ export default function FormulaSettings() {
     <div className="w-full animate-fade-in pb-20 md:pb-0 font-sans">
       
       {/* Header with Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 Editor de Fórmula

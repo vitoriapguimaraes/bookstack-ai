@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 
-export default function ScrollToTopBottom({ containerRef }) {
+// Hook to detect mobile screen size
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+    
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+    
+    return isMobile
+}
+
+export default function ScrollToTopBottom({ containerRef, currentPath }) {
+    const isMobile = useIsMobile()
     const [isTop, setIsTop] = useState(true)
     const [isBottom, setIsBottom] = useState(false)
 
@@ -73,7 +87,7 @@ export default function ScrollToTopBottom({ containerRef }) {
                 if (resizeObserver) resizeObserver.disconnect()
             }
         }
-    }, [containerRef, window.location.pathname]) // Re-run on route change
+    }, [containerRef, currentPath]) // Re-run on route change
 
     const scrollToTop = () => {
         const target = containerRef?.current || window
@@ -87,6 +101,26 @@ export default function ScrollToTopBottom({ containerRef }) {
         } else {
             target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' })
         }
+    }
+
+    // Determine if buttons should be visible
+    const shouldShow = () => {
+        if (!currentPath) return false
+        
+        // Desktop: only /table
+        if (!isMobile) {
+            return currentPath === '/table'
+        }
+        
+        // Mobile: /table, /mural/*, /analytics
+        return currentPath === '/table' || 
+               currentPath.startsWith('/mural') || 
+               currentPath === '/analytics'
+    }
+
+    // Don't render if shouldn't show
+    if (!shouldShow()) {
+        return null
     }
 
     return (

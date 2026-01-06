@@ -237,7 +237,7 @@ export default function App() {
         </main>
 
         {/* Button Scroll to Top */}
-        <ScrollToTopBottom />
+        <ScrollToTopBottom currentPath={location.pathname} />
 
       </div>
     </ToastProvider>
