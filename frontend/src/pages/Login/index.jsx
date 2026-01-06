@@ -4,46 +4,35 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Lock, Mail, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
-  const { signIn, signUp, user } = useAuth() // Get user to check status
-  const navigate = useNavigate()
-  const location = useLocation()
-  
-  const from = location.state?.from?.pathname || "/"
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-        navigate(from, { replace: true })
-    }
-  }, [user, navigate, from])
-
   const [isLogin, setIsLogin] = useState(true)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false) // Added showPassword state
+
+  const { signIn, signUp } = useAuth()
+  const { addToast } = useToast()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError(null)
+    setError('')
     setLoading(true)
 
     try {
       if (isLogin) {
-        await signIn({ email, password })
-        navigate(from, { replace: true })
+        const { error } = await signIn({ email, password })
+        if (error) throw error
+        navigate('/')
       } else {
-        await signUp({ email, password })
-        // Usually signup sends a confirmation email, or auto-logins depending on Supabase config
-        // Assuming auto-login for development or prompt to check email
-        // For simplicity, let's try to login immediately or show success message
-        alert('Cadastro realizado! Verifique seu email ou tente logar.')
-        setIsLogin(true)
+        const { error } = await signUp({ email, password })
+        if (error) throw error
+        addToast({ type: 'success', message: 'Cadastro realizado! Verifique seu email ou tente logar.' })
+        setIsLogin(true) // Switch to login view
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Erro na autenticação")
     } finally {
       setLoading(false)
     }

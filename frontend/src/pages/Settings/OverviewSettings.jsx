@@ -11,8 +11,20 @@ export default function OverviewSettings() {
   const navigate = useNavigate()
 
   return (
-    <div className="w-full animate-fade-in">
-
+    <div className="w-full animate-fade-in pb-20 md:pb-0 font-sans">
+      
+      {/* Header with Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                Configurações Gerais
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Veja o que você pode configurar aqui.
+            </p>
+        </div>
+      </div>
+      
       {/* Feature cards */}
       <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
         <FeatureCard

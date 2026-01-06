@@ -33,7 +33,6 @@ CATEGORY_WEIGHTS = {
     "IA": 6,
     "Data science": 7,
     "Análise de Dados": 5,
-    # Additional categories from the system
     "Liderança & Pensamento Estratégico": 7,
     "Arquitetura da Mente (Mindset)": 7,
     "Artesanato de Software (Clean Code)": 6,
@@ -108,62 +107,86 @@ def get_class_from_category(category: str) -> str:
             return book_class
     return "Desenvolvimento Pessoal"  # Default fallback
 
-def calculate_book_score(book: Book) -> float:
+
+def calculate_book_score(book: Book, config: dict = None) -> float:
     """
-    Calcula o score do livro baseado na fórmula do Excel:
-    =SE(G212=0; 0; 
-       SE(E212="Técnico";4;2)
-       + SE(H212="Estante";2;0)
-       + IFS(F212="1 - Baixa";1; F212="2 - Média";4; F212="3 - Média-Alta";7; F212="4 - Alta";10)
-       + IFS(D212<=2005;4; E(D212>=2006; D212<=2021);7; D212>=2022;9)
-       + IFS(I212=categoria; peso_categoria)
-    )
-    
-    Onde G212 = Status (0=Lido, 1=A Ler, 2=Lendo)
-    Se Status = Lido (0), score = 0
+    Calcula o score do livro baseado na fórmula personalizada ou padrão (Excel).
+    config: Dicionário opcional com pesos personalizados.
     """
     
     # Se o livro já foi lido, score = 0 (conforme fórmula Excel)
     if book.status == "Lido":
         return 0.0
     
+    # Default Config (Formula Original)
+    if not config:
+        config = {}
+
+    weights_type = config.get('type', {"Técnico": 4, "default": 2})
+    weights_availability = config.get('availability', {"Estante": 2, "default": 0})
+    weights_priority = config.get('priority', {"1 - Baixa": 1, "2 - Média": 4, "3 - Média-Alta": 7, "4 - Alta": 10})
+    weights_year = config.get('year', {
+        "ranges": [
+            {"max": 2005, "weight": 4},
+            {"min": 2006, "max": 2021, "weight": 7},
+            {"min": 2022, "weight": 9}
+        ]
+    })
+    
+    # New Weights for Class and Category
+    weights_class = config.get('book_class', {})
+    
+    # Merge Default CATEGORY_WEIGHTS if not present in config, or use config as primary
+    # If the user has saved a config, 'category' key will exist (even if empty).
+    # If it's a fresh/legacy call without any user pref, config is empty {}, so we rely on global defaults.
+    if 'category' in config:
+        weights_category = config['category']
+    else:
+        weights_category = CATEGORY_WEIGHTS
+
     score = 0.0
     
     # 1. Tipo (E212)
-    if book.type == "Técnico":
-        score += 4
-    else:
-        score += 2
+    score += weights_type.get(book.type, weights_type.get('default', 2))
         
     # 2. Disponibilidade (H212)
     if book.availability == "Estante":
-        score += 2
+        score += weights_availability.get('Estante', 2)
+    else:
+        score += weights_availability.get('default', 0)
         
     # 3. Prioridade (F212)
-    priority_weights = {
-        "1 - Baixa": 1,
-        "2 - Média": 4, 
-        "3 - Média-Alta": 7, 
-        "4 - Alta": 10
-    }
-    score += priority_weights.get(book.priority, 0)
+    score += weights_priority.get(book.priority, 0)
     
     # 4. Ano (D212)
     if book.year:
-        if book.year <= 2005:
-            score += 4
-        elif 2006 <= book.year <= 2021:
-            score += 7
-        elif book.year >= 2022:
-            score += 9
+        year_weight = 0
+        for r in weights_year.get('ranges', []):
+            if 'min' in r and 'max' in r:
+                if r['min'] <= book.year <= r['max']:
+                    year_weight = r['weight']
+                    break
+            elif 'max' in r:
+                if book.year <= r['max']:
+                    year_weight = r['weight']
+                    break
+            elif 'min' in r:
+                if book.year >= r['min']:
+                    year_weight = r['weight']
+                    break
+        score += year_weight
             
-    # 5. Categoria (I212)
+    # 5. Classe (Novo)
+    if hasattr(book, 'book_class') and book.book_class:
+        score += weights_class.get(book.book_class, 0)
+
+    # 6. Categoria (I212) - Updated to use dynamic weights
     # Tenta match exato primeiro
-    category_score = CATEGORY_WEIGHTS.get(book.category, 0)
+    category_score = weights_category.get(book.category, 0)
     
-    # Se não encontrou match exato, tenta match parcial
+    # Se não encontrou match exato, tenta match parcial (apenas se book.category existe)
     if category_score == 0 and book.category:
-        for cat_name, weight in CATEGORY_WEIGHTS.items():
+        for cat_name, weight in weights_category.items():
             if cat_name.lower() in book.category.lower() or book.category.lower() in cat_name.lower():
                 category_score = weight
                 break
@@ -307,12 +330,14 @@ def get_hybrid_rating(title: str, author: str = None, original_title: str = None
 
 # --- AI PROVIDERS ---
 
-def get_gemini_classification(prompt, system_prompt):
+def get_gemini_classification(prompt, system_prompt, api_keys=None):
     # Requires: pip install google-generativeai
     # Env: GEMINI_API_KEY
     try:
         import google.generativeai as genai
-        api_key = os.getenv("GEMINI_API_KEY")
+        # Prefer provided key, fallback to env
+        api_key = (api_keys or {}).get("gemini_key") or os.getenv("GEMINI_API_KEY")
+        
         if not api_key: 
             return {"error": "GEMINI_API_KEY não configurada"}
             
@@ -328,12 +353,14 @@ def get_gemini_classification(prompt, system_prompt):
     except Exception as e:
         return {"error": f"Erro Gemini: {str(e)}"}
 
-def get_openai_classification(prompt, system_prompt):
+def get_openai_classification(prompt, system_prompt, api_keys=None):
     # Requires: pip install openai
     # Env: OPENAI_API_KEY
     try:
         from openai import OpenAI
-        api_key = os.getenv("OPENAI_API_KEY")
+        # Prefer provided key, fallback to env
+        api_key = (api_keys or {}).get("openai_key") or os.getenv("OPENAI_API_KEY")
+        
         if not api_key: return {"error": "OPENAI_API_KEY não configurada"}
         
         client = OpenAI(api_key=api_key)
@@ -352,8 +379,10 @@ def get_openai_classification(prompt, system_prompt):
     except Exception as e:
         return {"error": f"Erro OpenAI: {str(e)}"}
 
-def get_groq_classification(prompt, system_prompt):
-    api_key = os.getenv("GROQ_API_KEY")
+def get_groq_classification(prompt, system_prompt, api_keys=None):
+    # Prefer provided key, fallback to env
+    api_key = (api_keys or {}).get("groq_key") or os.getenv("GROQ_API_KEY")
+    
     if not api_key: return {"error": "GROQ_API_KEY não configurada"}
     
     try:
@@ -371,7 +400,7 @@ def get_groq_classification(prompt, system_prompt):
     except Exception as e:
         return {"error": f"Erro Groq: {str(e)}"}
 
-def get_ai_classification(title: str, description: str = ""):
+def get_ai_classification(title: str, description: str = "", api_keys: dict = None):
     """Usa IA (Provider configurável com Fallback) para classificar o livro."""
     
     # Mapeamento de classes para categorias
@@ -444,8 +473,11 @@ Responda APENAS com um JSON válido no formato:
 }}
 """
     
-    preferred_provider = os.getenv("AI_PROVIDER", "groq").lower()
-    
+    preferred_provider = (api_keys or {}).get("ai_provider", "groq").lower()
+    # Fallback to env var if key not in dict, or if just relying on system default
+    if preferred_provider not in ["openai", "gemini", "groq"]:
+        preferred_provider = os.getenv("AI_PROVIDER", "groq").lower()
+
     providers = []
     # Order providers: Preferred first, then others
     if preferred_provider == "gemini":
@@ -460,7 +492,7 @@ Responda APENAS com um JSON válido no formato:
     print(f"Tentando classificar com {preferred_provider.upper()}...")
     
     for provider_func in providers:
-        res = provider_func(prompt, system_prompt)
+        res = provider_func(prompt, system_prompt, api_keys)
         
         # Se retornou dicionário com 'error', registramos e continuamos
         if isinstance(res, dict) and "error" in res:
@@ -483,7 +515,7 @@ Responda APENAS com um JSON válido no formato:
     error_summary = " | ".join(errors)
     return {"error": f"Falha em todas as IAs. Detalhes: {error_summary}"}
 
-def get_book_details_hybrid(title: str):
+def get_book_details_hybrid(title: str, api_keys: dict = None):
     """
     Solução híbrida: Google Books API + Open Library + Groq AI
     
@@ -520,7 +552,7 @@ def get_book_details_hybrid(title: str):
         result["google_ratings_count"] = rating_data.get("ratings_count", 0)
     
     # 3. Usa IA para classificação personalizada
-    ai_data = get_ai_classification(title, description)
+    ai_data = get_ai_classification(title, description, api_keys)
     if ai_data:
         result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")

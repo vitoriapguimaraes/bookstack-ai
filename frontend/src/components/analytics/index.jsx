@@ -7,9 +7,11 @@ import { InsightsGrid } from './InsightsGrid'
 import { useAnalyticsData } from './useAnalyticsData'
 import { getClassBaseHSL, hslToString } from './analyticsUtils'
 import html2canvas from 'html2canvas'
+import { useToast } from '../../context/ToastContext'
 
 
 export default function Analytics({ books }) {
+  const { addToast } = useToast()
   const [timelineType, setTimelineType] = useState('total')
   const [timelinePeriod, setTimelinePeriod] = useState('yearly') // 'monthly' | 'yearly'
   const [isExporting, setIsExporting] = useState(false)
@@ -63,9 +65,10 @@ export default function Analytics({ books }) {
           link.download = `relatorio-leitura-${new Date().toISOString().slice(0,10)}.png`
           link.href = canvas.toDataURL('image/png')
           link.click()
+          addToast({ type: 'success', message: 'Relatório exportado com sucesso!' })
       } catch (err) {
           console.error("Export failed:", err)
-          alert("Erro ao exportar relatório.")
+          addToast({ type: 'error', message: 'Erro ao exportar relatório.' })
       } finally {
           setIsExporting(false)
       }

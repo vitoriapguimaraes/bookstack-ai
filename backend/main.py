@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from sqlmodel import Session, select
-from typing import List, Optional
+from typing import List
 from database import create_db_and_tables, get_session
 from models import Book
 from utils import calculate_book_score, get_book_details_hybrid
@@ -18,6 +18,7 @@ import io
 import codecs
 from pydantic import BaseModel
 from models_preferences import UserPreference, Profile
+from security import encrypt_value, decrypt_value
 
 class TitleRequest(BaseModel):
     title: str
@@ -102,6 +103,17 @@ def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
                     session.add(book)
 
 
+@app.post("/books/suggest")
+def suggest_book_details(request: TitleRequest, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Need user context to get API Keys
+    pref = session.get(UserPreference, user['id'])
+    api_keys = get_decrypted_api_keys(pref)
+    
+    details = get_book_details_hybrid(request.title, api_keys)
+    if not details:
+        raise HTTPException(status_code=500, detail="Failed to get suggestions")
+    return details
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
@@ -116,13 +128,34 @@ def read_books(session: Session = Depends(get_session), user: dict = Depends(get
     books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
     return books
 
+
+# Helper to get decrypted API keys dict
+def get_decrypted_api_keys(pref: UserPreference) -> dict:
+    if not pref: return {}
+    return {
+        "openai_key": decrypt_value(pref.openai_key),
+        "gemini_key": decrypt_value(pref.gemini_key),
+        "groq_key": decrypt_value(pref.groq_key),
+        "ai_provider": "groq" # TODO: Add preference field for provider later if needed
+    }
+
+# ... (inside endpoints) ...
+
 @app.post("/books/", response_model=Book)
 def create_book(book: Book, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     # Set owner
     book.user_id = user['id']
     
-    # Auto-calculate score
-    book.score = calculate_book_score(book)
+    # Fetch user preferences for formula config and keys
+    pref = session.get(UserPreference, user['id'])
+    config = pref.formula_config if pref else None
+    api_keys = get_decrypted_api_keys(pref)
+
+    # Auto-calculate score (now possibly using keys in utils, though currently utils uses env, we will fix utils next)
+    # Right now calculate_book_score doesn't take keys, but get_ai_classification inside import/suggest does.
+    # Actually calculate_book_score is pure math. AI classification happens in Suggest or Import.
+    
+    book.score = calculate_book_score(book, config)
     
     # Reordenar se tem ordem definida (inserir e empurrar outros)
     if book.order:
@@ -133,80 +166,11 @@ def create_book(book: Book, session: Session = Depends(get_session), user: dict 
     session.refresh(book)
     return book
 
-@app.get("/books/{book_id}", response_model=Book)
-def read_book(book_id: int, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    book = session.get(Book, book_id)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    
-    # Ownership Check
-    if book.user_id != user['id']:
-        raise HTTPException(status_code=403, detail="Acesso negado")
-        
-    return book
-
-
-
-@app.delete("/books/{book_id}")
-def delete_book(book_id: int, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    book = session.get(Book, book_id)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    
-    # Ownership Check
-    if book.user_id != user['id']:
-        raise HTTPException(status_code=403, detail="Acesso negado")
-    
-    deleted_order = book.order  # Salvar ordem antes de deletar
-    session.delete(book)
-    
-    # Reordenar após deletar (recontar ordens)
-    if deleted_order:
-        reorder_books(session, 'delete', user_id=user['id'], deleted_order=deleted_order)
-    
-    session.commit()
-    # session.commit() # Removed duplicate commit
-    return {"ok": True}
-
-@app.post("/books/{book_id}/cover")
-async def upload_book_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    book = session.get(Book, book_id)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-        
-    # Ownership Check
-    if book.user_id != user['id']:
-        raise HTTPException(status_code=403, detail="Acesso negado")
-
-    # Ensure uploads directory exists
-    UPLOAD_DIR.mkdir(exist_ok=True)
-    
-    # Generate unique filename (timestamp) to avoid caching issues
-    file_extension = Path(file.filename).suffix
-    if not file_extension:
-        file_extension = ".jpg" # Default fallback
-        
-    filename = f"cover_{book_id}_{int(time.time())}{file_extension}"
-    file_path = UPLOAD_DIR / filename
-    
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        # Update book record
-        # Save relative path that will be served via proxy or static mount
-        book.cover_image = f"/uploads/{filename}"
-        session.add(book)
-        session.commit()
-        session.refresh(book)
-        
-        return {"filename": filename, "cover_url": book.cover_image}
-    except Exception as e:
-        print(f"Error uploading file: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload image")
+# ...
 
 @app.put("/books/{book_id}", response_model=Book)
 def update_book(book_id: int, book_data: Book, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # ... existing ownership check ...
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -215,9 +179,9 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     if book.user_id != user['id']:
         raise HTTPException(status_code=403, detail="Acesso negado")
     
-    old_order = book.order  # Salvar ordem antiga
+    old_order = book.order 
     
-    # Update fields manually to avoid overwriting ID or cover if not passed
+    # Update fields manually
     book.title = book_data.title
     book.original_title = book_data.original_title
     book.author = book_data.author
@@ -233,180 +197,35 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     book.motivation = book_data.motivation
     book.date_read = book_data.date_read
     
-    # Auto-clear order when status is "Lido" (finished books don't need queue position)
     if book_data.status == "Lido":
         new_order = None
     else:
         new_order = book_data.order
     
-    # Reordenar se a ordem mudou
     if old_order != new_order:
         if old_order is None and new_order is not None:
-            # Inserindo ordem pela primeira vez
             reorder_books(session, 'insert', new_order=new_order)
         elif old_order is not None and new_order is None:
-            # Removendo ordem (livro marcado como "Lido")
             reorder_books(session, 'delete', deleted_order=old_order)
         elif old_order is not None and new_order is not None:
-            # Movendo de uma posição para outra
             reorder_books(session, 'move', user_id=user['id'], old_order=old_order, new_order=new_order, book_id=book_id)
     
     book.order = new_order
     
-    # Recalculate score based on new data
-    book.score = calculate_book_score(book)
+    # Fetch user preferences
+    pref = session.get(UserPreference, user['id'])
+    config = pref.formula_config if pref else None
+    
+    # Recalculate score
+    book.score = calculate_book_score(book, config)
     
     session.add(book)
     session.commit()
     session.refresh(book)
     return book
 
-@app.post("/books/suggest")
-def suggest_book_details(request: TitleRequest):
-    details = get_book_details_hybrid(request.title)
-    if not details:
-        raise HTTPException(status_code=500, detail="Failed to get suggestions")
-    return details
 
-@app.get("/dashboard/stats")
-def get_dashboard_stats(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    # Filter by user
-    books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
-    
-    total_books = len(books)
-    if total_books == 0:
-        return {
-            "total": 0, "by_status": {}, "by_category": [], "rating_avg": 0
-        }
-
-    # Status counts
-    status_counts = {"Lido": 0, "A Ler": 0, "Lendo": 0}
-    for b in books:
-        if b.status in status_counts:
-            status_counts[b.status] += 1
-            
-    # Rating Average (only for Lido)
-    lidos = [b for b in books if b.status == 'Lido' and b.rating]
-    avg_rating = sum([b.rating for b in lidos]) / len(lidos) if lidos else 0
-    
-    # Category Distribution (Top 5)
-    cat_map = {}
-    for b in books:
-        cat = b.category or "Outros"
-        cat_map[cat] = cat_map.get(cat, 0) + 1
-    
-    # Format for Recharts: [{name: 'Cat', value: 10}, ...]
-    by_category = [{"name": k, "value": v} for k, v in cat_map.items()]
-    by_category.sort(key=lambda x: x['value'], reverse=True)
-    
-    # Readings per Year (chart) - based on 'year' field or maybe 'Data_Leitura' (not migrated yet?)
-    # Let's use 'year' (Publication Year) distribution as a proxy or just skip for now.
-    # A better metric is "Pages Reading" or count by Status. Let's return simple stats first.
-    
-    return {
-        "total": total_books,
-        "by_status": status_counts,
-        "by_category": by_category[:6], # Top 6
-        "rating_avg": round(avg_rating, 1)
-    }
-
-@app.get("/proxy/image")
-async def proxy_image(url: str):
-    """
-    Proxy endpoint to fetch images with local caching.
-    """
-    import os
-    import hashlib
-    from pathlib import Path
-
-    CACHE_DIR = Path("image_cache")
-    CACHE_DIR.mkdir(exist_ok=True)
-
-    try:
-        # Create hash for filename
-        url_hash = hashlib.md5(url.encode()).hexdigest()
-        cache_path = CACHE_DIR / f"{url_hash}.jpg"
-
-        if cache_path.exists():
-            with open(cache_path, "rb") as f:
-                return Response(content=f.read(), media_type="image/jpeg")
-
-        # Fetch from web (NON-BLOCKING)
-        import asyncio
-        loop = asyncio.get_event_loop()
-        
-        def fetch_url():
-            return requests.get(url, timeout=10, headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            })
-            
-        response = await loop.run_in_executor(None, fetch_url)
-        response.raise_for_status()
-        
-        # Save to cache
-        with open(cache_path, "wb") as f:
-            f.write(response.content)
-            
-        content_type = response.headers.get('content-type', 'image/jpeg')
-        return Response(content=response.content, media_type=content_type)
-
-    except Exception as e:
-        print(f"Error proxying image: {e}")
-        return Response(status_code=404)
-
-@app.get("/books_export/", response_class=StreamingResponse)
-def export_books_csv(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    """
-    Gera e baixa um CSV com todos os livros da biblioteca do usuário.
-    """
-    books = session.exec(select(Book).where(Book.user_id == user['id'])).all()
-    
-    # Criar um buffer em memória para o CSV
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Cabeçalhos
-    headers = [
-        "id", "title", "original_title", "author", "year", "type", 
-        "priority", "status", "availability", "book_class", 
-        "category", "rating", "google_rating", "date_read", 
-        "score", "motivation", "cover_image"
-    ]
-    writer.writerow(headers)
-    
-    # Dados
-    for book in books:
-        writer.writerow([
-            book.id,
-            book.title,
-            book.original_title,
-            book.author,
-            book.year,
-            book.type,
-            book.priority,
-            book.status,
-            book.availability,
-            book.book_class,
-            book.category,
-            book.rating,
-            book.google_rating,
-            book.date_read,
-            book.score,
-            book.motivation,
-            book.cover_image
-        ])
-    
-    output.seek(0)
-    
-    # Add BOM for Excel compatibility
-    bom = codecs.BOM_UTF8.decode('utf-8')
-    csv_content = bom + output.getvalue()
-    
-    return Response(
-        content=csv_content,
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=biblioteca_backup.csv"}
-    )
+# ... Preferences Endpoints ...
 
 @app.post("/books_import/")
 async def import_books_csv(file: UploadFile = File(...), session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
@@ -433,6 +252,11 @@ async def import_books_csv(file: UploadFile = File(...), session: Session = Depe
 
         imported_count = 0
         errors = []
+        
+        # Fetch user preferences ONCE
+        pref = session.get(UserPreference, user['id'])
+        config = pref.formula_config if pref else None
+        api_keys = get_decrypted_api_keys(pref) # Fetch and decrypt API keys
         
         for row in reader:
             # Check for required title
@@ -469,7 +293,7 @@ async def import_books_csv(file: UploadFile = File(...), session: Session = Depe
             new_book = Book(**book_data)
             
             # Calculate initial score
-            new_book.score = calculate_book_score(new_book)
+            new_book.score = calculate_book_score(new_book, config)
             
             # Assign order (append to end)
             last_order = session.exec(select(Book.order).order_by(Book.order.desc())).first() or 0
@@ -484,22 +308,35 @@ async def import_books_csv(file: UploadFile = File(...), session: Session = Depe
     except Exception as e:
         print(f"Erro na importação: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Failed to fetch image: {str(e)}")
-
-# --- Preferences Endpoints ---
 
 @app.get("/preferences/", response_model=UserPreference)
 def get_preferences(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     user_id = user['id']
     pref = session.get(UserPreference, user_id)
     if not pref:
-        # Create default if not exists
         pref = UserPreference(user_id=user_id)
         session.add(pref)
         session.commit()
         session.refresh(pref)
-    return pref
+    
+    # DECRYPT keys before sending to frontend (so user can see/edit them)
+    # We create a COPY or just return a new object to avoid modifying the DB session object which might auto-commit?
+    # SQLModel objects tracked by session might auto-save changes on commit. 
+    # Safest is to return a copy with decrypted values.
+    
+    # Create a transient copy for response
+    response_pref = UserPreference(
+        user_id=pref.user_id,
+        yearly_goal=pref.yearly_goal,
+        custom_prompts=pref.custom_prompts,
+        formula_config=pref.formula_config,
+        updated_at=pref.updated_at,
+        openai_key=decrypt_value(pref.openai_key),
+        gemini_key=decrypt_value(pref.gemini_key),
+        groq_key=decrypt_value(pref.groq_key)
+    )
+    
+    return response_pref
 
 @app.put("/preferences/", response_model=UserPreference)
 def update_preferences(pref_data: UserPreference, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
@@ -508,18 +345,33 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
     if not pref:
         pref = UserPreference(user_id=user_id)
     
-    # Update fields
-    if pref_data.openai_key is not None: pref.openai_key = pref_data.openai_key
-    if pref_data.gemini_key is not None: pref.gemini_key = pref_data.gemini_key
+    # Update fields with ENCRYPTION
+    if pref_data.openai_key is not None: pref.openai_key = encrypt_value(pref_data.openai_key)
+    if pref_data.gemini_key is not None: pref.gemini_key = encrypt_value(pref_data.gemini_key)
+    if pref_data.groq_key is not None: pref.groq_key = encrypt_value(pref_data.groq_key)
+    
     if pref_data.yearly_goal is not None: pref.yearly_goal = pref_data.yearly_goal
     if pref_data.custom_prompts is not None: pref.custom_prompts = pref_data.custom_prompts
+    if pref_data.formula_config is not None: pref.formula_config = pref_data.formula_config
     
     pref.updated_at = datetime.utcnow()
     
     session.add(pref)
     session.commit()
     session.refresh(pref)
-    return pref
+    
+    # Return DECRYPTED values so frontend state remains consistent/usable
+    response_pref = UserPreference(
+        user_id=pref.user_id,
+        yearly_goal=pref.yearly_goal,
+        custom_prompts=pref.custom_prompts,
+        formula_config=pref.formula_config,
+        updated_at=pref.updated_at,
+        openai_key=decrypt_value(pref.openai_key),
+        gemini_key=decrypt_value(pref.gemini_key),
+        groq_key=decrypt_value(pref.groq_key)
+    )
+    return response_pref
 
 # --- Admin Endpoints ---
 

@@ -3,6 +3,7 @@ import { Download, Upload, Info, Loader2 } from 'lucide-react'
 import BooksTable from '../../components/BooksTable'
 import axios from 'axios'
 import ScrollToTopBottom from '../../components/ScrollToTopBottom'
+import { useToast } from '../../context/ToastContext'
 
 const api = axios.create()
 
@@ -10,6 +11,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
   const [exporting, setExporting] = useState(false)
   const [showCsvInfo, setShowCsvInfo] = useState(false)
   const scrollContainerRef = useRef(null)
+  const { addToast } = useToast()
   
   const handleExport = async () => {
     try {
@@ -25,9 +27,10 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
       
       link.remove()
       window.URL.revokeObjectURL(url)
+      addToast({ type: 'success', message: 'Download iniciado!' })
     } catch (err) {
       console.error("Erro no export:", err)
-      alert("Falha ao exportar arquivo.")
+      addToast({ type: 'error', message: 'Falha ao exportar arquivo.' })
     } finally {
       setExporting(false)
     }
@@ -48,11 +51,11 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
       await api.post('/api/books_import/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      alert('Livros importados com sucesso!')
+      addToast({ type: 'success', message: 'Livros importados com sucesso!' })
       onUpdate()
     } catch (err) {
       console.error(err)
-      alert('Erro ao importar livros. Verifique se o arquivo segue o padrão.')
+      addToast({ type: 'error', message: 'Erro ao importar livros. Verifique se o arquivo segue o padrão.' })
     } finally {
       e.target.value = null
     }

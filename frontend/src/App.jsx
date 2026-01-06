@@ -16,17 +16,17 @@ import PreferencesSettings from './pages/Settings/PreferencesSettings'
 import ScrollToTopBottom from './components/ScrollToTopBottom'
 import Login from './pages/Login'
 import Admin from './pages/Admin'
-import { useAuth } from './context/AuthContext' // UPDATED
+import { useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext' // NEW
 import PrivateRoute from './components/PrivateRoute'
 
 import axios from 'axios'
-// ThemeProvider moved to main.jsx
 import { api } from './services/api'
 
-function App() {
+export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { session, loading: authLoading } = useAuth() // Get session
+  const { session, loading: authLoading } = useAuth() 
 
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +55,6 @@ function App() {
   })
 
   // Mural Persistence State
-  // Mural Persistence State
   const [muralState, setMuralState] = useState(() => {
       const saved = localStorage.getItem('muralState')
       return saved ? JSON.parse(saved) : { reading: 1, 'to-read': 1, read: 1 }
@@ -69,15 +68,14 @@ function App() {
   // --- Mobile Menu State ---
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // --- Theme Context ---
   // Fetch books only when session is ready
   useEffect(() => {
     if (!authLoading && session) {
         fetchBooks()
     } else if (!authLoading && !session) {
-        setLoading(false) // Stop loading if no user
+        setLoading(false) 
     }
-  }, [authLoading, session]) // Re-run when session changes
+  }, [authLoading, session]) 
 
   const fetchBooks = async () => {
     try {
@@ -106,7 +104,7 @@ function App() {
   const handleFormSuccess = () => {
     setEditingBook(null)
     fetchBooks()
-    navigate(-1) // Go back to previous route
+    navigate(-1) 
   }
 
   const handleOpenForm = () => {
@@ -116,6 +114,7 @@ function App() {
 
 
   return (
+    <ToastProvider>
         <div className="h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-hidden w-full">
           
           {/* Mobile Header (Visible < md) */}
@@ -241,7 +240,7 @@ function App() {
         <ScrollToTopBottom />
 
       </div>
+    </ToastProvider>
   )
 }
 
-export default App

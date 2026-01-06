@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { Target, Save, User, Copy, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { api } from '../../services/api'
+import { useToast } from '../../context/ToastContext'
 
 export default function PreferencesSettings() {
   const { user } = useAuth()
+  const { addToast } = useToast()
   const [yearlyGoal, setYearlyGoal] = useState(20)
   const [isSaved, setIsSaved] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -32,10 +34,11 @@ export default function PreferencesSettings() {
         await api.put('/preferences/', { yearly_goal: yearlyGoal })
         localStorage.setItem('yearlyReadingGoal', yearlyGoal.toString()) // Keep sync for now
         setIsSaved(true)
+        addToast({ type: 'success', message: 'Preferências salvas com sucesso!' })
         setTimeout(() => setIsSaved(false), 2000)
     } catch (err) {
         console.error("Erro ao salvar:", err)
-        alert("Erro ao salvar preferências no servidor.")
+        addToast({ type: 'error', message: 'Erro ao salvar preferências no servidor.' })
     }
   }
 
@@ -43,6 +46,7 @@ export default function PreferencesSettings() {
     if (user?.id) {
         navigator.clipboard.writeText(user.id)
         setCopied(true)
+        addToast({ type: 'success', message: 'ID copiado para a área de transferência', duration: 2000 })
         setTimeout(() => setCopied(false), 2000)
     }
   }

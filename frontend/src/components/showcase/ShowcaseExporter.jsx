@@ -1,12 +1,14 @@
-import { useState, useRef } from 'react'
-import { X, Download, Loader2, BookOpen, Star, Sparkles } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Download, Share2, X, Sparkles, Loader2 } from 'lucide-react'
 import html2canvas from 'html2canvas'
+import { useToast } from '../../context/ToastContext'
 
-export default function ShowcaseExporter({ books, selectedYears, filterClass, stats, activeBook, onClose }) {
+export default function ShowcaseExporter({ books, selectedYears, filterClass, stats, onClose }) {
+  const { addToast } = useToast()
+  const exportRef = useRef(null)
   const [isExporting, setIsExporting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(null)
-  const exportRef = useRef(null)
 
   const handleExport = async () => {
     if (!exportRef.current) return
@@ -30,9 +32,10 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
       const dataUrl = canvas.toDataURL('image/png')
       setPreviewUrl(dataUrl)
       setShowPreview(true)
+      addToast({ type: 'success', message: 'Preview gerado com sucesso!' })
     } catch (err) {
       console.error('Export failed:', err)
-      alert('Erro ao gerar imagem.')
+      addToast({ type: 'error', message: 'Erro ao gerar imagem.' })
     } finally {
       setIsExporting(false)
     }
@@ -45,9 +48,10 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
     link.download = `bookstack-showcase-${new Date().toISOString().slice(0, 10)}.png`
     link.href = previewUrl
     link.click()
+    addToast({ type: 'success', message: 'Download iniciado!' })
   }
 
-  // Get books with covers for display - NO LIMIT
+  // Get books with covers for display
   const displayBooks = books.filter(b => b.cover_image)
 
   // Dynamic Grid Configuration
@@ -63,7 +67,6 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
     const parts = []
     if (selectedYears && selectedYears.length > 0) {
       if (selectedYears.length > 3) {
-        // Sort numerically to find min and max even if array is unordered
         const sortedYears = [...selectedYears].sort((a, b) => a - b)
         const min = sortedYears[0]
         const max = sortedYears[sortedYears.length - 1]
@@ -90,27 +93,24 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
             </h2>
           </div>
           <div className="flex items-center gap-3">
-             {/* Dynamic Header Actions */}
              {!showPreview ? (
-                <>
-                   <button
-                    onClick={handleExport}
-                    disabled={isExporting}
-                    className={`flex items-center gap-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
-                  >
-                    {isExporting ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        Gerando...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={14} />
-                        Gerar
-                      </>
-                    )}
-                  </button>
-                </>
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className={`flex items-center gap-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} />
+                      Gerar Preview
+                    </>
+                  )}
+                </button>
              ) : (
                 <>
                   <button
@@ -124,7 +124,7 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
                     className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     <Download size={14} />
-                    Baixar
+                    Baixar Imagem
                   </button>
                 </>
              )}
@@ -143,107 +143,92 @@ export default function ShowcaseExporter({ books, selectedYears, filterClass, st
         {/* Preview Area */}
         <div className="p-6">
           {!showPreview ? (
-            <>
-              {/* Template Preview Wrapper */}
-              <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 flex justify-center overflow-auto max-h-[65vh]">
-                <div
-                  ref={exportRef}
-                  className="bg-white relative flex-shrink-0"
-                  style={{ width: '1200px', minHeight: '630px', height: 'auto' }}
-                >
-                  {/* Template Content */}
-                  <div className="w-full min-h-full p-8 pb-12 flex flex-col">
+            <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 flex justify-center overflow-auto max-h-[65vh]">
+              <div
+                ref={exportRef}
+                className="bg-white relative flex-shrink-0"
+                style={{ width: '1200px', minHeight: '630px', height: 'auto' }}
+              >
+                {/* Template Content - Same as before */}
+                <div className="w-full min-h-full p-8 pb-12 flex flex-col">
+                  
+                  {/* Header inside Image */}
+                  <div className="mb-6 flex items-center justify-between border-b border-slate-200/60 pb-4">
+                    <div className="flex items-baseline gap-3">
+                      <h1 className="text-4xl font-black text-slate-800 tracking-tight">
+                        Minha Estante Virtual
+                      </h1>
+                      <span className="text-2xl font-light text-slate-400">
+                        {filterSummary()}
+                      </span>
+                    </div>
                     
-                    {/* Header */}
-                    <div className="mb-6 flex items-center justify-between border-b border-slate-200/60 pb-4">
-                      <div className="flex items-baseline gap-3">
-                        <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                          Minha Estante Virtual
-                        </h1>
-                        <span className="text-2xl font-light text-slate-400">
-                          {filterSummary()}
-                        </span>
-                      </div>
+                    <div className="bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100 flex items-center gap-3">
+                       <div className="flex items-baseline gap-1.5">
+                         <span className="text-2xl font-black text-slate-800 leading-none">
+                           {stats?.kpi?.total || books.length}
+                         </span>
+                         <span className="text-sm font-semibold text-slate-400">
+                           livros
+                         </span>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Books Grid */}
+                  <div className={`flex-1 grid ${getGridConfig()}`}>
+                    {displayBooks.map((book, idx) => {
+                      const coverUrl = book.cover_image && book.cover_image.startsWith('/')
+                        ? book.cover_image
+                        : book.cover_image 
+                          ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+                          : null
                       
-                      <div className="bg-white px-6 py-3 rounded-full shadow-sm border border-slate-100 flex items-center gap-3">
-                         <div className="flex items-baseline gap-1.5">
-                           <span className="text-2xl font-black text-slate-800 leading-none">
-                             {stats?.kpi?.total || books.length}
-                           </span>
-                           <span className="text-sm font-semibold text-slate-400">
-                             livros
-                           </span>
-                         </div>
-                      </div>
-                    </div>
-
-                    {/* Books Grid */}
-                    <div className={`flex-1 grid ${getGridConfig()}`}>
-                      {displayBooks.map((book, idx) => {
-                        const coverUrl = book.cover_image && book.cover_image.startsWith('/')
-                          ? book.cover_image
-                          : book.cover_image 
-                            ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-                            : null
-                        
-                        return (
-                          <div
-                            key={idx}
-                            className="aspect-[2/3] rounded-md overflow-hidden shadow-md bg-white"
-                          >
-                            {coverUrl ? (
-                              <img
-                                src={coverUrl}
-                                alt={book.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center p-2">
-                                <span className="text-purple-900 text-[10px] font-bold text-center line-clamp-3 leading-tight">
-                                  {book.title}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-6 pt-4 border-t border-slate-200/50 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src="/logo_bookstack-ai.png" 
-                          alt="Logo" 
-                          className="h-8 w-auto object-contain opacity-80"
-                        />
-                        <div className="text-xl font-bold text-slate-700">
-                          bookstack-ai
+                      return (
+                        <div
+                          key={idx}
+                          className="aspect-[2/3] rounded-md overflow-hidden shadow-md bg-white"
+                        >
+                          {coverUrl ? (
+                            <img
+                              src={coverUrl}
+                              alt={book.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center p-2">
+                              <span className="text-purple-900 text-[10px] font-bold text-center line-clamp-3 leading-tight">
+                                {book.title}
+                              </span>
+                            </div>
+                          )}
                         </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="mt-6 pt-4 border-t border-slate-200/50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-xl font-bold text-slate-700">
+                        bookstack-ai
                       </div>
-                      <div className="text-sm font-medium text-slate-400">
-                        Gerado em {new Date().toLocaleDateString('pt-BR')}
-                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-slate-400">
+                      Gerado em {new Date().toLocaleDateString('pt-BR')}
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Actions moved to Header */}
-            </>
+            </div>
           ) : (
-            <>
-              {/* Preview Image */}
-              <div className="bg-slate-100 dark:bg-neutral-800 p-4 rounded-lg flex justify-center items-center h-[65vh]">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-slate-200"
-                />
-              </div>
-
-              {/* Actions moved to Header */}
-            </>
+            <div className="bg-slate-100 dark:bg-neutral-800 p-4 rounded-lg flex justify-center items-center h-[65vh]">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-slate-200"
+              />
+            </div>
           )}
         </div>
       </div>
