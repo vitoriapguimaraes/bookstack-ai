@@ -20,7 +20,7 @@ export default function PreferencesSettings() {
 
   return (
     <div className="w-full animate-fade-in">
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Preferências</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
           Configure suas preferências pessoais

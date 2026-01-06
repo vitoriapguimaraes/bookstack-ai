@@ -124,7 +124,7 @@ export default function HomeView({ books }) {
         {/* Left Column - Metrics Cards (25% - col-span-3) */}
         <div className="w-full md:col-span-3 flex flex-col gap-4">
           {/* Header with dynamic title */}
-          <div className="mb-2">
+          <div className="mb-2 hidden md:block">
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
               Minha Estante Virtual
             </h1>

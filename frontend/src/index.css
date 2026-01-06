@@ -25,11 +25,18 @@
   }
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  @apply bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-slate-100 transition-colors duration-300;
+}
+
+body {
   min-width: 320px;
   min-height: 100vh;
-  @apply bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-slate-100 transition-colors duration-300;
 }
 
 /* Custom Scrollbar for a cleaner look */

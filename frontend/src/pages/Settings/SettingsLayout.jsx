@@ -143,15 +143,16 @@ function MobileTab({ to, label, icon: Icon }) {
     return (
         <NavLink
             to={to}
+            title={label}
             className={({ isActive }) => `
-                flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all
+                flex items-center justify-center p-2.5 flex-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all
                 ${isActive
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400'}
+                    ? 'bg-white dark:bg-neutral-800 text-purple-600 dark:text-purple-400 shadow-sm border border-slate-200 dark:border-neutral-700'
+                    : 'text-slate-500 dark:text-neutral-500 hover:bg-slate-100 dark:hover:bg-neutral-800'}
             `}
         >
-            <Icon size={14} />
-            {label}
+            <Icon size={20} />
+            <span className="sr-only">{label}</span>
         </NavLink>
     )
 }
