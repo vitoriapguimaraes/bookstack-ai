@@ -108,8 +108,9 @@ def suggest_book_details(request: TitleRequest, session: Session = Depends(get_s
     # Need user context to get API Keys
     pref = session.get(UserPreference, user['id'])
     api_keys = get_decrypted_api_keys(pref)
+    custom_prompts = pref.custom_prompts if pref else None
     
-    details = get_book_details_hybrid(request.title, api_keys)
+    details = get_book_details_hybrid(request.title, api_keys, custom_prompts)
     if not details:
         raise HTTPException(status_code=500, detail="Failed to get suggestions")
     return details

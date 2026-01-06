@@ -400,7 +400,7 @@ def get_groq_classification(prompt, system_prompt, api_keys=None):
     except Exception as e:
         return {"error": f"Erro Groq: {str(e)}"}
 
-def get_ai_classification(title: str, description: str = "", api_keys: dict = None):
+def get_ai_classification(title: str, description: str = "", api_keys: dict = None, custom_prompts: dict = None):
     """Usa IA (Provider configurável com Fallback) para classificar o livro."""
     
     # Mapeamento de classes para categorias
@@ -409,9 +409,15 @@ def get_ai_classification(title: str, description: str = "", api_keys: dict = No
         for cls, cats in CLASS_CATEGORIES.items()
     ])
     
-    system_prompt = "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
+    system_prompt = (custom_prompts or {}).get("system_prompt") or "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
     
-    prompt = f"""
+    user_prompt_template = (custom_prompts or {}).get("user_prompt")
+    if user_prompt_template:
+        # Replace placeholders if any, but since it's a template we just append the book info or expect specific format
+        # For now, let's keep it simple: if custom user_prompt exists, use it as the base prompt
+        prompt = f"{user_prompt_template}\n\nLIVRO A ANALISAR:\nTítulo: \"{title}\"\nDescrição: \"{description[:800]}\""
+    else:
+        prompt = f"""
 PERFIL DA LEITORA:
 Vitória é uma mulher de 30 anos, pansexual e profissional de tecnologia (Cientista de Dados e Desenvolvedora) com raízes na Engenharia Ambiental. Seu estilo de leitura é marcado pela busca de equilíbrio entre a densidade técnica e a sensibilidade humana. Ela não lê apenas para aprender uma sintaxe, mas para entender como a tecnologia e o comportamento humano se moldam. Como estudante contínua, ela valoriza o rigor técnico, mas sua lente de mundo é inclusiva, ética e focada em impacto coletivo.
 
@@ -515,7 +521,7 @@ Responda APENAS com um JSON válido no formato:
     error_summary = " | ".join(errors)
     return {"error": f"Falha em todas as IAs. Detalhes: {error_summary}"}
 
-def get_book_details_hybrid(title: str, api_keys: dict = None):
+def get_book_details_hybrid(title: str, api_keys: dict = None, custom_prompts: dict = None):
     """
     Solução híbrida: Google Books API + Open Library + Groq AI
     
@@ -552,7 +558,7 @@ def get_book_details_hybrid(title: str, api_keys: dict = None):
         result["google_ratings_count"] = rating_data.get("ratings_count", 0)
     
     # 3. Usa IA para classificação personalizada
-    ai_data = get_ai_classification(title, description, api_keys)
+    ai_data = get_ai_classification(title, description, api_keys, custom_prompts)
     if ai_data:
         result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")
