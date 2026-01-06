@@ -42,11 +42,18 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
   const bgColor = theme === 'dark' ? '171717' : 'f1f5f9' // neutral-900 : slate-100
   const textColor = theme === 'dark' ? 'a855f7' : '475569' // purple-500 : slate-600
   
-  const coverUrl = book.cover_image && book.cover_image.startsWith('/')
-      ? book.cover_image
-      : book.cover_image 
-          ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-          : `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(book.title)}`
+  // Robust Image URL Handling
+  let coverUrl = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(book.title)}`
+  
+  if (book.cover_image) {
+      if (book.cover_image.startsWith('/')) {
+          coverUrl = book.cover_image
+      } else if (book.cover_image.includes('uploads/')) {
+          coverUrl = `/${book.cover_image}`
+      } else {
+          coverUrl = `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+      }
+  }
   
   
   const handleDelete = async (e) => {

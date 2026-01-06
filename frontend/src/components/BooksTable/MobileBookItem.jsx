@@ -4,11 +4,18 @@ import { useState } from 'react'
 export default function MobileBookItem({ book, onEdit, onDelete, onSelect, isSelected }) {
   const [showActions, setShowActions] = useState(false)
 
-  const coverUrl = book.cover_image && book.cover_image.startsWith('/')
-      ? book.cover_image
-      : book.cover_image
-        ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-        : null
+  // Robust Image URL Handling
+  let coverUrl = null
+  if (book.cover_image) {
+      if (book.cover_image.startsWith('/')) {
+          coverUrl = book.cover_image // Already absolute path (/uploads/...)
+      } else if (book.cover_image.includes('uploads/')) {
+          coverUrl = `/${book.cover_image}` // Fix missing leading slash
+      } else {
+          // External URL -> Use Proxy
+          coverUrl = `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+      }
+  }
 
   return (
     <div className={`bg-white dark:bg-neutral-900 rounded-lg p-3 border ${isSelected ? 'border-purple-500 ring-1 ring-purple-500' : 'border-slate-200 dark:border-neutral-800'} shadow-sm flex gap-3 relative transition-all active:scale-[0.99]`}>

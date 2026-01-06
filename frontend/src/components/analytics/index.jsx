@@ -111,7 +111,7 @@ export default function Analytics({ books }) {
             className={`flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 text-slate-700 dark:text-white border border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-700 rounded-lg text-sm font-medium transition-colors shadow-sm ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
          >
              {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-             {isExporting ? 'Exportando...' : 'Exportar Relatório'}
+             <span className="hidden md:inline">{isExporting ? 'Exportando...' : 'Exportar Relatório'}</span>
          </button>
       </div>
 
@@ -144,7 +144,7 @@ export default function Analytics({ books }) {
       <InsightsGrid insights={stats.insights} />
 
       {/* Timeline Section */}
-      <div id="chart-timeline" className="relative bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl h-[500px] flex flex-col shadow-sm group">
+      <div id="chart-timeline" className="relative bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl min-h-[500px] h-auto flex flex-col shadow-sm group">
           <button 
                 onClick={() => handleExportChart('chart-timeline', 'historico-leitura')}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-white/50 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all z-10"

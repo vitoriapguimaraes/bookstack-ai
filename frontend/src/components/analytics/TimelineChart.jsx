@@ -100,8 +100,16 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
     const gridColor = isDark ? '#262626' : '#e2e8f0' // neutral-800 : slate-200
     const textColor = isDark ? '#737373' : '#64748b' // neutral-500 : slate-500
 
+    if (!currentData || currentData.length === 0) {
+        return (
+            <div className="w-full h-[350px] flex items-center justify-center text-slate-400 dark:text-neutral-500">
+                Sem dados para exibir neste período.
+            </div>
+        )
+    }
+
     return (
-        <div className="w-full h-full flex flex-col md:flex-row">
+        <div className="w-full flex flex-col md:flex-row">
             <div className="flex-1 min-w-0 h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart

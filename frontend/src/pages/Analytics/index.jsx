@@ -1,14 +1,10 @@
-import { useRef } from 'react'
 import Analytics from '../../components/Analytics'
-import ScrollToTopBottom from '../../components/ScrollToTopBottom'
 
 export default function AnalyticsView({ books }) {
-  const scrollContainerRef = useRef(null)
-
+  // Ref not needed for window scroll
   return (
-    <div ref={scrollContainerRef} className="animate-fade-in h-[calc(100vh-4rem)] overflow-y-auto">
+    <div className="animate-fade-in w-full">
       <Analytics books={books} />
-      <ScrollToTopBottom containerRef={scrollContainerRef} />
     </div>
   )
 }

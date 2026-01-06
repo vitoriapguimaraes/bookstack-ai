@@ -59,7 +59,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
   }
   
   return (
-    <div ref={scrollContainerRef} className="animate-fade-in h-[calc(100vh-4rem)] overflow-y-auto">
+    <div ref={scrollContainerRef} className="animate-fade-in w-full">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Gerenciar Biblioteca</h2>
@@ -83,7 +83,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
             title="Importar lista de livros via CSV (Obrigatório: Title)"
           >
             <Upload size={16} />
-            Importar CSV
+            <span className="hidden md:inline">Importar CSV</span>
           </button>
           
           <button 
@@ -93,7 +93,7 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
             title="Baixar backup da biblioteca (CSV)"
           >
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            {exporting ? 'Carregando...' : 'Exportar CSV'}
+            <span className="hidden md:inline">{exporting ? 'Carregando...' : 'Exportar CSV'}</span>
           </button>
         </div>
       </div>
@@ -110,27 +110,27 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
       {/* CSV Info Modal */}
       {showCsvInfo && (
         <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl max-w-2xl w-full border border-slate-200 dark:border-neutral-800 shadow-2xl transition-all">
-            <div className="p-6 border-b border-slate-100 dark:border-neutral-800">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Formato CSV para Importação</h3>
+          <div className="bg-white dark:bg-neutral-900 rounded-xl max-w-2xl w-full border border-slate-200 dark:border-neutral-800 shadow-2xl transition-all flex flex-col max-h-[90vh]">
+            <div className="p-4 md:p-6 border-b border-slate-100 dark:border-neutral-800 sticky top-0 bg-white dark:bg-neutral-900 z-10 rounded-t-xl">
+              <h3 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white">Formato CSV para Importação</h3>
             </div>
             
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-              <p className="text-slate-600 dark:text-neutral-300">O arquivo CSV deve conter as seguintes colunas (separadas por vírgula):</p>
+            <div className="p-4 md:p-6 space-y-4 overflow-y-auto">
+              <p className="text-sm md:text-base text-slate-600 dark:text-neutral-300">O arquivo CSV deve conter as seguintes colunas (separadas por vírgula):</p>
               
-              <div className="bg-slate-100 dark:bg-neutral-950 p-4 rounded-lg font-mono text-sm text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-transparent">
+              <div className="bg-slate-100 dark:bg-neutral-950 p-3 md:p-4 rounded-lg font-mono text-xs md:text-sm text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-transparent break-all">
                 Title,Author,Status,Class,Category,Score,Rating,Google Rating,Order,Priority,Date Read,Motivation,Availability,Original Title
               </div>
               
               <div className="space-y-2">
-                <p className="text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Title:</strong> Nome do livro (obrigatório)</p>
-                <p className="text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Status:</strong> Lendo, A Ler, ou Lido</p>
-                <p className="text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Order:</strong> Número para ordenação (opcional)</p>
-                <p className="text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Date Read:</strong> Data de conclusão no formato YYYY-MM-DD</p>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Title:</strong> Nome do livro (obrigatório)</p>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Status:</strong> Lendo, A Ler, ou Lido</p>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Order:</strong> Número para ordenação (opcional)</p>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-neutral-400"><strong className="text-slate-800 dark:text-white">Date Read:</strong> Data de conclusão no formato YYYY-MM-DD</p>
               </div>
             </div>
             
-            <div className="p-6 border-t border-slate-100 dark:border-neutral-800 flex justify-end">
+            <div className="p-4 md:p-6 border-t border-slate-100 dark:border-neutral-800 flex justify-end sticky bottom-0 bg-white dark:bg-neutral-900 rounded-b-xl">
               <button 
                 onClick={() => setShowCsvInfo(false)}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white dark:hover:bg-slate-200 text-slate-900 font-semibold rounded-lg text-sm transition-colors"
@@ -142,7 +142,6 @@ export default function TableView({ books, onUpdate, onDelete, onEdit, tableStat
         </div>
       )}
       
-      <ScrollToTopBottom containerRef={scrollContainerRef} />
     </div>
   )
 }

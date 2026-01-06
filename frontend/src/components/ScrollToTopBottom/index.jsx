@@ -6,12 +6,12 @@ export default function ScrollToTopBottom({ containerRef }) {
     const [isBottom, setIsBottom] = useState(false)
 
     useEffect(() => {
-        const getTarget = () => containerRef?.current || window
-        const target = getTarget()
+        let target = window
+        let resizeObserver = null
         
-        const handleScroll = () => {
+        const checkScroll = () => {
             let scrollTop, scrollHeight, clientHeight
-
+            
             if (target === window) {
                 scrollTop = window.scrollY
                 scrollHeight = document.documentElement.scrollHeight
@@ -22,31 +22,58 @@ export default function ScrollToTopBottom({ containerRef }) {
                 clientHeight = target.clientHeight
             }
 
-            // Check if at top
-            setIsTop(scrollTop <= 100)
-
-            // Check if at bottom (allow small margin of error)
-            const isScrollable = scrollHeight > clientHeight
+            // Tolerance of 2px for fractional scaling issues
+            const isScrollable = scrollHeight > clientHeight + 2
+            
+            setIsTop(!isScrollable || scrollTop <= 50)
+            
+            // At bottom if logic fits or not scrollable
             const isAtBottom = !isScrollable || (scrollTop + clientHeight >= scrollHeight - 50)
             setIsBottom(isAtBottom)
         }
 
-        target.addEventListener('scroll', handleScroll)
-        // Also listen on document body/html just in case for window
-        if (target === window) {
-           document.addEventListener('scroll', handleScroll)
+        const attachListener = () => {
+             if (containerRef) {
+                 if (containerRef.current) {
+                     target = containerRef.current
+                 } else {
+                     setTimeout(attachListener, 100)
+                     return
+                 }
+             } else {
+                 target = window
+             }
+             
+             target.addEventListener('scroll', checkScroll)
+             if (target === window) {
+                document.addEventListener('scroll', checkScroll)
+             }
+             
+             // Add ResizeObserver to detect content changes (filtering, loading)
+             if (target !== window && typeof ResizeObserver !== 'undefined') {
+                 resizeObserver = new ResizeObserver(checkScroll)
+                 resizeObserver.observe(target)
+                 // Also observe children if possible? No, target is enough usually if overflow works.
+                 // Actually observing the first child wrapper is better, but target scrollHeight change should trigger on scroll? 
+                 // Scroll event doesn't trigger on size change. ResizeObserver on target triggers on container resize.
+                 // To detect content size change, we might need to rely on the fact that 'scroll' doesn't fire, but we need to check manually.
+                 // We can also simply use an interval or re-check on prop change.
+             }
+             
+             checkScroll()
         }
-        
-        // Initial check
-        handleScroll()
+
+        const timer = setTimeout(attachListener, 100)
         
         return () => {
-            target.removeEventListener('scroll', handleScroll)
-            if (target === window) {
-                document.removeEventListener('scroll', handleScroll)
+            clearTimeout(timer)
+            if (target) {
+                target.removeEventListener('scroll', checkScroll)
+                if (target === window) document.removeEventListener('scroll', checkScroll)
+                if (resizeObserver) resizeObserver.disconnect()
             }
         }
-    }, [containerRef])
+    }, [containerRef, window.location.pathname]) // Re-run on route change
 
     const scrollToTop = () => {
         const target = containerRef?.current || window

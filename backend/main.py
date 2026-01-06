@@ -300,15 +300,20 @@ async def proxy_image(url: str):
         url_hash = hashlib.md5(url.encode()).hexdigest()
         cache_path = CACHE_DIR / f"{url_hash}.jpg"
 
-        # Check cache
         if cache_path.exists():
             with open(cache_path, "rb") as f:
                 return Response(content=f.read(), media_type="image/jpeg")
 
-        # Fetch from web
-        response = requests.get(url, timeout=10, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
+        # Fetch from web (NON-BLOCKING)
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
+        def fetch_url():
+            return requests.get(url, timeout=10, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            
+        response = await loop.run_in_executor(None, fetch_url)
         response.raise_for_status()
         
         # Save to cache

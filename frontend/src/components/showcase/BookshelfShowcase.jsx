@@ -5,16 +5,22 @@ export default function BookshelfShowcase({ books, onExport }) {
   const displayBooks = books.filter(b => b.cover_image)
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col">
       {/* Grid de Capas */}
-      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4 px-4 pt-4 pb-8 transition-opacity duration-300">
+      <div className="">
+        <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 sm:gap-4 pb-8 transition-opacity duration-300">
           {displayBooks.map((book) => {
-            const coverUrl = book.cover_image && book.cover_image.startsWith('/')
-                ? book.cover_image
-                : book.cover_image
-                  ? `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
-                  : null
+            // Robust Image URL Handling
+            let coverUrl = null
+            if (book.cover_image) {
+                if (book.cover_image.startsWith('/')) {
+                    coverUrl = book.cover_image
+                } else if (book.cover_image.includes('uploads/')) {
+                    coverUrl = `/${book.cover_image}`
+                } else {
+                    coverUrl = `/api/proxy/image?url=${encodeURIComponent(book.cover_image)}`
+                }
+            }
             
             return (
               <div
@@ -56,7 +62,7 @@ export default function BookshelfShowcase({ books, onExport }) {
         </div>
 
         {displayBooks.length === 0 && (
-          <div className="flex items-center justify-center h-full text-slate-400 dark:text-neutral-500">
+          <div className="flex items-center justify-center py-20 text-slate-400 dark:text-neutral-500">
             <p>Nenhum livro com capa encontrado</p>
           </div>
         )}

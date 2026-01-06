@@ -39,8 +39,6 @@ function App() {
       selectedStatuses: [],
       selectedPriorities: [],
       selectedAvailabilities: [],
-      selectedPriorities: [],
-      selectedAvailabilities: [],
       yearRange: null 
   })
 
@@ -120,7 +118,7 @@ function App() {
 
         {/* Main Content Area */}
         <main className={`flex-1 transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0`}>
-          <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+          <div className="w-full h-full">
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
                     <p>⚠️ {error}</p>
@@ -133,7 +131,7 @@ function App() {
             {!loading && (
               <Routes>
                 {/* Home Dashboard */}
-                <Route path="/" element={<Home books={books} />} />
+                <Route path="/" element={<div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6"><Home books={books} /></div>} />
                 
                 {/* Mural routes with nested status routes */}
                 <Route path="/mural/:status" element={
@@ -149,6 +147,7 @@ function App() {
                 
                 {/* Table route */}
                 <Route path="/table" element={
+                  <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
                   <BooksList 
                     books={books}
                     onUpdate={fetchBooks}
@@ -157,11 +156,14 @@ function App() {
                     tableState={tableState}
                     setTableState={setTableState}
                   />
+                  </div>
                 } />
                 
                 {/* Analytics route */}
                 <Route path="/analytics" element={
+                  <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
                   <Analytics books={books} />
+                  </div>
                 } />
                 
                 {/* Settings Routes */}

@@ -44,6 +44,13 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
               </button>
           </div>
 
+          {/* Mobile Brand Title */}
+          <div className="md:hidden w-full px-6 mb-6 mt-2">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                bookstack-ai
+            </h2>
+          </div>
+
           {/* Main Navigation */}
           <nav className="flex-1 flex flex-col gap-2 w-full px-3 overflow-y-auto md:overflow-visible">
             {menuItems.map((item) => {

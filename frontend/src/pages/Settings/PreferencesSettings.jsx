@@ -29,14 +29,14 @@ export default function PreferencesSettings() {
 
       {/* Reading Goal Card */}
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-slate-200 dark:border-neutral-800 p-6">
-        <div className="grid grid-cols-12 gap-6">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
           {/* Column 1 - Title and Description (42%) */}
-          <div className="col-span-5">
+          <div className="md:col-span-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                 <Target className="text-purple-600 dark:text-purple-400" size={20} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+              <h3 className="text-base md:text-lg font-semibold text-slate-800 dark:text-white leading-tight">
                 Meta Anual de Leitura
               </h3>
             </div>
@@ -46,7 +46,7 @@ export default function PreferencesSettings() {
           </div>
 
           {/* Column 2 - Current Goal Display (25%) */}
-          <div className="col-span-3">
+          <div className="md:col-span-3">
             <div className="text-center p-4 bg-slate-50 dark:bg-neutral-800/50 rounded-lg border border-slate-200 dark:border-neutral-700">
               <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Meta Atual</p>
               <p className="text-2xl font-bold text-slate-800 dark:text-white">
@@ -59,7 +59,7 @@ export default function PreferencesSettings() {
           </div>
 
           {/* Column 3 - Input and Button (33%) */}
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-slate-700 dark:text-neutral-300 whitespace-nowrap">

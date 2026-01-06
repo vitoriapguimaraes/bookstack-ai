@@ -119,10 +119,10 @@ export default function HomeView({ books }) {
   }
 
   return (
-    <div className="animate-fade-in h-[calc(100vh-4rem)]">
-      <div className="grid grid-cols-12 gap-6 h-full">
+    <div className="animate-fade-in min-h-[calc(100vh-4rem)] pb-20 md:pb-0">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
         {/* Left Column - Metrics Cards (25% - col-span-3) */}
-        <div className="col-span-3 flex flex-col gap-4">
+        <div className="w-full md:col-span-3 flex flex-col gap-4">
           {/* Header with dynamic title */}
           <div className="mb-2">
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
@@ -190,8 +190,8 @@ export default function HomeView({ books }) {
             </div>
           </div>
 
-          {/* Metrics Grid with independent scroll */}
-          <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto pr-2">
+          {/* Metrics Grid - NO SCROLL */}
+          <div className="grid grid-cols-2 gap-2">
             {/* Total de Livros */}
             <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-32 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
@@ -271,7 +271,7 @@ export default function HomeView({ books }) {
         </div>
 
         {/* Right Column - Bookshelf (75% - col-span-9) */}
-        <div className="col-span-9 flex flex-col overflow-hidden">
+        <div className="w-full md:col-span-9 flex flex-col">
           <BookshelfShowcase books={filteredBooks} />
         </div>
       </div>

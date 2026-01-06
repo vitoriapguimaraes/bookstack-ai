@@ -14,7 +14,7 @@ const CLASS_CATEGORIES = {
   "Desenvolvimento Pessoal": ["Bem-estar", "Comunicação", "Criatividade", "Desenvolvimento Pessoal", "Inteligência Emocional", "Liderança", "Liderança & Pensamento Estratégico", "Produtividade", "Biohacking & Existência", "Storytelling & Visualização", "Geral"]
 }
 
-export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
+export default function BookForm({ bookToEdit, onSuccess, onCancel, onLoadingChange }) {
   const [formData, setFormData] = useState({
     title: '', original_title: '', author: '', status: 'A Ler', book_class: 'Desenvolvimento Pessoal', category: 'Geral',
     priority: '2 - Média', availability: 'Estante', type: 'Não Técnico',
@@ -160,6 +160,8 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
     }
 
     setLoading(true)
+    if (onLoadingChange) onLoadingChange(true)
+    
     try {
       let savedBook
       if (bookToEdit) {
@@ -185,35 +187,13 @@ export default function BookForm({ bookToEdit, onSuccess, onCancel }) {
       console.error(err)
     } finally {
       setLoading(false)
+      if (onLoadingChange) onLoadingChange(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-slate-200 dark:border-neutral-800 w-full animate-fade-in text-slate-900 dark:text-white">
-       {/* Header Actions */}
-       <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-             {bookToEdit ? 'Gerenciar Livro' : 'Adicionar Livro'}
-          </h2>
-          <div className="flex gap-2">
-             <button 
-                type="submit" 
-                disabled={loading} 
-                className="flex items-center gap-2 px-5 py-1.5 bg-emerald-600 dark:bg-emerald-600 text-white rounded hover:bg-emerald-500 dark:hover:bg-emerald-500 disabled:opacity-50 transition-colors text-xs font-bold shadow-lg shadow-emerald-900/20"
-             >
-                <Save size={16} /> {loading ? 'Salvando...' : 'Salvar Alterações'}
-             </button>
-             {onCancel && (
-               <button 
-                  type="button" 
-                  onClick={onCancel} 
-                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 rounded hover:bg-slate-300 dark:hover:bg-neutral-700 hover:text-slate-800 dark:hover:text-white transition-colors text-xs"
-               >
-                  <X size={16} />
-               </button>
-             )}
-          </div>
-       </div>
+    <form id="book-form-main" onSubmit={handleSubmit} className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-slate-200 dark:border-neutral-800 w-full animate-fade-in text-slate-900 dark:text-white">
+       {/* Actions moved to parent header */}
 
        <div className="p-3 grid grid-cols-1 md:grid-cols-12 gap-4">
           

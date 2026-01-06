@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowUpDown, Pencil, Trash2, Search, X, Check, Edit3, Trash } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2, Search, X, Check, Edit3, Trash, ChevronDown, ChevronUp } from 'lucide-react'
 import axios from 'axios'
 import BulkEditModal from '../BulkEditModal'
 import MobileBookItem from './MobileBookItem'
@@ -22,6 +22,7 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
   const [selectedBooks, setSelectedBooks] = useState([])
   const [showBulkEdit, setShowBulkEdit] = useState(false)
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Clear selection when filters change (to avoid operating on hidden items? or keep them? better clear to be safe)
   useEffect(() => {
@@ -288,201 +289,224 @@ export default function BooksTable({ books, onUpdate, onDelete, onEdit, tableSta
   return (
     <div className="space-y-4">
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 border border-slate-200 dark:border-neutral-800 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">📋 Filtros</h3>
-          {hasActiveFilters && (
-            <button 
-              onClick={clearAllFilters}
-              className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 flex items-center gap-1"
-            >
-              <X size={14} /> Limpar Filtros
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          {/* Search - Full Width */}
-          <div>
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-slate-400 dark:text-neutral-500 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="🔍 Buscar por Título ou Autor..."
-                value={searchTerm}
-                onChange={(e) => setTableState(prev => ({...prev, searchTerm: e.target.value}))}
-                className="w-full pl-10 pr-10 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setTableState(prev => ({...prev, searchTerm: ''}))}
-                  className="absolute right-3 top-2.5 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-white transition-colors"
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden transition-all">
+        <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800/50"
+            onClick={() => setShowFilters(!showFilters)}
+        >
+           <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                 📋 Filtros
+              </h3>
+              {hasActiveFilters && (
+                  <span className="bg-purple-100 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      Ativos
+                  </span>
+              )}
+           </div>
+           
+           <div className="flex items-center gap-3">
+              {hasActiveFilters && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); clearAllFilters(); }}
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 hover:underline z-10"
                 >
-                  <X size={16} />
+                  Limpar
                 </button>
               )}
-            </div>
-          </div>
+              {showFilters ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+           </div>
+        </div>
 
-          {/* Classes - Full Width Row */}
-          <div>
-            <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Classes</label>
-            <div className="flex flex-wrap gap-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2">
-              {uniqueClasses.map(cls => (
-                <button
-                  key={cls}
-                  onClick={() => toggleFilter(cls, 'selectedClasses')}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    selectedClasses.includes(cls)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
-                  }`}
-                >
-                  {cls}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Categories - Full Width Row */}
-          <div>
-            <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Categorias</label>
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-neutral-600">
-              {uniqueCategories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => toggleFilter(cat, 'selectedCategories')}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    selectedCategories.includes(cat)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Status, Priority, Availability, Year - Single Row */}
-          <div className="grid gap-2 grid-cols-1 md:grid-cols-4 lg:grid-cols-[0.65fr_1.5fr_1.5fr_1fr]">
-            {/* Status */}
+        {/* Collapsible Content */}
+        {showFilters && (
+            <div className="p-4 pt-0 space-y-3 border-t border-slate-100 dark:border-neutral-800 animate-slide-down">
+            {/* Search - Full Width */}
             <div>
-              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Status</label>
-              <div className="flex gap-1.5 flex-wrap">
-                {uniqueStatuses.map(status => (
-                  <button
-                    key={status}
-                    onClick={() => toggleFilter(status, 'selectedStatuses')}
-                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
-                      selectedStatuses.includes(status)
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
-                    }`}
-                  >
-                    {status}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Priority */}
-            <div>
-              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Prioridade</label>
-              <div className="flex gap-1.5 flex-wrap">
-                {uniquePriorities.map(prio => (
-                  <button
-                    key={prio}
-                    onClick={() => toggleFilter(prio, 'selectedPriorities')}
-                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
-                      selectedPriorities.includes(prio)
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
-                    }`}
-                  >
-                    {prio}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Availability */}
-            <div>
-              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Disponibilidade</label>
-              <div className="flex gap-1.5 flex-wrap">
-                {uniqueAvailabilities.map(avail => (
-                  <button
-                    key={avail}
-                    onClick={() => toggleFilter(avail, 'selectedAvailabilities')}
-                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
-                      selectedAvailabilities.includes(avail)
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
-                    }`}
-                  >
-                    {avail}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Year Range - Dual Thumb Slider */}
-            <div>
-              <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">
-                Ano de lançamento: {safeYearRange[0]} - {safeYearRange[1]}
-              </label>
-              <div className="relative pt-2 pb-1 px-1">
-                {/* Track background */}
-                <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 dark:bg-neutral-700 rounded-full -translate-y-1/2"></div>
-                
-                {/* Active range */}
-                <div 
-                  className="absolute top-1/2 h-1 bg-purple-600 rounded-full -translate-y-1/2"
-                  style={{
-                    left: `${((safeYearRange[0] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`,
-                    right: `${100 - ((safeYearRange[1] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`
-                  }}
-                ></div>
-                
-                {/* Min slider */}
+                <div className="relative">
+                <Search className="absolute left-3 top-2.5 text-slate-400 dark:text-neutral-500 w-4 h-4" />
                 <input
-                  type="range"
-                  min={yearBounds[0]}
-                  max={yearBounds[1]}
-                  value={safeYearRange[0]}
-                  onChange={(e) => {
-                    const newMin = parseInt(e.target.value)
-                    if (newMin <= safeYearRange[1]) {
-                      setTableState(prev => ({ ...prev, yearRange: [newMin, safeYearRange[1]] }))
-                    }
-                  }}
-                  className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: safeYearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3, left: 0 }}
+                    type="text"
+                    placeholder="🔍 Buscar por Título ou Autor..."
+                    value={searchTerm}
+                    onChange={(e) => setTableState(prev => ({...prev, searchTerm: e.target.value}))}
+                    className="w-full pl-10 pr-10 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 />
-                
-                {/* Max slider */}
-                <input
-                  type="range"
-                  min={yearBounds[0]}
-                  max={yearBounds[1]}
-                  value={safeYearRange[1]}
-                  onChange={(e) => {
-                    const newMax = parseInt(e.target.value)
-                    if (newMax >= safeYearRange[0]) {
-                      setTableState(prev => ({ ...prev, yearRange: [safeYearRange[0], newMax] }))
-                    }
-                  }}
-                  className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
-                  style={{ zIndex: safeYearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4, left: 0 }}
-                />
-              </div>
+                {searchTerm && (
+                    <button
+                    onClick={() => setTableState(prev => ({...prev, searchTerm: ''}))}
+                    className="absolute right-3 top-2.5 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-white transition-colors"
+                    >
+                    <X size={16} />
+                    </button>
+                )}
+                </div>
+            </div>
+
+            {/* Classes - Full Width Row */}
+            <div>
+                <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Classes</label>
+                <div className="flex flex-wrap gap-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2">
+                {uniqueClasses.map(cls => (
+                    <button
+                    key={cls}
+                    onClick={() => toggleFilter(cls, 'selectedClasses')}
+                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                        selectedClasses.includes(cls)
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
+                    }`}
+                    >
+                    {cls}
+                    </button>
+                ))}
+                </div>
+            </div>
+
+            {/* Categories - Full Width Row */}
+            <div>
+                <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Categorias</label>
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded p-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-neutral-600">
+                {uniqueCategories.map(cat => (
+                    <button
+                    key={cat}
+                    onClick={() => toggleFilter(cat, 'selectedCategories')}
+                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                        selectedCategories.includes(cat)
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
+                    }`}
+                    >
+                    {cat}
+                    </button>
+                ))}
+                </div>
+            </div>
+
+            {/* Status, Priority, Availability, Year - Single Row */}
+            <div className="grid gap-2 grid-cols-1 md:grid-cols-4 lg:grid-cols-[0.65fr_1.5fr_1.5fr_1fr]">
+                {/* Status */}
+                <div>
+                <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Status</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                        {uniqueStatuses.map(status => (
+                        <button
+                            key={status}
+                            onClick={() => toggleFilter(status, 'selectedStatuses')}
+                            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+                            selectedStatuses.includes(status)
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
+                            }`}
+                        >
+                            {status}
+                        </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Priority */}
+                <div>
+                    <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Prioridade</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                        {uniquePriorities.map(prio => (
+                        <button
+                            key={prio}
+                            onClick={() => toggleFilter(prio, 'selectedPriorities')}
+                            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+                            selectedPriorities.includes(prio)
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
+                            }`}
+                        >
+                            {prio}
+                        </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Availability */}
+                <div>
+                    <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">Disponibilidade</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                        {uniqueAvailabilities.map(avail => (
+                        <button
+                            key={avail}
+                            onClick={() => toggleFilter(avail, 'selectedAvailabilities')}
+                            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+                            selectedAvailabilities.includes(avail)
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-50 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-600 border border-slate-200 dark:border-transparent'
+                            }`}
+                        >
+                            {avail}
+                        </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Year Range - Dual Thumb Slider */}
+                <div>
+                    <label className="block text-xs text-slate-500 dark:text-neutral-400 mb-1.5">
+                        Ano de lançamento: {safeYearRange[0]} - {safeYearRange[1]}
+                    </label>
+                    <div className="relative pt-2 pb-1 px-1">
+                        {/* Track background */}
+                        <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 dark:bg-neutral-700 rounded-full -translate-y-1/2"></div>
+                    
+                    {/* Active range */}
+                    <div 
+                    className="absolute top-1/2 h-1 bg-purple-600 rounded-full -translate-y-1/2"
+                    style={{
+                        left: `${((safeYearRange[0] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`,
+                        right: `${100 - ((safeYearRange[1] - yearBounds[0]) / (yearBounds[1] - yearBounds[0] || 1)) * 100}%`
+                    }}
+                    ></div>
+                    
+                    {/* Min slider */}
+                    <input
+                    type="range"
+                    min={yearBounds[0]}
+                    max={yearBounds[1]}
+                    value={safeYearRange[0]}
+                    onChange={(e) => {
+                        const newMin = parseInt(e.target.value)
+                        if (newMin <= safeYearRange[1]) {
+                        setTableState(prev => ({ ...prev, yearRange: [newMin, safeYearRange[1]] }))
+                        }
+                    }}
+                    className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
+                    style={{ zIndex: safeYearRange[0] > yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 3, left: 0 }}
+                    />
+                    
+                    {/* Max slider */}
+                    <input
+                    type="range"
+                    min={yearBounds[0]}
+                    max={yearBounds[1]}
+                    value={safeYearRange[1]}
+                    onChange={(e) => {
+                        const newMax = parseInt(e.target.value)
+                        if (newMax >= safeYearRange[0]) {
+                        setTableState(prev => ({ ...prev, yearRange: [safeYearRange[0], newMax] }))
+                        }
+                    }}
+                    className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white"
+                    style={{ zIndex: safeYearRange[1] < yearBounds[0] + (yearBounds[1] - yearBounds[0]) * 0.5 ? 5 : 4, left: 0 }}
+                    />
+                </div>
             </div>
           </div>
         </div>
-
-        <div className="mt-3 text-xs text-slate-500 dark:text-neutral-500">
-          Mostrando {sortedBooks.length} de {books.length} livros
-        </div>
+      )}
+        
+        {showFilters && (
+            <div className="bg-slate-50 dark:bg-neutral-800/50 p-2 text-center border-t border-slate-100 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-400 dark:text-neutral-500 uppercase tracking-wider font-semibold">
+                    Mostrando {sortedBooks.length} de {books.length} livros
+                </span>
+            </div>
+        )}
       </div>
 
       {/* Desktop Table View */}

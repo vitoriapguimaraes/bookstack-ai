@@ -59,7 +59,7 @@ export function DistributionChart({ title, dataLidos, dataNaoLidos, chartType = 
                             ) : (
                                 <BarChart data={dataLidos} layout="vertical" margin={{ left: 20 }}>
                                     <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" width={170} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+                                    <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                                     <Tooltip 
                                         cursor={{ fill: 'var(--tooltip-cursor)' }} 
                                         contentStyle={{ 
@@ -120,7 +120,7 @@ export function DistributionChart({ title, dataLidos, dataNaoLidos, chartType = 
                             ) : (
                                 <BarChart data={dataNaoLidos} layout="vertical" margin={{ left: 20 }}>
                                     <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" width={170} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+                                    <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                                     <Tooltip 
                                         cursor={{ fill: 'var(--tooltip-cursor)' }} 
                                         contentStyle={{ 
