@@ -1,11 +1,13 @@
-import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home, X } from 'lucide-react'
+import { BookOpen, Layers, LayoutGrid, BarChart2, PlusCircle, Sun, Moon, Library, CheckCircle2, Home, X, Shield } from 'lucide-react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Sidebar({ onAddBook, isOpen, onClose }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
+  const { isAdmin } = useAuth()
   
   const menuItems = [
     { id: 'home', label: 'Início', icon: Home, path: '/', color: 'bg-pastel-blue' },
@@ -127,7 +129,10 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
           </div>
     
           {/* User Avatar - Settings Link */}
-          <div className="w-full px-3">
+          <div className="w-full px-3 flex flex-col gap-2">
+            
+
+
             <div 
                 onClick={() => {
                     navigate('/settings')

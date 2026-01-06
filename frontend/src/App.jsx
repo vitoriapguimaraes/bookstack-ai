@@ -116,7 +116,7 @@ function App() {
 
 
   return (
-        <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-x-hidden w-full">
+        <div className="h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-hidden w-full">
           
           {/* Mobile Header (Visible < md) */}
           <PrivateRoute>
@@ -135,9 +135,9 @@ function App() {
               />
           </PrivateRoute>
 
-          {/* Main Content Area */}
-          <main className={`flex-1 transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0`}>
-            <div className="w-full h-full">
+          {/* Main Content Area - Scrollable */}
+          <main className={`flex-1 h-full overflow-y-auto overflow-x-hidden transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0`}>
+            <div className="w-full min-h-full">
               {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
                       <p>⚠️ {error}</p>
@@ -153,11 +153,12 @@ function App() {
                   <Route path="/login" element={<Login />} />
 
                   {/* Dashboard Protected Routes */}
-                  <Route path="/" element={<PrivateRoute><div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6"><Home books={books} /></div></PrivateRoute>} />
+                  <Route path="/" element={<PrivateRoute><div className="max-w-[1600px] mx-auto"><Home books={books} /></div></PrivateRoute>} />
                   
                   {/* Mural routes with nested status routes */}
                   <Route path="/mural/:status" element={
                     <PrivateRoute>
+                    <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
                     <Mural 
                       books={books}
                       onEdit={handleEdit}
@@ -165,6 +166,7 @@ function App() {
                       muralState={muralState}
                       setMuralState={setMuralState}
                     />
+                    </div>
                     </PrivateRoute>
                   } />
                   <Route path="/mural" element={<Navigate to="/mural/reading" replace />} />
@@ -202,10 +204,8 @@ function App() {
                       <Route path="formula" element={<FormulaSettings />} />
                       <Route path="lists" element={<ListSettings />} />
                       <Route path="preferences" element={<PreferencesSettings />} />
+                      <Route path="admin" element={<Admin />} />
                   </Route>
-
-                  {/* Admin Route */}
-                  <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
 
                   {/* Book Form routes */}
                   <Route path="/create" element={

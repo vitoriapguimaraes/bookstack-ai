@@ -145,16 +145,16 @@ export default function HomeView({ books }) {
 
   return (
     <div className="animate-fade-in min-h-[calc(100vh-4rem)] pb-20 md:pb-0">
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-0">
         {/* Left Column - Metrics Cards (25% - col-span-3) */}
-        <div className="w-full md:col-span-3 flex flex-col gap-4">
+        <div className="w-full md:col-span-3 flex flex-col gap-4 md:sticky md:top-0 md:self-start md:h-screen md:overflow-hidden pl-4 md:pl-8 pt-4 md:pt-8 pr-4 md:pr-4 border-r border-transparent z-10">
           {/* Header with dynamic title */}
           <div className="mb-2 hidden md:block">
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
-              Minha Estante Virtual
+              Minha Estante
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              Explore sua coleção por ano e categoria
+              Explore sua coleção
             </p>
           </div>
 
@@ -218,7 +218,7 @@ export default function HomeView({ books }) {
           {/* Metrics Grid - NO SCROLL */}
           <div className="grid grid-cols-2 gap-2">
             {/* Total de Livros */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-32 flex flex-col">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-28 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
                 <Library size={16} className="text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">Total</span>
@@ -229,7 +229,7 @@ export default function HomeView({ books }) {
             </div>
 
             {/* Nota Média */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-32 flex flex-col">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-28 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
                 <Star size={16} className="text-red-600 dark:text-red-400" />
                 <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">Nota Média</span>
@@ -240,7 +240,7 @@ export default function HomeView({ books }) {
             </div>
 
             {/* Lendo Agora */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-44 flex flex-col">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-36 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={16} className="text-purple-600 dark:text-purple-400" />
                 <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">Lendo Agora</span>
@@ -262,7 +262,7 @@ export default function HomeView({ books }) {
             </div>
 
             {/* Último Lido */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-44 flex flex-col">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-36 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={16} className="text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">Último Lido</span>
@@ -296,7 +296,7 @@ export default function HomeView({ books }) {
         </div>
 
         {/* Right Column - Bookshelf (75% - col-span-9) */}
-        <div className="w-full md:col-span-9 flex flex-col">
+        <div className="w-full md:col-span-9 flex flex-col pl-4 md:pl-6 pr-4 md:pr-8 pt-4 md:pt-8">
           <BookshelfShowcase books={filteredBooks} />
         </div>
       </div>
