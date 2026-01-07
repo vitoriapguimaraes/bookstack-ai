@@ -78,6 +78,8 @@ export default function App() {
   // --- Mobile Menu State ---
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isLoginPage = location.pathname === "/login";
+
   // Fetch books only when session is ready
   useEffect(() => {
     if (!authLoading && session) {
@@ -90,7 +92,10 @@ export default function App() {
   const fetchBooks = async () => {
     try {
       console.log("Fetching books from /books/...");
-      const res = await api.get("/books/");
+      // Enforce a minimum loading time to avoid "empty state" flash
+      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
+      const [res] = await Promise.all([api.get("/books/"), minLoadTime]);
+
       setBooks(res.data);
       setError(null);
     } catch (err) {
@@ -126,30 +131,44 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <div className="h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-hidden w-full">
+      <div
+        className={
+          isLoginPage
+            ? "min-h-screen w-full bg-slate-50 dark:bg-neutral-950"
+            : "h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-hidden w-full"
+        }
+      >
         {/* Mobile Header (Visible < md) */}
-        <PrivateRoute>
-          <MobileHeader
-            onMenuClick={() => setIsMobileMenuOpen(true)}
-            onAddBook={() => handleOpenForm()}
-          />
-        </PrivateRoute>
+        {!isLoginPage && (
+          <PrivateRoute>
+            <MobileHeader
+              onMenuClick={() => setIsMobileMenuOpen(true)}
+              onAddBook={() => handleOpenForm()}
+            />
+          </PrivateRoute>
+        )}
 
         {/* Sidebar (Desktop Fixed / Mobile Drawer) */}
-        <PrivateRoute>
-          <Sidebar
-            onAddBook={() => handleOpenForm()}
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-          />
-        </PrivateRoute>
+        {!isLoginPage && (
+          <PrivateRoute>
+            <Sidebar
+              onAddBook={() => handleOpenForm()}
+              isOpen={isMobileMenuOpen}
+              onClose={() => setIsMobileMenuOpen(false)}
+            />
+          </PrivateRoute>
+        )}
 
         {/* Main Content Area - Scrollable */}
         <main
-          className={`flex-1 h-full overflow-y-auto overflow-x-hidden transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0`}
+          className={
+            isLoginPage
+              ? "w-full h-full"
+              : "flex-1 h-full overflow-y-auto overflow-x-hidden transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0"
+          }
         >
-          <div className="w-full min-h-full">
-            {error && (
+          <div className={isLoginPage ? "h-full" : "w-full min-h-full"}>
+            {error && !isLoginPage && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
                 <p>⚠️ {error}</p>
                 <p className="text-sm">
@@ -158,13 +177,13 @@ export default function App() {
               </div>
             )}
 
-            {(loading || authLoading) && (
+            {(loading || authLoading) && !isLoginPage && (
               <p className="text-center mt-20 text-lg animate-pulse text-neutral-500">
-                Carregando biblioteca...
+                Carregando...
               </p>
             )}
 
-            {!loading && !authLoading && (
+            {(!loading && !authLoading) || isLoginPage ? (
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
@@ -234,6 +253,18 @@ export default function App() {
                   }
                 />
 
+                {/* User Guide Route */}
+                <Route
+                  path="/guide"
+                  element={
+                    <PrivateRoute>
+                      <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                        <GuideSettings />
+                      </div>
+                    </PrivateRoute>
+                  }
+                />
+
                 {/* Settings Routes */}
                 <Route
                   path="/settings"
@@ -249,7 +280,7 @@ export default function App() {
                   <Route path="formula" element={<FormulaSettings />} />
                   <Route path="lists" element={<ListSettings />} />
                   <Route path="audit" element={<AuditSettings />} />
-                  <Route path="guide" element={<GuideSettings />} />
+                  <Route path="audit" element={<AuditSettings />} />
                   <Route path="preferences" element={<PreferencesSettings />} />
                   <Route path="administrador" element={<Admin />} />
                 </Route>
@@ -286,12 +317,12 @@ export default function App() {
                   }
                 />
               </Routes>
-            )}
+            ) : null}
           </div>
         </main>
 
         {/* Button Scroll to Top */}
-        <ScrollToTopBottom currentPath={location.pathname} />
+        {!isLoginPage && <ScrollToTopBottom currentPath={location.pathname} />}
       </div>
     </ToastProvider>
   );

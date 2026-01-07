@@ -18,29 +18,16 @@ export default function OverviewSettings() {
       <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            Configurações Gerais
+            Visão Geral
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Veja o que você pode configurar aqui.
+            Status do sistema
           </p>
         </div>
       </div>
 
       {/* Feature cards */}
       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <FeatureCard
-          icon={Info}
-          title="Guia do Usuário"
-          description="Aprenda como configurar e tirar o melhor proveito do sistema."
-          onClick={() => navigate("/settings/guide")}
-          color="bg-purple-500"
-          features={[
-            "Primeiros passos",
-            "Entendendo o Score",
-            "Automação com IA",
-          ]}
-        />
-
         <FeatureCard
           icon={Brain}
           title="IA & Inteligência"
