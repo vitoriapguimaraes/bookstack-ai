@@ -14,7 +14,7 @@ import { DistributionChart } from "./DistributionChart.jsx";
 import { TimelineChart } from "./TimelineChart.jsx";
 import { InsightsGrid } from "./InsightsGrid.jsx";
 import { useAnalyticsData } from "./useAnalyticsData.js";
-import { getClassBaseHSL, hslToString } from "./analyticsUtils.js";
+import { getClassBaseHSL, hslToString } from "../../utils/analyticsUtils.js";
 import html2canvas from "html2canvas";
 import { useToast } from "../../context/ToastContext";
 
