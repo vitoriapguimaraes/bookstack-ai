@@ -257,7 +257,6 @@ export default function BookForm({
 
     try {
       let savedBook;
-      console.log("Saving book...", bookToEdit ? "PUT" : "POST");
       if (bookToEdit) {
         const res = await api.put(`/books/${bookToEdit.id}`, formData);
         savedBook = res.data;
@@ -268,12 +267,8 @@ export default function BookForm({
 
       // Only upload file if user selected a local file
       if (coverFile && savedBook.id) {
-        console.log("Uploading cover for book ID:", savedBook.id);
         const formDataUpload = new FormData();
         formDataUpload.append("file", coverFile);
-
-        // Debug Log
-        console.log("Cover Upload URL:", `/books/${savedBook.id}/cover`);
 
         await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
           headers: { "Content-Type": "multipart/form-data" },

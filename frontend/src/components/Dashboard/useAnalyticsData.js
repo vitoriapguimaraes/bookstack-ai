@@ -198,22 +198,13 @@ export function useAnalyticsData(books) {
       }
     });
 
-    let topAuthorsList = [];
-    let maxAuthorCount = 0;
+    // Sort and get Top 10
+    const topAuthorsList = Object.entries(authorMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
 
-    Object.entries(authorMap).forEach(([author, count]) => {
-      if (count > maxAuthorCount) {
-        maxAuthorCount = count;
-        topAuthorsList = [author];
-      } else if (count === maxAuthorCount) {
-        topAuthorsList.push(author);
-      }
-    });
-
-    const topAuthor =
-      maxAuthorCount > 0
-        ? { names: topAuthorsList, count: maxAuthorCount }
-        : null;
+    const topAuthor = topAuthorsList.length > 0 ? topAuthorsList[0] : null;
 
     // C. Busiest Year
     const yearMap = {};
@@ -325,7 +316,13 @@ export function useAnalyticsData(books) {
         avgRating,
         avgScore,
       },
-      insights: { oldestRead, newestRead, topAuthor, busiestYear },
+      insights: {
+        oldestRead,
+        newestRead,
+        topAuthor,
+        topAuthorsList,
+        busiestYear,
+      },
       timeline: { monthly: timelineMonthly, yearly: timelineYearly },
       timelineMeta: {
         classes: Array.from(allClasses),

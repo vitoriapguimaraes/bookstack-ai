@@ -93,25 +93,23 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
       )}
 
       <aside
-        className={`w-64 md:w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-50 transition-all duration-300 shadow-2xl md:shadow-none
+        className={`w-64 md:w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-[60] transition-all duration-300 shadow-2xl md:shadow-none
             ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        {/* Mobile Close Button */}
-        <div className="md:hidden w-full flex justify-end px-4 mb-4">
+        {/* Mobile Header (Logo + Close) */}
+        <div className="md:hidden w-full flex items-center justify-between px-6 mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+              bookstack-ai
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200"
+            className="p-2 -mr-2 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200"
           >
             <X size={24} />
           </button>
-        </div>
-
-        {/* Mobile Brand Title */}
-        <div className="md:hidden w-full px-6 mb-6 mt-2">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-            bookstack-ai
-          </h2>
         </div>
 
         {/* Main Navigation */}

@@ -104,7 +104,6 @@ export default function App() {
       if (!session?.access_token) return;
 
       setLoading(true);
-      console.log("Fetching books from /books/...");
 
       // Explicitly pass token to avoid race conditions with interceptors/defaults
       const config = {

@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
   Bar,
+  LabelList,
 } from "recharts";
 import { COLORS } from "../../utils/analyticsUtils.js";
 
@@ -129,6 +130,12 @@ export function DistributionChart({
                     barSize={32}
                     background={{ fill: "transparent" }}
                   >
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      fill="var(--text-secondary)"
+                      fontSize={11}
+                    />
                     {dataLidos.map((entry, index) => (
                       <Cell key={index} fill={resolveColor(entry, index)} />
                     ))}
@@ -231,6 +238,12 @@ export function DistributionChart({
                     barSize={32}
                     background={{ fill: "transparent" }}
                   >
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      fill="var(--text-secondary)"
+                      fontSize={11}
+                    />
                     {dataNaoLidos.map((entry, index) => (
                       <Cell key={index} fill={resolveColor(entry, index)} />
                     ))}

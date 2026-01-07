@@ -50,20 +50,12 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
   if (book.cover_image) {
     if (book.cover_image.startsWith("http")) {
       coverUrl = book.cover_image.replace(/^http:/, "https:");
-      console.log(`[BookCard] Direct URL for "${book.title}":`, coverUrl);
     } else {
       coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
         book.cover_image
       )}`;
-      console.log(
-        `[BookCard] Proxy URL for "${book.title}":`,
-        coverUrl,
-        "Original:",
-        book.cover_image
-      );
     }
-  } else {
-    console.log(`[BookCard] No cover for "${book.title}"`);
+    // No debug log needed for missing cover
   }
 
   const handleDelete = async (e) => {

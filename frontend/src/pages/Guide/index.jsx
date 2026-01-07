@@ -186,32 +186,33 @@ export default function GuideSettings() {
         </section>
       </div>
 
-      {/* Quick Links Card */}
-      <div className="bg-slate-900 rounded-xl p-10 text-white relative overflow-hidden group shrink-0 mt-auto sticky bottom-4 z-50 shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-slate-900 rounded-xl p-4 md:p-10 text-white relative overflow-hidden group shrink-0 mt-auto sticky bottom-4 z-40 shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 text-center md:text-left">
           <div>
-            <h3 className="text-lg font-black mb-1">Pronta para começar?</h3>
-            <p className="text-slate-400 text-sm">
+            <h3 className="text-base md:text-lg font-black mb-1">
+              Pronta para começar?
+            </h3>
+            <p className="text-slate-400 text-sm max-w-md hidden md:block">
               Acesse as seções abaixo para configurar sua biblioteca agora
               mesmo.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 md:flex md:flex-row w-full md:w-auto gap-3">
             <a
               href="/settings/ai"
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+              className="px-4 py-2 md:px-6 md:py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2"
             >
-              Configurar APIs <ArrowRight size={16} />
+              Configurar APIs <ArrowRight size={14} />
             </a>
             <a
               href="/settings/lists"
-              className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+              className="px-4 py-2 md:px-6 md:py-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2"
             >
-              Gerenciar Listas <Search size={16} />
+              Gerenciar Listas <Search size={14} />
             </a>
           </div>
         </div>
-        <div className="absolute -right-8 -bottom-6 text-white/5 transform rotate-12 transition-transform group-hover:scale-125">
+        <div className="absolute -right-8 -bottom-6 text-white/5 transform rotate-12 transition-transform group-hover:scale-125 pointer-events-none">
           <BookOpen size={120} />
         </div>
       </div>
