@@ -118,7 +118,13 @@ def suggest_book_details(request: TitleRequest, session: Session = Depends(get_s
 
 @app.on_event("startup")
 def on_startup():
-    create_db_and_tables()
+    try:
+        print("🔄 Tentando conectar ao BD na inicialização...")
+        create_db_and_tables()
+        print("✅ Tabelas verificadas/criadas com sucesso!")
+    except Exception as e:
+        print(f"⚠️ ERRO CRÍTICO: Não foi possível conectar ao Banco de Dados na inicialização: {e}")
+        print("⚠️ A aplicação continuará incializando, mas endpoints de banco falharão.")
 
 @app.get("/")
 def read_root():
