@@ -157,7 +157,10 @@ export default function BulkEditModal({ count, onClose, onSave }) {
                 className="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-white focus:border-purple-500 outline-none disabled:opacity-50"
               >
                 <option value="">(Não Alterar)</option>
-                {(classCategories[updates.book_class] || [])
+                {(Array.isArray(classCategories[updates.book_class])
+                  ? classCategories[updates.book_class]
+                  : []
+                )
                   .filter((cat) => cat !== updates.book_class)
                   .map((cat) => (
                     <option key={cat} value={cat}>

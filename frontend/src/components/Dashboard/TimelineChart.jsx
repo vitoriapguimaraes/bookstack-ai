@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  LabelList,
 } from "recharts";
 import { CustomTimelineLegend } from "./CustomTimelineLegend";
 import {
@@ -135,8 +136,8 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
   }
 
   return (
-    <div className="w-full flex flex-col md:flex-row">
-      <div className="flex-1 min-w-0 h-[350px]">
+    <div className="w-full flex flex-col md:flex-row gap-4">
+      <div className="w-full h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={currentData}
@@ -186,7 +187,17 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
                 radius={[2, 2, 0, 0]}
                 isAnimationActive={false}
                 background={{ fill: "transparent" }}
-              />
+              >
+                {/* Show label only on the top segment of stack or total */}
+                {/* For simplicity we add labels. If stacked, it might be messy but meets req. */}
+                <LabelList
+                  dataKey={key}
+                  position="top"
+                  fill="#888"
+                  fontSize={10}
+                  formatter={(val) => (val > 0 ? val : "")}
+                />
+              </Bar>
             ))}
           </BarChart>
         </ResponsiveContainer>

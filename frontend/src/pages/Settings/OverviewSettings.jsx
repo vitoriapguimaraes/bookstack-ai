@@ -112,6 +112,15 @@ function FeatureCard({
       onClick={onClick}
       className="group cursor-pointer rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
     >
+      {/* Visual Indicator */}
+      <div
+        className={`absolute top-6 right-6 transition-all duration-300 transform group-hover:translate-x-1`}
+      >
+        <ArrowRight
+          size={20}
+          className={`text-slate-300 dark:text-neutral-700 group-hover:${iconColor}`}
+        />
+      </div>
       <div className="flex items-center gap-3 mb-4">
         <div className={`p-2 rounded-xl ${color} bg-opacity-10 ${iconColor}`}>
           <Icon size={20} />
@@ -137,7 +146,7 @@ function FeatureCard({
       )}
 
       <div
-        className={`mt-auto pt-6 text-xs font-bold ${iconColor} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0`}
+        className={`mt-auto pt-6 text-xs font-bold ${iconColor} flex items-center gap-1 transition-all`}
       >
         Acessar configurações <ArrowRight size={14} />
       </div>

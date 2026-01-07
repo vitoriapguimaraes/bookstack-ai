@@ -59,10 +59,10 @@ export default function Analytics({ books }) {
         backgroundColor: bgColor,
         useCORS: true,
         scrollX: 0,
-        scrollY: 0, // Force capture from top-left logic
-        width: element.scrollWidth, // Capture full width
-        height: element.scrollHeight + 50, // Capture full height + branding padding
-        windowWidth: element.scrollWidth + 50, // Ensure window context is large enough
+        scrollY: -window.scrollY,
+        width: element.scrollWidth + 20,
+        height: element.scrollHeight + 50,
+        windowWidth: element.scrollWidth + 50,
         onclone: (clonedDoc) => {
           const buttons = clonedDoc.querySelectorAll("button");
           buttons.forEach((btn) => (btn.style.display = "none"));
@@ -78,6 +78,13 @@ export default function Analytics({ books }) {
             clonedElement.style.height = "auto";
             clonedElement.style.overflow = "visible";
           }
+
+          // Expand scrollable charts
+          const scrollables = clonedDoc.querySelectorAll(".overflow-x-auto");
+          scrollables.forEach((el) => {
+            el.style.overflow = "visible";
+            el.style.width = "auto";
+          });
         },
       });
       const link = document.createElement("a");
@@ -278,14 +285,50 @@ export default function Analytics({ books }) {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 w-full">
-          <TimelineChart
-            stats={stats}
-            timelineType={timelineType}
-            timelinePeriod={timelinePeriod}
-          />
+        <div className="flex-1 min-h-0 w-full overflow-x-auto pb-2">
+          <div className="w-full h-full">
+            <TimelineChart
+              stats={stats}
+              timelineType={timelineType}
+              timelinePeriod={timelinePeriod}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Top Authors Card */}
+      {stats.insights.topAuthorsList &&
+        stats.insights.topAuthorsList.length > 0 && (
+          <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl shadow-sm">
+            <h3 className="text-lg font-light text-slate-800 dark:text-neutral-200 mb-6 flex items-center gap-2">
+              <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
+              Top Autores
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {stats.insights.topAuthorsList.map((author, index) => (
+                <div
+                  key={author.name}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-neutral-800/50 border border-slate-100 dark:border-neutral-800"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-xs">
+                    {index + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate"
+                      title={author.name}
+                    >
+                      {author.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {author.count} {author.count === 1 ? "livro" : "livros"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       {/* Distributions (Charts) */}
       <div id="chart-types" className="relative group">
