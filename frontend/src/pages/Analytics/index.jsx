@@ -1,4 +1,4 @@
-import Analytics from "../../components/Analytics/index.jsx";
+import Analytics from "../../components/Dashboard/index.jsx";
 
 export default function AnalyticsView({ books }) {
   return (

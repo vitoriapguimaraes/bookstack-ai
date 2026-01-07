@@ -8,7 +8,7 @@ import {
   Library,
   Camera,
 } from "lucide-react";
-import { useAnalyticsData } from "../../components/Analytics/useAnalyticsData.js";
+import { useAnalyticsData } from "../../components/Dashboard/useAnalyticsData.js";
 import BookshelfShowcase from "../../components/Showcase/BookshelfShowcase.jsx";
 import ShowcaseExporter from "../../components/Showcase/ShowcaseExporter.jsx";
 
