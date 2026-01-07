@@ -5,11 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _key = os.getenv("ENCRYPTION_KEY")
-_cipher = Fernet(_key) if _key else None
+try:
+    _cipher = Fernet(_key) if _key else None
+except Exception as e:
+    print(f"⚠️ WARNING: Invalid ENCRYPTION_KEY ({e}). Encryption disabled.")
+    _cipher = None
 
-if not _key:
+if not _cipher:
     # Only print warning if strictly necessary or logging
-    print("WARNING: ENCRYPTION_KEY not found. Data will be saved as plain text or error out depending on usage.")
+    print("WARNING: Encryption disabled. Data will be saved as plain text.")
 
 def encrypt_value(value: str) -> str:
     """Encrypts a string value. Returns the encrypted string."""
