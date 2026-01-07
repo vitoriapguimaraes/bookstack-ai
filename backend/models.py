@@ -9,7 +9,7 @@ class Book(SQLModel, table=True):
     year: Optional[int] = None
     type: str = "Não Técnico"
     priority: str = "1 - Baixa"
-    status: str = "A Ler"       # 0=Lido, 1=A Ler, 2=Lendo (convertido para string)
+    status: str = "A Ler"
     availability: str = "Estante"
     book_class: str = "Desenvolvimento Pessoal"
     category: str = "Geral"
@@ -20,3 +20,4 @@ class Book(SQLModel, table=True):
     score: Optional[float] = 0.0
     motivation: Optional[str] = None
     cover_image: Optional[str] = None
+    user_id: Optional[str] = Field(default=None, index=True) # ID do usuário no Supabase

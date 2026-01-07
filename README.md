@@ -1,209 +1,84 @@
-# 📚 Sistema de Gerenciamento de Leitura
+# Sistema de Gerenciamento de Leitura (BookStack AI)
 
-> Um sistema completo de gerenciamento de biblioteca pessoal com classificação hierárquica, sugestões de IA e analytics avançados. Organize sua lista de leitura, acompanhe seu progresso e descubra insights sobre seus hábitos de leitura.
+> Um sistema completo de gerenciamento de biblioteca pessoal com classificação hierárquica, sugestões inteligentes de IA e analytics avançados. Organize sua lista de leitura, acompanhe seu progresso, defina metas anuais e exporte showcases visuais da sua estante.
 
-![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![Demonstração do sistema](https://placehold.co/1200x630/4f46e5/ffffff?text=BookStack+AI+Preview)
 
-## ✨ Funcionalidades Principais
+## Funcionalidades Principais
 
-### 📖 Gerenciamento de Livros
-- **CRUD Completo**: Adicionar, editar, visualizar e excluir livros
-- **Classificação Hierárquica**: Sistema de 6 classes e 47 categorias
-- **Sugestões de IA**: Integração com Groq AI e Google Books API para preenchimento automático
-- **Capas Automáticas**: Busca e armazenamento de capas via Google Books API
-- **Sistema de Score**: Cálculo automático de prioridade baseado em múltiplos fatores
+- **Gerenciamento Inteligente de Livros**: CRUD completo com sugestões automáticas de metadados via IA (Groq) e Google Books API.
+- **Classificação Hierárquica**: Organização robusta em 6 classes e 47 categorias para melhor segmentação do conhecimento.
+- **Showcase Exporter (Novo)**: Gere imagens compartilháveis da sua estante ("aesthetic") com contador de livros, resumo de filtros e layout otimizado para redes sociais.
+- **Analytics Avançados**: Dashboard interativo com métricas de leitura, distribuição por classes e progresso de metas.
+- **Configurações de Usuário (Novo)**: Defina e acompanhe metas anuais de leitura com persistência de preferências e filtros.
+- **Sistema de Prioridade (Score)**: Algoritmo que calcula automaticamente a prioridade de leitura baseada em múltiplos fatores.
+- **Fila de Leitura Dinâmica**: Organização automática de próximos livros baseada em status e prioridade.
 
-### 🎯 Organização Inteligente
-- **Fila de Leitura**: Sistema de ordenação para "Próximos da Fila"
-- **Filtros Avançados**: Busca por título/autor, categoria, status, prioridade e ano
-- **Múltiplas Visualizações**: Mural de cards, tabela gerencial e analytics
+## Tecnologias Utilizadas
 
-### 📊 Analytics
-- **Dashboard Interativo**: Estatísticas de leitura em tempo real
-- **Distribuição por Classe**: Visualize seus livros por macro-categorias
-- **Métricas de Progresso**: Acompanhe livros lidos, em leitura e na fila
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React, Axios, html2canvas.
+- **Backend**: FastAPI, SQLModel (SQLite), Groq AI SDK.
+- **Integrações**: Google Books API, Groq LLM.
 
-### 🤖 Inteligência Artificial
-- **Classificação Automática**: IA sugere classe, categoria e tipo do livro
-- **Motivação Gerada**: Resumos e motivos para ler gerados por IA
-- **Dados Factuais**: Autor, ano e descrição via Google Books API
+## Como Executar
 
-## 🛠️ Tecnologias Utilizadas
+1. Clone o repositório:
 
-### Backend
-- **FastAPI**: Framework web moderno e rápido
-- **SQLModel**: ORM com suporte a SQLite
-- **Groq AI**: Modelo de linguagem para classificação
-- **Google Books API**: Dados factuais e capas de livros
-- **Python 3.11+**
+   ```bash
+   git clone https://github.com/vitoriapguimaraes/bookstack-ai.git
+   cd bookstack-ai
+   ```
 
-### Frontend
-- **React 18**: Biblioteca UI com hooks
-- **Vite**: Build tool ultra-rápido
-- **Tailwind CSS**: Framework CSS utility-first
-- **Axios**: Cliente HTTP
-- **Lucide React**: Ícones modernos
+2. Configure e execute o Backend:
 
-## 🚀 Como Executar
+   ```bash
+   cd backend
+   python -m venv venv
+   # Windows: venv\Scripts\activate | Unix: source venv/bin/activate
+   pip install -r requirements.txt
+   # Crie um arquivo .env com sua GROQ_API_KEY
+   uvicorn main:app --reload
+   ```
 
-### Pré-requisitos
-- Python 3.11+
-- Node.js 18+
-- Conta Groq (para API key)
+3. Configure e execute o Frontend:
 
-### 1. Clone o Repositório
-```bash
-git clone https://github.com/vitoriapguimaraes/new_project_book.git
-cd new_project_book
-```
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-### 2. Configure o Backend
+4. Acesse o sistema em `http://localhost:5173`.
 
-```bash
-cd backend
+## Como Usar
 
-# Crie um ambiente virtual
-python -m venv venv
+- **Adicionar Livros**: Use a busca por IA para preencher dados automaticamente apenas pelo título.
+- **Exportar Estante**: Na tela inicial, use o botão de "Compartilhar Estante" para gerar uma imagem personalizada do seu progresso atual.
+- **Definir Metas**: Acesse "Configurações > Preferências" para definir quantos livros deseja ler no ano.
+- **Analytics**: Acompanhe o gráfico de distribuição para garantir que você está diversificando suas lecturas entre as classes (Tecnologia, Negócios, etc).
 
-# Ative o ambiente (Windows)
-venv\Scripts\activate
-
-# Instale as dependências
-pip install fastapi uvicorn sqlmodel python-dotenv groq requests
-
-# Configure a API key do Groq
-# Crie um arquivo .env com:
-# GROQ_API_KEY=sua_chave_aqui
-
-# Execute o servidor
-uvicorn main:app --reload
-```
-
-O backend estará rodando em `http://127.0.0.1:8000`
-
-### 3. Configure o Frontend
-
-```bash
-cd frontend
-
-# Instale as dependências
-npm install
-
-# Execute o servidor de desenvolvimento
-npm run dev
-```
-
-O frontend estará rodando em `http://localhost:5173`
-
-## 📖 Como Usar
-
-### Adicionar um Novo Livro
-
-1. Acesse a aba **"Adicionar Livro"**
-2. Digite o **título** do livro
-3. Clique em **"✨ Sugerir com IA"** para preenchimento automático
-4. Revise e ajuste os campos sugeridos
-5. Selecione a **Classe** (as categorias serão filtradas automaticamente)
-6. Clique em **"Salvar Livro"**
-
-### Organizar Fila de Leitura
-
-1. Acesse a aba **"Gerenciar Biblioteca"**
-2. Filtre por status **"A Ler"** ou **"Lendo"**
-3. Edite o campo **"Ordem"** para definir prioridades
-4. Livros com ordem definida aparecem em **"Próximos da Fila"**
-
-### Visualizar Analytics
-
-1. Acesse a aba **"Analytics"**
-2. Veja estatísticas de:
-   - Total de livros
-   - Distribuição por status
-   - Top 6 categorias
-   - Nota média
-
-## 📁 Estrutura de Diretórios
+## Estrutura de Diretórios
 
 ```
-/new_project_book
+/bookstack-ai
 ├── backend/
 │   ├── main.py              # API FastAPI
-│   ├── models.py            # Modelos SQLModel
-│   ├── utils.py             # Funções auxiliares e IA
-│   ├── database.py          # Configuração do banco
-│   ├── database.db          # SQLite database
-│   └── static/covers/       # Capas de livros (legacy)
+│   ├── models.py            # Modelos de Dados
+│   └── database.py          # Configuração SQLite
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # Componentes React
-│   │   │   ├── BookForm.jsx
-│   │   │   ├── BookCard.jsx
-│   │   │   ├── BooksTable.jsx
-│   │   │   ├── Analytics.jsx
-│   │   │   └── Sidebar.jsx
-│   │   ├── App.jsx          # Componente principal
-│   │   └── index.css        # Estilos Tailwind
-│   ├── vite.config.js       # Configuração Vite
-│   └── package.json
+│   │   ├── components/      # UI Components (BookCard, ShowcaseExporter, etc)
+│   │   ├── views/           # Page Views (Home, Analytics, Settings)
+│   │   └── index.css        # Tailwind Global Styles
 └── README.md
 ```
 
-## 🎨 Sistema de Classificação
+## Status
 
-### 6 Classes Hierárquicas
+- 🚧 Em desenvolvimento
 
-1. **🤖 Tecnologia & IA** (7 categorias)
-   - IA, Machine Learning, Data Science, Programação, etc.
+> Veja as [issues abertas](https://github.com/vitoriapguimaraes/bookstack-ai/issues) para sugestões de melhorias e próximos passos.
 
-2. **🏗️ Engenharia & Arquitetura** (6 categorias)
-   - MLOps, Engenharia de Dados, Clean Code, etc.
-
-3. **📈 Conhecimento & Ciências** (4 categorias)
-   - Estatística, Cosmologia, Conhecimento Geral
-
-4. **💰 Negócios & Finanças** (3 categorias)
-   - Finanças Pessoais, Negócios, Liberdade Econômica
-
-5. **📚 Literatura & Cultura** (6 categorias)
-   - Literatura Brasileira, Ficção, Diversidade, etc.
-
-6. **🌱 Desenvolvimento Pessoal** (10 categorias)
-   - Liderança, Produtividade, Bem-estar, Comunicação, etc.
-
-## 🔄 Migração de Dados
-
-O projeto inclui scripts de migração para:
-- Adicionar campo `book_class` ao banco existente
-- Popular classes automaticamente baseado em categorias
-- Converter capas locais para URLs da API
-- Atualizar URLs para thumbnails (menor resolução)
-
-## 📊 Sistema de Score
-
-O score é calculado automaticamente baseado em:
-- **Peso da Categoria** (1-7 pontos)
-- **Prioridade** (1-3 pontos)
-- **Disponibilidade** (+2 se "Estante")
-- **Tipo** (+1 se "Técnico")
-
-## 🔮 Próximos Passos
-
-> Veja as [issues abertas](https://github.com/vitoriapguimaraes/new_project_book/issues) para sugestões de melhorias.
-
-## 📝 Status
-
-🚧 **Em Desenvolvimento Ativo**
-
-**Última Atualização**: Janeiro 2026
-
-**Versão**: 2.0.0 (Sistema de Classificação Hierárquica)
-
-## 👩‍💻 Mais Sobre Mim
+## Mais Sobre Mim
 
 Acesse os arquivos disponíveis na [Pasta Documentos](https://github.com/vitoriapguimaraes/vitoriapguimaraes/tree/main/DOCUMENTOS) para mais informações sobre minhas qualificações e certificações.
-
----
-
-**Desenvolvido com ❤️ por [Vitória Guimarães](https://github.com/vitoriapguimaraes)**

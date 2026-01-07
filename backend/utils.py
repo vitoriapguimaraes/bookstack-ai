@@ -17,7 +17,6 @@ CATEGORY_WEIGHTS = {
     "Comunicação": 5,
     "Bem-estar": 5,
     "Literatura brasileira": 5,
-    "Literatura Brasileira Clássica": 5,
     "História/Ficção": 7,
     "Diversidade e inclusão": 3,
     "Negócios": 2,
@@ -26,24 +25,22 @@ CATEGORY_WEIGHTS = {
     "Estatística": 7,
     "MLOps": 5,
     "Engenharia de dados": 5,
-    "Arquitetura": 1,
+    "Arquitetura de Software": 1,
     "Programação": 3,
     "Machine learning": 7,
     "Visão computacional": 7,
     "IA": 6,
     "Data science": 7,
     "Análise de Dados": 5,
-    # Additional categories from the system
     "Liderança & Pensamento Estratégico": 7,
     "Arquitetura da Mente (Mindset)": 7,
-    "Artesanato de Software (Clean Code)": 6,
     "Sistemas de IA & LLMs": 6,
     "Storytelling & Visualização": 5,
     "Biohacking & Existência": 5,
     "Épicos & Ficção Reflexiva": 7,
     "Justiça Social & Interseccionalidade": 3,
-    "Liberdade Econômica & Finanças": 4,
-    "Cosmologia & Fronteiras da Ciência": 7,
+    "Liberdade Econômica": 4,
+    "Cosmologia": 7,
     "Estatística & Incerteza": 7,
     "Engenharia de ML & MLOps": 5,
 }
@@ -60,29 +57,27 @@ CLASS_CATEGORIES = {
         "Sistemas de IA & LLMs"
     ],
     "Engenharia & Arquitetura": [
-        "Arquitetura",
+        "Arquitetura de Software",
         "Arquitetura da Mente (Mindset)",
         "Engenharia de Dados",
         "MLOps",
-        "Engenharia de ML & MLOps",
-        "Artesanato de Software (Clean Code)"
+        "Engenharia de ML & MLOps"
     ],
     "Conhecimento & Ciências": [
         "Conhecimento Geral",
         "Estatística",
         "Estatística & Incerteza",
-        "Cosmologia & Fronteiras da Ciência"
+        "Cosmologia"
     ],
     "Negócios & Finanças": [
         "Finanças Pessoais",
         "Negócios",
-        "Liberdade Econômica & Finanças"
+        "Liberdade Econômica"
     ],
     "Literatura & Cultura": [
         "Diversidade e Inclusão",
         "História/Ficção",
         "Literatura Brasileira",
-        "Literatura Brasileira Clássica",
         "Épicos & Ficção Reflexiva",
         "Justiça Social & Interseccionalidade"
     ],
@@ -108,62 +103,86 @@ def get_class_from_category(category: str) -> str:
             return book_class
     return "Desenvolvimento Pessoal"  # Default fallback
 
-def calculate_book_score(book: Book) -> float:
+
+def calculate_book_score(book: Book, config: dict = None) -> float:
     """
-    Calcula o score do livro baseado na fórmula do Excel:
-    =SE(G212=0; 0; 
-       SE(E212="Técnico";4;2)
-       + SE(H212="Estante";2;0)
-       + IFS(F212="1 - Baixa";1; F212="2 - Média";4; F212="3 - Média-Alta";7; F212="4 - Alta";10)
-       + IFS(D212<=2005;4; E(D212>=2006; D212<=2021);7; D212>=2022;9)
-       + IFS(I212=categoria; peso_categoria)
-    )
-    
-    Onde G212 = Status (0=Lido, 1=A Ler, 2=Lendo)
-    Se Status = Lido (0), score = 0
+    Calcula o score do livro baseado na fórmula personalizada ou padrão (Excel).
+    config: Dicionário opcional com pesos personalizados.
     """
     
     # Se o livro já foi lido, score = 0 (conforme fórmula Excel)
     if book.status == "Lido":
         return 0.0
     
+    # Default Config (Formula Original)
+    if not config:
+        config = {}
+
+    weights_type = config.get('type', {"Técnico": 0, "default": 0})
+    weights_availability = config.get('availability', {"Estante": 0, "default": 0})
+    weights_priority = config.get('priority', {"1 - Baixa": 0, "2 - Média": 0, "3 - Média-Alta": 0, "4 - Alta": 0})
+    weights_year = config.get('year', {
+        "ranges": [
+            {"max": 2005, "weight": 0},
+            {"min": 2006, "max": 2021, "weight": 0},
+            {"min": 2022, "weight": 0}
+        ]
+    })
+    
+    # New Weights for Class and Category
+    weights_class = config.get('book_class', {})
+    
+    # Merge Default CATEGORY_WEIGHTS if not present in config, or use config as primary
+    # If the user has saved a config, 'category' key will exist (even if empty).
+    # If it's a fresh/legacy call without any user pref, config is empty {}, so we rely on global defaults.
+    if 'category' in config:
+        weights_category = config['category']
+    else:
+        weights_category = CATEGORY_WEIGHTS
+
     score = 0.0
     
     # 1. Tipo (E212)
-    if book.type == "Técnico":
-        score += 4
-    else:
-        score += 2
+    score += weights_type.get(book.type, weights_type.get('default', 2))
         
     # 2. Disponibilidade (H212)
     if book.availability == "Estante":
-        score += 2
+        score += weights_availability.get('Estante', 2)
+    else:
+        score += weights_availability.get('default', 0)
         
     # 3. Prioridade (F212)
-    priority_weights = {
-        "1 - Baixa": 1,
-        "2 - Média": 4, 
-        "3 - Média-Alta": 7, 
-        "4 - Alta": 10
-    }
-    score += priority_weights.get(book.priority, 0)
+    score += weights_priority.get(book.priority, 0)
     
     # 4. Ano (D212)
     if book.year:
-        if book.year <= 2005:
-            score += 4
-        elif 2006 <= book.year <= 2021:
-            score += 7
-        elif book.year >= 2022:
-            score += 9
+        year_weight = 0
+        for r in weights_year.get('ranges', []):
+            if 'min' in r and 'max' in r:
+                if r['min'] <= book.year <= r['max']:
+                    year_weight = r['weight']
+                    break
+            elif 'max' in r:
+                if book.year <= r['max']:
+                    year_weight = r['weight']
+                    break
+            elif 'min' in r:
+                if book.year >= r['min']:
+                    year_weight = r['weight']
+                    break
+        score += year_weight
             
-    # 5. Categoria (I212)
+    # 5. Classe (Novo)
+    if hasattr(book, 'book_class') and book.book_class:
+        score += weights_class.get(book.book_class, 0)
+
+    # 6. Categoria (I212) - Updated to use dynamic weights
     # Tenta match exato primeiro
-    category_score = CATEGORY_WEIGHTS.get(book.category, 0)
+    category_score = weights_category.get(book.category, 0)
     
-    # Se não encontrou match exato, tenta match parcial
+    # Se não encontrou match exato, tenta match parcial (apenas se book.category existe)
     if category_score == 0 and book.category:
-        for cat_name, weight in CATEGORY_WEIGHTS.items():
+        for cat_name, weight in weights_category.items():
             if cat_name.lower() in book.category.lower() or book.category.lower() in cat_name.lower():
                 category_score = weight
                 break
@@ -307,9 +326,60 @@ def get_hybrid_rating(title: str, author: str = None, original_title: str = None
 
 # --- AI PROVIDERS ---
 
-def get_groq_classification(prompt, system_prompt):
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key: return None
+def get_gemini_classification(prompt, system_prompt, api_keys=None):
+    # Requires: pip install google-generativeai
+    # Env: GEMINI_API_KEY
+    try:
+        import google.generativeai as genai
+        # Prefer provided key, fallback to env
+        api_key = (api_keys or {}).get("gemini_key") or os.getenv("GEMINI_API_KEY")
+        
+        if not api_key: 
+            return {"error": "GEMINI_API_KEY não configurada"}
+            
+        genai.configure(api_key=api_key)
+        # Fallback to 'gemini-pro' if flash is not found or deprecated
+        model = genai.GenerativeModel('gemini-pro', generation_config={"response_mime_type": "application/json"})
+        
+        full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
+        response = model.generate_content(full_prompt)
+        return json.loads(response.text)
+    except ImportError:
+        return {"error": "Biblioteca 'google-generativeai' não instalada"}
+    except Exception as e:
+        return {"error": f"Erro Gemini: {str(e)}"}
+
+def get_openai_classification(prompt, system_prompt, api_keys=None):
+    # Requires: pip install openai
+    # Env: OPENAI_API_KEY
+    try:
+        from openai import OpenAI
+        # Prefer provided key, fallback to env
+        api_key = (api_keys or {}).get("openai_key") or os.getenv("OPENAI_API_KEY")
+        
+        if not api_key: return {"error": "OPENAI_API_KEY não configurada"}
+        
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" },
+            temperature=0.7
+        )
+        return json.loads(response.choices[0].message.content)
+    except ImportError:
+        return {"error": "Biblioteca 'openai' não instalada"}
+    except Exception as e:
+        return {"error": f"Erro OpenAI: {str(e)}"}
+
+def get_groq_classification(prompt, system_prompt, api_keys=None):
+    # Prefer provided key, fallback to env
+    api_key = (api_keys or {}).get("groq_key") or os.getenv("GROQ_API_KEY")
+    
+    if not api_key: return {"error": "GROQ_API_KEY não configurada"}
     
     try:
         client = Groq(api_key=api_key)
@@ -324,113 +394,73 @@ def get_groq_classification(prompt, system_prompt):
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Erro no Groq: {e}")
-        return None
+        return {"error": f"Erro Groq: {str(e)}"}
 
-def get_gemini_classification(prompt, system_prompt):
-    # Requires: pip install google-generativeai
-    # Env: GEMINI_API_KEY
-    try:
-        import google.generativeai as genai
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key: 
-            print("Erro: GEMINI_API_KEY não encontrada.")
-            return None
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
-        
-        full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
-        response = model.generate_content(full_prompt)
-        return json.loads(response.text)
-    except ImportError:
-        print("Erro: Biblioteca 'google-generativeai' não instalada.")
-        return None
-    except Exception as e:
-        print(f"Erro no Gemini: {e}")
-        return None
-
-def get_openai_classification(prompt, system_prompt):
-    # Requires: pip install openai
-    # Env: OPENAI_API_KEY
-    try:
-        from openai import OpenAI
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key: return None
-        
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={ "type": "json_object" },
-            temperature=0.7
-        )
-        return json.loads(response.choices[0].message.content)
-    except ImportError:
-        print("Erro: Biblioteca 'openai' não instalada.")
-        return None
-    except Exception as e:
-        print(f"Erro na OpenAI: {e}")
-        return None
-
-def get_ai_classification(title: str, description: str = ""):
-    """Usa IA (Provider configurável) para classificar o livro."""
+def get_ai_classification(title: str, description: str = "", api_keys: dict = None, custom_prompts: dict = None, class_categories: dict = None):
+    """Usa IA (Provider configurável com Fallback) para classificar o livro."""
     
     # Mapeamento de classes para categorias
+    current_mapping = class_categories if class_categories and len(class_categories) > 0 else CLASS_CATEGORIES
+    
     class_categories_str = "\n".join([
         f"- {cls}: {', '.join(cats)}" 
-        for cls, cats in CLASS_CATEGORIES.items()
+        for cls, cats in current_mapping.items()
     ])
     
-    system_prompt = "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
+    valid_classes_str = "\n".join([f"   - {cls}" for cls in current_mapping.keys()])
     
-    prompt = f"""
-PERFIL DA LEITORA:
-Vitória é uma mulher de 30 anos, pansexual e profissional de tecnologia (Cientista de Dados e Desenvolvedora) com raízes na Engenharia Ambiental. Seu estilo de leitura é marcado pela busca de equilíbrio entre a densidade técnica e a sensibilidade humana. Ela não lê apenas para aprender uma sintaxe, mas para entender como a tecnologia e o comportamento humano se moldam. Como estudante contínua, ela valoriza o rigor técnico, mas sua lente de mundo é inclusiva, ética e focada em impacto coletivo.
+    system_prompt = (custom_prompts or {}).get("system_prompt") or "Você é um assistente literário especializado que auxilia na organização e enriquecimento de uma biblioteca pessoal."
+    
+    user_prompt_template = (custom_prompts or {}).get("user_prompt")
+    if user_prompt_template:
+        # Replace placeholders if any, but since it's a template we just append the book info or expect specific format
+        # For now, let's keep it simple: if custom user_prompt exists, use it as the base prompt
+        prompt = f"{user_prompt_template}\n\nLIVRO A ANALISAR:\nTítulo: \"{title}\"\nDescrição: \"{description[:800]}\""
+    else:
+        prompt = f"""
+PERFIL DO USUÁRIO:
+[NOME/PERSONA]: [Idade, profissão e principais áreas de interesse]
+[OBJETIVO DE LEITURA]: [O que você busca ao ler um livro? Ex: Rigor técnico, lazer, expansão de repertório, etc.]
+[LENTE DE MUNDO]: [Quais valores ou perspectivas você aplica ao analisar um tema? Ex: Inclusividade, ética, pragmatismo, etc.]
 
 LIVRO A ANALISAR:
 Título: "{title}"
 Descrição: "{description[:800]}"
 
-TAREFA:
-Analise este livro e retorne um JSON com:
+PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
+1. Primeiro, defina a "book_class" (Classe Macro) adequada.
+2. Depois, consulte a lista de categorias APENAS dessa classe específica.
+3. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
 
-1. "book_class" (string): Escolha UMA das 6 classes abaixo:
-   - Tecnologia & IA
-   - Desenvolvimento Pessoal
-   - Negócios & Carreira
-   - Ciência & Conhecimento
-   - Ficção & Literatura
-   - Engenharia & Arquitetura
+1. "book_class" (string): Escolha UMA das classes abaixo.
+   ATENÇÃO: Use EXACTAMENTE a string da classe. NÃO INVENTE ou modifique.
+   OPÇÕES VÁLIDAS:
+{valid_classes_str}
 
-2. "category" (string): Escolha UMA categoria específica dentro da classe escolhida:
+2. "category" (string): Escolha UMA categoria específica válida para a classe que você escolheu no passo anterior.
+   CRÍTICO: A categoria DEVE pertencer à classe selecionada.
+   
+   TABELA DE REFERÊNCIA (CLASSE -> CATEGORIAS):
 {class_categories_str}
 
 3. "type" (string): "Técnico" ou "Não Técnico"
    - Técnico: Programação, Data Science, Engenharia, Arquitetura de Software
    - Não Técnico: Desenvolvimento pessoal, ficção, negócios, comportamento
 
-4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para Vitória AGORA, aos 30 anos.
+4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para o usuário AGORA, considerando o perfil e objetivos descritos.
 
 DIRETRIZES PARA A MOTIVAÇÃO:
-- Informar o 'O quê': Resumir a tese central da obra de forma direta, sem rodeios
-- Identificar a Motivação Técnica: Como fortalece sua base como dev/cientista de dados
-- Identificar a Motivação Pessoal/Social: Conectar com sua fase de vida (maturidade, liderança, transição) e valores (respeito, autenticidade, impacto coletivo)
-- Tom: Reflexivo, autêntico, levemente instigante. Fuja de clichês de 'gurus de produtividade'
-
-ESTRUTURA IDEAL DA MOTIVAÇÃO:
-"Este livro explora [eixo central] e faz total sentido para o momento da Vitória porque, enquanto oferece [benefício prático/técnico], também provoca uma reflexão necessária sobre [aspecto humano/comportamental/social], alinhando-se à sua busca por uma tecnologia mais consciente e uma liderança autêntica."
+- Seja específico: cite como o livro ajuda nos objetivos de leitura mencionados.
+- Use tom de "curador": aja como um mentor recomendando a obra.
+- Se for técnico, destaque o impacto na carreira/habilidades.
+- Se for cultura/ficção, destaque a lente de mundo do usuário.
 
 5. "original_title" (string): O título original do livro. IMPORTANTE: Se o título fornecido JA ESTIVER no idioma original (ex: Inglês), repita exatamente o mesmo título aqui. NÃO retorne null.
 
 IMPORTANTE:
-- Seja específico e relevante ao perfil dela
+- Seja específico e relevante ao perfil do usuário
 - Evite generalizações vazias
-- Conecte tecnologia com humanidade
-- Reconheça sua maturidade e experiência
+- Reflita os valores e objetivos de leitura do usuário
 
 Responda APENAS com um JSON válido no formato:
 {{
@@ -442,16 +472,49 @@ Responda APENAS com um JSON válido no formato:
 }}
 """
     
-    provider = os.getenv("AI_PROVIDER", "groq").lower()
-    
-    if provider == "gemini":
-        return get_gemini_classification(prompt, system_prompt)
-    elif provider == "openai":
-        return get_openai_classification(prompt, system_prompt)
-    else:
-        return get_groq_classification(prompt, system_prompt)
+    preferred_provider = (api_keys or {}).get("ai_provider", "groq").lower()
+    # Fallback to env var if key not in dict, or if just relying on system default
+    if preferred_provider not in ["openai", "gemini", "groq"]:
+        preferred_provider = os.getenv("AI_PROVIDER", "groq").lower()
 
-def get_book_details_hybrid(title: str):
+    providers = []
+    # Order providers: Preferred first, then others
+    if preferred_provider == "gemini":
+        providers = [get_gemini_classification, get_groq_classification, get_openai_classification]
+    elif preferred_provider == "openai":
+        providers = [get_openai_classification, get_gemini_classification, get_groq_classification]
+    else: # Groq or default
+        providers = [get_groq_classification, get_gemini_classification, get_openai_classification]
+        
+    errors = []
+    
+    print(f"Tentando classificar com {preferred_provider.upper()}...")
+    
+    for provider_func in providers:
+        res = provider_func(prompt, system_prompt, api_keys)
+        
+        # Se retornou dicionário com 'error', registramos e continuamos
+        if isinstance(res, dict) and "error" in res:
+            error_msg = f"{provider_func.__name__}: {res['error']}"
+            print(error_msg)
+            errors.append(error_msg)
+            continue
+            
+        # Se retornou None ou vazio (caso antigo), também continuamos
+        if not res:
+            errors.append(f"{provider_func.__name__}: Retorno vazio")
+            continue
+
+        # Se chegou aqui, é sucesso (JSON válido)
+        print(f"Sucesso com {provider_func.__name__}")
+        return res
+
+    # Se saiu do loop, tudo falhou
+    print("Todas as IAs falharam.")
+    error_summary = " | ".join(errors)
+    return {"error": f"Falha em todas as IAs. Detalhes: {error_summary}"}
+
+def get_book_details_hybrid(title: str, api_keys: dict = None, custom_prompts: dict = None, class_categories: dict = None):
     """
     Solução híbrida: Google Books API + Open Library + Groq AI
     
@@ -488,7 +551,7 @@ def get_book_details_hybrid(title: str):
         result["google_ratings_count"] = rating_data.get("ratings_count", 0)
     
     # 3. Usa IA para classificação personalizada
-    ai_data = get_ai_classification(title, description)
+    ai_data = get_ai_classification(title, description, api_keys, custom_prompts, class_categories)
     if ai_data:
         result["book_class"] = ai_data.get("book_class", "Desenvolvimento Pessoal")
         result["type"] = ai_data.get("type", "Não Técnico")
