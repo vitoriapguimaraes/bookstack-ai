@@ -530,8 +530,11 @@ async def proxy_image(url: str):
             raise HTTPException(status_code=400, detail="Failed to fetch image")
         
         content = response.content
-        # Salva no cache
-        cache_path.write_bytes(content)
+        # Salva no cache (Opcional - fail safe)
+        try:
+            cache_path.write_bytes(content)
+        except Exception as e:
+            print(f"Warning: Could not write to cache: {e}")
         
         return Response(content=content, media_type=response.headers.get("Content-Type", "image/jpeg"))
     except Exception as e:
