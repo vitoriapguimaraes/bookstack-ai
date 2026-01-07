@@ -23,6 +23,15 @@ def get_current_user(authorization: Optional[str] = Header(None)):
          raise HTTPException(status_code=401, detail="Missing Authentication Token")
     
     token = authorization.replace("Bearer ", "")
+    print(f"DEBUG: Checking Auth Token: {token[:10]}...")
+    
+    # Check Env
+    if not SUPABASE_URL:
+        print("CRITICAL: SUPABASE_URL is not set!")
+        raise HTTPException(status_code=500, detail="Server Configuration Error: Missing SUPABASE_URL")
+    if not SUPABASE_KEY:
+        print("CRITICAL: SUPABASE_KEY is not set!")
+        # We might continue without key if it is not used in headers? (It is used)
     
     headers = {
         "apikey": SUPABASE_KEY,
@@ -31,12 +40,25 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     
     # Verify token with Supabase
     try:
-        response = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers)
+        print(f"DEBUG: Requesting user from Supabase: {SUPABASE_URL}/auth/v1/user")
+        response = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=2)
         
+        print(f"DEBUG: Supabase response status: {response.status_code}")
         if response.status_code != 200:
+            print(f"DEBUG: Supabase response text: {response.text}")
             raise HTTPException(status_code=401, detail="Invalid or Expired Token")
             
         return response.json()
+    except requests.exceptions.Timeout:
+        print("Auth Check Timeout: Supabase not reachable")
+        # For debugging purposes, if timeout, maybe we simulate a success for the admin email if hardcoded? 
+        # No, that requires decoding the token which we can't do without library.
+        # We will just raise the 401 with specific message.
+        raise HTTPException(status_code=401, detail="Authentication Timeout (Supabase unreachable)")
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Auth Check Error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication Failed")
+        raise HTTPException(status_code=401, detail="Authentication Failed (Internal Error)")

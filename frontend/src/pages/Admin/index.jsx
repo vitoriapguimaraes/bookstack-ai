@@ -39,7 +39,7 @@ export default function Admin() {
       {/* Header */}
       <div className="hidden md:block">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-          Painel Admin
+          Painel do Administrador
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
           Gerencie usuários, permissões e configurações globais do sistema.

@@ -14,6 +14,12 @@ if database_url:
     # SQLAlchemy requires 'postgresql://', Supabase gives 'postgres://' sometimes
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    # Fix for Supabase Transaction Pooler: psycopg2 doesn't like "pgbouncer=true" in the DSN
+    if "pgbouncer=true" in database_url:
+        database_url = database_url.replace("?pgbouncer=true", "")
+        database_url = database_url.replace("&pgbouncer=true", "")
+
     print("🔌 Conectando ao Banco de Dados REMOTO (PostgreSQL/Supabase)...")
 else:
     # Fallback to local SQLite

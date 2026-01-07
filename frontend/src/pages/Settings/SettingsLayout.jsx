@@ -38,7 +38,7 @@ export default function SettingsLayout({ onEdit }) {
       audit: "Auditoria de Dados",
       guide: "Guia do Usuário",
       preferences: "Preferências",
-      admin: "Painel Admin",
+      administrador: "Painel do Administrador",
     };
     return map[path] || "Configurações";
   };
@@ -101,8 +101,8 @@ export default function SettingsLayout({ onEdit }) {
 
           {isAdmin && (
             <SidebarItem
-              to="admin"
-              title="Painel Admin"
+              to="administrador"
+              title="Painel do Administrador"
               subtitle="Gestão de Usuários"
               icon={Shield}
             />

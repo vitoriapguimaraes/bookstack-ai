@@ -251,7 +251,7 @@ export default function App() {
                   <Route path="audit" element={<AuditSettings />} />
                   <Route path="guide" element={<GuideSettings />} />
                   <Route path="preferences" element={<PreferencesSettings />} />
-                  <Route path="admin" element={<Admin />} />
+                  <Route path="administrador" element={<Admin />} />
                 </Route>
 
                 {/* Book Form routes */}

@@ -27,10 +27,10 @@ app = FastAPI(title="Reading List API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origin_regex='.*',
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
 )
 
 # Mount uploads directory to serve static files (images)
@@ -463,6 +463,13 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
     # Simple Admin Check
     requester_profile = session.get(Profile, user['id'])
     
+    print(f"DEBUG: Requesting user ID: {user['id']}")
+    print(f"DEBUG: Requesting user email: {user.get('email')}")
+    if requester_profile:
+        print(f"DEBUG: Profile found. Role: {requester_profile.role}")
+    else:
+        print("DEBUG: No profile found for this user.")
+
     is_admin = False
     if requester_profile and requester_profile.role == 'admin':
         is_admin = True
@@ -470,6 +477,7 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
         is_admin = True
         
     if not is_admin:
+        print("DEBUG: Access Denied. Not an admin.")
         raise HTTPException(status_code=403, detail="Admin access required")
         
     # Join Profile with UserPreference to get flags
