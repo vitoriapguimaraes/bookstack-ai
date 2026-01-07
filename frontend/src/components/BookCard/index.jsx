@@ -48,10 +48,8 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
   )}`;
 
   if (book.cover_image) {
-    if (book.cover_image.startsWith("/")) {
+    if (book.cover_image.startsWith("http")) {
       coverUrl = book.cover_image;
-    } else if (book.cover_image.includes("uploads/")) {
-      coverUrl = `${API_URL}/${book.cover_image}`;
     } else {
       coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
         book.cover_image

@@ -693,8 +693,6 @@ export default function BooksTable({
                       if (book.cover_image) {
                         if (book.cover_image.startsWith("http"))
                           coverUrl = book.cover_image;
-                        else if (book.cover_image.startsWith("/"))
-                          coverUrl = `${API_URL}${book.cover_image}`;
                         else
                           coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
                             book.cover_image

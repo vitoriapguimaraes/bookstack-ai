@@ -17,10 +17,6 @@ export default function MobileBookItem({
   if (book.cover_image) {
     if (book.cover_image.startsWith("http")) {
       coverUrl = book.cover_image; // Use external URL directly (Supabase)
-    } else if (book.cover_image.startsWith("/")) {
-      coverUrl = `${API_URL}${book.cover_image}`; // Local uploads require API URL
-    } else if (book.cover_image.includes("uploads/")) {
-      coverUrl = `${API_URL}/${book.cover_image}`;
     } else {
       // Proxy for external images (Google Books)
       coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
