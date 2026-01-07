@@ -36,6 +36,7 @@ export default function SettingsLayout({ onEdit }) {
       formula: "Fórmula de Score",
       lists: "Listas e Opções",
       audit: "Auditoria de Dados",
+      guide: "Guia do Usuário",
       preferences: "Preferências",
       admin: "Painel Admin",
     };
@@ -61,6 +62,12 @@ export default function SettingsLayout({ onEdit }) {
             title="Visão Geral"
             subtitle="Status do sistema"
             icon={LayoutDashboard}
+          />
+          <SidebarItem
+            to="guide"
+            title="Guia do Usuário"
+            subtitle="Primeiros passos"
+            icon={Info}
           />
 
           <div className="h-px bg-slate-100 dark:bg-neutral-800 my-1 mx-2" />
@@ -131,6 +138,7 @@ export default function SettingsLayout({ onEdit }) {
         <MobileTab to="formula" label="Score" icon={Calculator} />
         <MobileTab to="lists" label="Listas" icon={List} />
         <MobileTab to="audit" label="Audit" icon={Shield} />
+        <MobileTab to="guide" label="Guia" icon={Info} />
         <MobileTab to="preferences" label="Pref." icon={User} />
         <button
           onClick={() => setShowLogoutModal(true)}

@@ -19,19 +19,19 @@ import {
 } from "../../components/Analytics/analyticsUtils";
 
 const DEFAULT_CONFIG = {
-  type: { Técnico: 4, default: 2 },
-  availability: { Estante: 2, default: 0 },
+  type: { Técnico: 0, default: 0 },
+  availability: { Estante: 0, default: 0 },
   priority: {
-    "1 - Baixa": 1,
-    "2 - Média": 4,
-    "3 - Média-Alta": 7,
-    "4 - Alta": 10,
+    "1 - Baixa": 0,
+    "2 - Média": 0,
+    "3 - Média-Alta": 0,
+    "4 - Alta": 0,
   },
   year: {
     ranges: [
-      { max: 2005, weight: 4, label: "Antigos (≤ 2005)" },
-      { min: 2006, max: 2021, weight: 7, label: "Intermediários (2006-2021)" },
-      { min: 2022, weight: 9, label: "Recentes (≥ 2022)" },
+      { max: 2005, weight: 0, label: "Antigos (≤ 2005)" },
+      { min: 2006, max: 2021, weight: 0, label: "Intermediários (2006-2021)" },
+      { min: 2022, weight: 0, label: "Recentes (≥ 2022)" },
     ],
   },
 };
@@ -262,6 +262,21 @@ export default function FormulaSettings() {
                 <Save size={18} />
                 {saving ? "Salvando..." : "Salvar Fórmula"}
               </button>
+            </div>
+          </div>
+
+          <div className="max-w-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl p-4 flex gap-3 items-start animate-fade-in shadow-sm">
+            <Calculator
+              size={18}
+              className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+            />
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="font-bold text-amber-700 dark:text-amber-300 mb-1">
+                Score Fluido & Sincronizado
+              </p>
+              O Score de prioridade não é fixo. Ao salvar novos pesos, o sistema
+              irá <strong>recalcular instantaneamente</strong> o índice de todos
+              os livros da sua biblioteca para manter a consistência.
             </div>
           </div>
 

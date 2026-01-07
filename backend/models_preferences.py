@@ -13,6 +13,13 @@ class UserPreference(SQLModel, table=True):
     custom_prompts: Dict[str, Any] = Field(default={}, sa_type=JSON)
     formula_config: Dict[str, Any] = Field(default={}, sa_type=JSON)
     class_categories: Dict[str, Any] = Field(default={}, sa_type=JSON)
+    
+    # Onboarding Flags
+    has_api_keys: bool = Field(default=False)
+    has_custom_prompts: bool = Field(default=False)
+    has_custom_formula: bool = Field(default=False)
+    has_custom_classes: bool = Field(default=False)
+    
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Profile(SQLModel, table=True):

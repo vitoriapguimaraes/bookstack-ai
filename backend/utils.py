@@ -118,14 +118,14 @@ def calculate_book_score(book: Book, config: dict = None) -> float:
     if not config:
         config = {}
 
-    weights_type = config.get('type', {"Técnico": 4, "default": 2})
-    weights_availability = config.get('availability', {"Estante": 2, "default": 0})
-    weights_priority = config.get('priority', {"1 - Baixa": 1, "2 - Média": 4, "3 - Média-Alta": 7, "4 - Alta": 10})
+    weights_type = config.get('type', {"Técnico": 0, "default": 0})
+    weights_availability = config.get('availability', {"Estante": 0, "default": 0})
+    weights_priority = config.get('priority', {"1 - Baixa": 0, "2 - Média": 0, "3 - Média-Alta": 0, "4 - Alta": 0})
     weights_year = config.get('year', {
         "ranges": [
-            {"max": 2005, "weight": 4},
-            {"min": 2006, "max": 2021, "weight": 7},
-            {"min": 2022, "weight": 9}
+            {"max": 2005, "weight": 0},
+            {"min": 2006, "max": 2021, "weight": 0},
+            {"min": 2022, "weight": 0}
         ]
     })
     
@@ -409,7 +409,7 @@ def get_ai_classification(title: str, description: str = "", api_keys: dict = No
     
     valid_classes_str = "\n".join([f"   - {cls}" for cls in current_mapping.keys()])
     
-    system_prompt = (custom_prompts or {}).get("system_prompt") or "Você é um assistente literário especializado que conhece profundamente o perfil da leitora."
+    system_prompt = (custom_prompts or {}).get("system_prompt") or "Você é um assistente literário especializado que auxilia na organização e enriquecimento de uma biblioteca pessoal."
     
     user_prompt_template = (custom_prompts or {}).get("user_prompt")
     if user_prompt_template:
@@ -418,8 +418,10 @@ def get_ai_classification(title: str, description: str = "", api_keys: dict = No
         prompt = f"{user_prompt_template}\n\nLIVRO A ANALISAR:\nTítulo: \"{title}\"\nDescrição: \"{description[:800]}\""
     else:
         prompt = f"""
-PERFIL DA LEITORA:
-Vitória é uma mulher de 30 anos, pansexual e profissional de tecnologia (Cientista de Dados e Desenvolvedora) com raízes na Engenharia Ambiental. Seu estilo de leitura é marcado pela busca de equilíbrio entre a densidade técnica e a sensibilidade humana. Ela não lê apenas para aprender uma sintaxe, mas para entender como a tecnologia e o comportamento humano se moldam. Como estudante contínua, ela valoriza o rigor técnico, mas sua lente de mundo é inclusiva, ética e focada em impacto coletivo.
+PERFIL DO USUÁRIO:
+[NOME/PERSONA]: [Idade, profissão e principais áreas de interesse]
+[OBJETIVO DE LEITURA]: [O que você busca ao ler um livro? Ex: Rigor técnico, lazer, expansão de repertório, etc.]
+[LENTE DE MUNDO]: [Quais valores ou perspectivas você aplica ao analisar um tema? Ex: Inclusividade, ética, pragmatismo, etc.]
 
 LIVRO A ANALISAR:
 Título: "{title}"
@@ -445,24 +447,20 @@ PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
    - Técnico: Programação, Data Science, Engenharia, Arquitetura de Software
    - Não Técnico: Desenvolvimento pessoal, ficção, negócios, comportamento
 
-4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para Vitória AGORA, aos 30 anos.
+4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para o usuário AGORA, considerando o perfil e objetivos descritos.
 
 DIRETRIZES PARA A MOTIVAÇÃO:
-- Informar o 'O quê': Resumir a tese central da obra de forma direta, sem rodeios
-- Identificar a Motivação Técnica: Como fortalece sua base como dev/cientista de dados
-- Identificar a Motivação Pessoal/Social: Conectar com sua fase de vida (maturidade, liderança, transição) e valores (respeito, autenticidade, impacto coletivo)
-- Tom: Reflexivo, autêntico, levemente instigante. Fuja de clichês de 'gurus de produtividade'
-
-ESTRUTURA IDEAL DA MOTIVAÇÃO:
-"Este livro explora [eixo central] e faz total sentido para o momento da Vitória porque, enquanto oferece [benefício prático/técnico], também provoca uma reflexão necessária sobre [aspecto humano/comportamental/social], alinhando-se à sua busca por uma tecnologia mais consciente e uma liderança autêntica."
+- Seja específico: cite como o livro ajuda nos objetivos de leitura mencionados.
+- Use tom de "curador": aja como um mentor recomendando a obra.
+- Se for técnico, destaque o impacto na carreira/habilidades.
+- Se for cultura/ficção, destaque a lente de mundo do usuário.
 
 5. "original_title" (string): O título original do livro. IMPORTANTE: Se o título fornecido JA ESTIVER no idioma original (ex: Inglês), repita exatamente o mesmo título aqui. NÃO retorne null.
 
 IMPORTANTE:
-- Seja específico e relevante ao perfil dela
+- Seja específico e relevante ao perfil do usuário
 - Evite generalizações vazias
-- Conecte tecnologia com humanidade
-- Reconheça sua maturidade e experiência
+- Reflita os valores e objetivos de leitura do usuário
 
 Responda APENAS com um JSON válido no formato:
 {{

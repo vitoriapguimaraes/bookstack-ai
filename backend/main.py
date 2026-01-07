@@ -348,19 +348,94 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
     if not pref:
         pref = UserPreference(user_id=user_id)
     
+    # Check if formula_config is changing to trigger recalculation
+    formula_changed = False
+    if pref_data.formula_config is not None and pref_data.formula_config != pref.formula_config:
+        formula_changed = True
+
     # Update fields with ENCRYPTION
     if pref_data.openai_key is not None: pref.openai_key = encrypt_value(pref_data.openai_key)
     if pref_data.gemini_key is not None: pref.gemini_key = encrypt_value(pref_data.gemini_key)
     if pref_data.groq_key is not None: pref.groq_key = encrypt_value(pref_data.groq_key)
     
-    if pref_data.yearly_goal is not None: pref.yearly_goal = pref_data.yearly_goal
-    if pref_data.custom_prompts is not None: pref.custom_prompts = pref_data.custom_prompts
-    if pref_data.formula_config is not None: pref.formula_config = pref_data.formula_config
-    if pref_data.class_categories is not None: pref.class_categories = pref_data.class_categories
+    # Update flags based on content
+    # 1. API Keys: True if ANY key is present and meaningful
+    pref.has_api_keys = bool(
+        (pref_data.openai_key and len(pref_data.openai_key) > 5) or 
+        (pref_data.gemini_key and len(pref_data.gemini_key) > 5) or 
+        (pref_data.groq_key and len(pref_data.groq_key) > 5) or
+        (pref.openai_key and len(pref.openai_key) > 5) or
+        (pref.gemini_key and len(pref.gemini_key) > 5) or
+        (pref.groq_key and len(pref.groq_key) > 5)
+    )
     
+    # 2. Custom Prompts: True if prompts exist AND are not just the default template
+    # We check if 'user_prompt' is in custom_prompts and has specific content length 
+    # or doesn't contain the placeholder strictly. 
+    # For now, let's assume if the user saves prompts that are not empty, it is customized.
+    # But since the frontend sends the default template, we might need to check content.
+    # Simplified approach: If custom_prompts has content and is not empty dict.
+    if pref_data.custom_prompts and len(pref_data.custom_prompts) > 0:
+         # Optional: Add smarter check here if needed later
+         pref.has_custom_prompts = True
+    elif pref.custom_prompts and len(pref.custom_prompts) > 0:
+         pref.has_custom_prompts = True
+    else:
+         pref.has_custom_prompts = False
+        
+    # 3. Custom Formula: True if ANY weight is > 0
+    # We need to traverse the config to find non-zero weights
+    has_nonzero = False
+    config_to_check = pref_data.formula_config or pref.formula_config or {}
+    
+    # helper to check nested dicts
+    def check_nonzero(d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if check_nonzero(v): return True
+            elif isinstance(v, (int, float)) and v > 0:
+                return True
+            elif isinstance(v, list): # Handle year ranges
+                 for item in v:
+                     if isinstance(item, dict) and item.get('weight', 0) > 0:
+                         return True
+        return False
+
+    if config_to_check and check_nonzero(config_to_check):
+        pref.has_custom_formula = True
+    else:
+        pref.has_custom_formula = False
+
+    # 4. Custom Classes: True if class_categories is different from default
+    # We import CLASS_CATEGORIES from utils to compare
+    from utils import CLASS_CATEGORIES as DEFAULT_CLASS_CATEGORIES
+    
+    current_classes = pref_data.class_categories or pref.class_categories or {}
+    
+    if current_classes and len(current_classes) > 0:
+        # Simple comparison: if the dictionaries are not equal, it's custom
+        # Note: This is sensitive to order if standard dict comparison wasn't robust, but in Python 3.7+ it is fine.
+        # We might want to check equality more loosely (same keys, same lists irrespective of order)
+        # But for now, exact match is a good start.
+        if current_classes != DEFAULT_CLASS_CATEGORIES:
+            pref.has_custom_classes = True
+        else:
+            pref.has_custom_classes = False
+    else:
+        # If empty, it uses default implementation-wise, so it's NOT custom
+        pref.has_custom_classes = False
+
     pref.updated_at = datetime.utcnow()
     
     session.add(pref)
+    
+    # If formula changed, recalculate ALL book scores for this user
+    if formula_changed:
+        books = session.exec(select(Book).where(Book.user_id == user_id)).all()
+        for book in books:
+            book.score = calculate_book_score(book, pref.formula_config)
+            session.add(book)
+    
     session.commit()
     session.refresh(pref)
     
@@ -371,6 +446,9 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
         custom_prompts=pref.custom_prompts,
         formula_config=pref.formula_config,
         class_categories=pref.class_categories,
+        has_api_keys=pref.has_api_keys,
+        has_custom_prompts=pref.has_custom_prompts,
+        has_custom_formula=pref.has_custom_formula,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
@@ -380,23 +458,40 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
 
 # --- Admin Endpoints ---
 
-@app.get("/admin/users", response_model=List[Profile])
+@app.get("/admin/users")
 def list_users(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
-    # Simple Admin Check (Hardcoded for vipistori@gmail.com or via Profiles table role)
-    # 1. Check if requester has admin role in Profiles table
+    # Simple Admin Check
     requester_profile = session.get(Profile, user['id'])
     
     is_admin = False
     if requester_profile and requester_profile.role == 'admin':
         is_admin = True
-    elif user.get('email') == 'vipistori@gmail.com': # Fallback hardcode
+    elif user.get('email') == 'vipistori@gmail.com': # Fallback
         is_admin = True
         
     if not is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
         
-    profiles = session.exec(select(Profile)).all()
-    return profiles
+    # Join Profile with UserPreference to get flags
+    results = session.exec(
+        select(Profile, UserPreference)
+        .outerjoin(UserPreference, Profile.id == UserPreference.user_id)
+    ).all()
+    
+    output = []
+    for profile, pref in results:
+        user_data = {
+            "id": profile.id,
+            "email": profile.email,
+            "role": profile.role,
+            "created_at": profile.created_at,
+            "has_api_keys": pref.has_api_keys if pref else False,
+            "has_custom_prompts": pref.has_custom_prompts if pref else False,
+            "has_custom_formula": pref.has_custom_formula if pref else False
+        }
+        output.append(user_data)
+        
+    return output
 
 import hashlib
 CACHE_DIR = Path("image_cache")
