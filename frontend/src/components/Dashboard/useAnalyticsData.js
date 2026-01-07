@@ -179,7 +179,23 @@ export function useAnalyticsData(books) {
     // B. Top Author
     const authorMap = {};
     lidos.forEach((b) => {
-      if (b.author) authorMap[b.author] = (authorMap[b.author] || 0) + 1;
+      if (b.author) {
+        // Split by comma, trim whitespace, filter empty, and Normalize to Title Case
+        const authors = b.author
+          .split(",")
+          .map((a) => {
+            let name = a.trim();
+            // Title Case: "ANA BAN" -> "Ana Ban"
+            return name.replace(/\w\S*/g, (txt) => {
+              return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+          })
+          .filter((a) => a.length > 0);
+
+        authors.forEach((author) => {
+          authorMap[author] = (authorMap[author] || 0) + 1;
+        });
+      }
     });
 
     let topAuthorsList = [];
