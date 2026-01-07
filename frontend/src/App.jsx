@@ -25,7 +25,7 @@ import ScrollToTopBottom from "./components/ScrollToTopBottom";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import { useAuth } from "./context/AuthContext";
-import { ToastProvider } from "./context/ToastContext"; // NEW
+import { ToastProvider } from "./context/ToastContext";
 import PrivateRoute from "./components/PrivateRoute";
 
 import axios from "axios";
@@ -91,10 +91,24 @@ export default function App() {
 
   const fetchBooks = async () => {
     try {
+      // Security Check: ensure token exists
+      if (!session?.access_token) return;
+
       console.log("Fetching books from /books/...");
+
+      // Explicitly pass token to avoid race conditions with interceptors/defaults
+      const config = {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      };
+
       // Enforce a minimum loading time to avoid "empty state" flash
       const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
-      const [res] = await Promise.all([api.get("/books/"), minLoadTime]);
+      const [res] = await Promise.all([
+        api.get("/books/", config),
+        minLoadTime,
+      ]);
 
       setBooks(res.data);
       setError(null);
