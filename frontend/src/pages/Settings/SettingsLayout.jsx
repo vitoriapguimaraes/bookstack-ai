@@ -16,7 +16,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
 
-export default function SettingsLayout() {
+export default function SettingsLayout({ onEdit }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, isAdmin } = useAuth();
@@ -151,7 +151,7 @@ export default function SettingsLayout() {
             </h2>
           </header>
 
-          <Outlet />
+          <Outlet context={{ onEdit }} />
         </div>
       </main>
 

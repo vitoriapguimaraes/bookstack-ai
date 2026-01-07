@@ -238,7 +238,7 @@ export default function App() {
                   path="/settings"
                   element={
                     <PrivateRoute>
-                      <SettingsLayout />
+                      <SettingsLayout onEdit={handleEdit} />
                     </PrivateRoute>
                   }
                 >

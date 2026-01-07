@@ -2,10 +2,6 @@
 
 > Um sistema completo de gerenciamento de biblioteca pessoal com classificação hierárquica, sugestões inteligentes de IA e analytics avançados. Organize sua lista de leitura, acompanhe seu progresso, defina metas anuais e exporte showcases visuais da sua estante.
 
-![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-yellow?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
-
 ![Demonstração do sistema](https://placehold.co/1200x630/4f46e5/ffffff?text=BookStack+AI+Preview)
 
 ## Funcionalidades Principais
@@ -27,12 +23,14 @@
 ## Como Executar
 
 1. Clone o repositório:
+
    ```bash
    git clone https://github.com/vitoriapguimaraes/bookstack-ai.git
    cd bookstack-ai
    ```
 
 2. Configure e execute o Backend:
+
    ```bash
    cd backend
    python -m venv venv
@@ -43,6 +41,7 @@
    ```
 
 3. Configure e execute o Frontend:
+
    ```bash
    cd frontend
    npm install
