@@ -59,10 +59,10 @@ export default function Analytics({ books }) {
         backgroundColor: bgColor,
         useCORS: true,
         scrollX: 0,
-        scrollY: 0, // Force capture from top-left logic
-        width: element.scrollWidth, // Capture full width
-        height: element.scrollHeight + 50, // Capture full height + branding padding
-        windowWidth: element.scrollWidth + 50, // Ensure window context is large enough
+        scrollY: -window.scrollY,
+        width: element.scrollWidth + 20,
+        height: element.scrollHeight + 50,
+        windowWidth: element.scrollWidth + 50,
         onclone: (clonedDoc) => {
           const buttons = clonedDoc.querySelectorAll("button");
           buttons.forEach((btn) => (btn.style.display = "none"));
@@ -77,7 +77,6 @@ export default function Analytics({ books }) {
           if (clonedElement) {
             clonedElement.style.height = "auto";
             clonedElement.style.overflow = "visible";
-            clonedElement.style.width = "1000px"; // Force desktop width for export
           }
 
           // Expand scrollable charts
@@ -287,7 +286,7 @@ export default function Analytics({ books }) {
         </div>
 
         <div className="flex-1 min-h-0 w-full overflow-x-auto pb-2">
-          <div className="min-w-[500px] h-full">
+          <div className="w-full h-full">
             <TimelineChart
               stats={stats}
               timelineType={timelineType}
