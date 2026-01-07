@@ -1,0 +1,32 @@
+Opção 1: Estilo "Lançamento Oficial" (E-mail ou Grupo Geral)
+Assunto: 🚀 Convite VIP: Acesso ao BookStack AI v1.0 (Alpha)
+
+Fala, pessoal! 👋
+
+Vocês foram oficialmente selecionados (leia-se: recrutados com carinho) para serem os pioneiros na Versão 1.0 Alpha do meu novo sistema de gestão de livros, o BookStack AI.
+
+📚 O que dá pra fazer agora:
+
+Cadastrar livros num piscar de olhos: A IA preenche quase tudo sozinha (é meio mágica, meio assustadora).
+Organizar sua estante: Separe o que você já leu, o que está lendo e o que fingiu que leu.
+Ver estatísticas: Gráficos bonitos para provar que você é culto(a).
+🚧 Aviso de "Obras na Pista": Como é uma versão Alpha, coisas estranhas podem acontecer. Se uma capa não carregar, se a tela ficar branca (chamamos de "Modo Zen") ou se o servidor tirar um cochilo... me avisem!
+
+🛠️ Sua Missão: Usem sem dó. Cliquem em tudo. Se quebrar, tirem um print e mandem pra mim. O feedback de vocês – por menor que seja – é o que vai transformar isso aqui num app de verdade.
+
+🔗 Link de Acesso: [INSERIR SEU LINK VERCEL/RENDER AQUI] Login: [SEU EMAIL OU O DELES] Senha: 123456 (ou a senha padrão que você definiu)
+
+Obrigado por ajudarem a construir isso. Prometo pagar um café (ou uma cerveja) depois! ☕🍺
+
+Abraços, [Seu Nome]
+
+Opção 2: Estilo "WhatsApp Rápido" (Mais informal)
+🚨 Alerta de Cobai... digo, Beta Testers! 🚨
+
+O BookStack AI 1.0 tá vivo! 📚✨ Basicamente, é meu app pra organizar leituras e usar IA pra não ter trabalho digitando.
+
+A sua missão é:
+- Entrar: https://bookstack-ai.vercel.app/
+- Fuçar: Cadastrem uns livros, testem a busca.
+- Dedurar: Se algo explodir 💥 ou estiver feio, me mandem print!
+Conto com você pra achar os bugs antes que eles me achem. Valew! ❤️

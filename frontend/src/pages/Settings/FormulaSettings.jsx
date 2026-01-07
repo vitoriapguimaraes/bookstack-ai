@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
-import { hslToString } from "../../utils/analyticsUtils.js";
+import { hslToString, getClassBaseHSL } from "../../utils/analyticsUtils.js";
 
 const DEFAULT_CONFIG = {
   type: { Técnico: 0, default: 0 },

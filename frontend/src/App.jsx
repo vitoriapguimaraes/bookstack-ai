@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Routes,
   Route,
@@ -36,6 +36,14 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
+  const mainRef = useRef(null);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.pathname]);
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +188,7 @@ export default function App() {
 
         {/* Main Content Area - Scrollable */}
         <main
+          ref={mainRef}
           className={
             isLoginPage
               ? "w-full h-full"
