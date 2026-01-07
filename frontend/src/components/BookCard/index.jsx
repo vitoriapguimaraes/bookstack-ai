@@ -48,15 +48,22 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
   )}`;
 
   if (book.cover_image) {
-    if (book.cover_image.startsWith("/")) {
-      coverUrl = book.cover_image;
-    } else if (book.cover_image.includes("uploads/")) {
-      coverUrl = `${API_URL}/${book.cover_image}`;
+    if (book.cover_image.startsWith("http")) {
+      coverUrl = book.cover_image.replace(/^http:/, "https:");
+      console.log(`[BookCard] Direct URL for "${book.title}":`, coverUrl);
     } else {
       coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
         book.cover_image
       )}`;
+      console.log(
+        `[BookCard] Proxy URL for "${book.title}":`,
+        coverUrl,
+        "Original:",
+        book.cover_image
+      );
     }
+  } else {
+    console.log(`[BookCard] No cover for "${book.title}"`);
   }
 
   const handleDelete = async (e) => {
@@ -103,6 +110,13 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
             } object-cover rounded flex-shrink-0`}
             loading="lazy"
             decoding="async"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+                book.title
+              )}`;
+            }}
           />
 
           <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -215,6 +229,13 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
           className="w-full h-full object-cover"
           loading="lazy"
           decoding="async"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+              book.title
+            )}`;
+          }}
         />
 
         {/* Order badge - bottom left on cover */}
