@@ -114,9 +114,7 @@ export default function App() {
       setError(null);
     } catch (err) {
       console.error("Erro ao buscar livros:", err);
-      setError(
-        "Não foi possível conectar ao backend python. Detalhes no console."
-      );
+      setError("Falha de Conexão");
     } finally {
       setLoading(false);
     }
@@ -183,11 +181,22 @@ export default function App() {
         >
           <div className={isLoginPage ? "h-full" : "w-full min-h-full"}>
             {error && !isLoginPage && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
-                <p>⚠️ {error}</p>
-                <p className="text-sm">
-                  Dica: Rode `uvicorn main:app --reload` na pasta backend.
-                </p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 px-4 py-4 rounded-lg mb-6 flex items-start gap-3 animate-fade-in mx-4 mt-4">
+                <div className="text-xl">⚠️</div>
+                <div>
+                  <h3 className="font-bold text-sm uppercase tracking-wider mb-1">
+                    Conexão Interrompida
+                  </h3>
+                  <p className="text-sm mb-2">
+                    Não foi possível carregar seus livros no momento. Pode haver
+                    uma instabilidade temporária no banco de dados.
+                  </p>
+                  <p className="text-xs opacity-80">
+                    Aguarde um momento e recarregue a página. Se o erro
+                    persistir, entre em contato:{" "}
+                    <b className="select-all">vipistori@gmail.com</b>
+                  </p>
+                </div>
               </div>
             )}
 
