@@ -330,6 +330,7 @@ export default function BooksTable({
   const columns = [
     { key: "select", label: "", width: "w-[40px]" }, // Selection Column
     { key: "order", label: "#", width: "w-[3%]" },
+    { key: "cover", label: "Capa", width: "w-[5%]" },
     { key: "title", label: "Título", width: "w-[18%]" },
     { key: "author", label: "Autor", width: "w-[10%]" },
     { key: "year", label: "Ano", width: "w-[4%]" },
@@ -683,6 +684,36 @@ export default function BooksTable({
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-slate-500 dark:text-neutral-400">
                     {book.order || "-"}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {(() => {
+                      const API_URL =
+                        import.meta.env.VITE_API_URL || "http://localhost:8000";
+                      let coverUrl = null;
+                      if (book.cover_image) {
+                        if (book.cover_image.startsWith("http"))
+                          coverUrl = book.cover_image;
+                        else if (book.cover_image.startsWith("/"))
+                          coverUrl = `${API_URL}${book.cover_image}`;
+                        else
+                          coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
+                            book.cover_image
+                          )}`;
+                      }
+                      return coverUrl ? (
+                        <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded overflow-hidden border border-slate-200 dark:border-neutral-700">
+                          <img
+                            src={coverUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-12 bg-slate-50 dark:bg-neutral-800 rounded flex items-center justify-center border border-slate-100 dark:border-transparent">
+                          <span className="text-[8px] text-slate-300">N/A</span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td
                     className="px-3 py-2 text-xs font-medium text-slate-800 dark:text-white max-w-[256px] truncate"

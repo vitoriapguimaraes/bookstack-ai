@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import MobileHeader from "./components/Layout/MobileHeader";
 import Mural from "./pages/Mural";
@@ -103,8 +104,8 @@ export default function App() {
         },
       };
 
-      // Enforce a minimum loading time to avoid "empty state" flash
-      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
+      // Enforce a small minimum loading time to avoid "empty state" flash (reduced)
+      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 500));
       const [res] = await Promise.all([
         api.get("/books/", config),
         minLoadTime,
@@ -201,9 +202,25 @@ export default function App() {
             )}
 
             {(loading || authLoading) && !isLoginPage && (
-              <p className="text-center mt-20 text-lg animate-pulse text-neutral-500">
-                Carregando...
-              </p>
+              <div className="flex flex-col items-center justify-center h-[50vh] animate-fade-in gap-4 text-center px-4">
+                <Loader2
+                  className="animate-spin text-emerald-600 dark:text-emerald-400"
+                  size={48}
+                />
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
+                    Carregando sua Biblioteca...
+                  </h2>
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
+                    O servidor pode estar "acordando" se ficou inativo. Isso
+                    pode levar até 1 minuto.
+                    <br />
+                    <span className="text-xs opacity-70 mt-1 block">
+                      Agradecemos sua paciência! ☕
+                    </span>
+                  </p>
+                </div>
+              </div>
             )}
 
             {(!loading && !authLoading) || isLoginPage ? (

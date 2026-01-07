@@ -102,7 +102,7 @@ export default function BookForm({
 
   const fetchPreferences = async () => {
     try {
-      const res = await api.get("/api/preferences/");
+      const res = await api.get("/preferences/");
       if (
         res.data?.class_categories &&
         Object.keys(res.data.class_categories).length > 0
@@ -166,7 +166,7 @@ export default function BookForm({
     setAiLoading(true);
     setSuggestedCoverUrl(null);
     try {
-      const res = await api.post("/api/books/suggest", {
+      const res = await api.post("/books/suggest", {
         title: formData.title,
       });
       const suggestion = res.data;
@@ -255,10 +255,10 @@ export default function BookForm({
     try {
       let savedBook;
       if (bookToEdit) {
-        const res = await api.put(`/api/books/${bookToEdit.id}`, formData);
+        const res = await api.put(`/books/${bookToEdit.id}`, formData);
         savedBook = res.data;
       } else {
-        const res = await api.post("/api/books/", formData);
+        const res = await api.post("/books/", formData);
         savedBook = res.data;
       }
 
@@ -266,7 +266,7 @@ export default function BookForm({
       if (coverFile && savedBook.id) {
         const formDataUpload = new FormData();
         formDataUpload.append("file", coverFile);
-        await api.post(`/api/books/${savedBook.id}/cover`, formDataUpload, {
+        await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
