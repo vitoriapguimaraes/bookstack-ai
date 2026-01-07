@@ -40,9 +40,23 @@ export default function MobileBookItem({
       <div className="shrink-0 w-16 h-24 bg-slate-100 dark:bg-neutral-800 rounded overflow-hidden relative">
         {coverUrl ? (
           <img
-            src={coverUrl}
+            src={
+              coverUrl.startsWith("http")
+                ? coverUrl.replace(/^http:/, "https:")
+                : coverUrl
+            }
             alt={book.title}
             className="w-full h-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.onerror = null;
+              const bgColor = "f1f5f9";
+              const textColor = "475569";
+              e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+                book.title
+              )}`;
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-neutral-800 dark:to-neutral-700">

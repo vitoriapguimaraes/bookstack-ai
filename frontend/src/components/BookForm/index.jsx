@@ -8,11 +8,9 @@ import {
   BookOpen,
   Layers,
 } from "lucide-react";
-import axios from "axios";
+import { useToast } from "../../context/ToastContext";
+import { api } from "../../services/api";
 
-const api = axios.create();
-
-// Hierarchical classification mapping
 const DEFAULT_CLASS_CATEGORIES = {
   "Tecnologia & IA": [
     "Análise de Dados",
@@ -60,6 +58,7 @@ export default function BookForm({
   onCancel,
   onLoadingChange,
 }) {
+  const { addToast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
     original_title: "",
@@ -175,9 +174,10 @@ export default function BookForm({
         // Check for explicit error from backend
         if (suggestion.error) {
           console.error("AI Error Log:", suggestion.error);
-          alert(
-            `❌ Falha na IA:\n${suggestion.error}\n\nTente novamente ou preencha manualmente.`
-          );
+          addToast({
+            type: "error",
+            message: `Falha na IA: ${suggestion.error}`,
+          });
           return;
         }
 
@@ -195,9 +195,10 @@ export default function BookForm({
         }));
 
         if (!suggestion.motivation) {
-          alert(
-            "⚠️ Aviso: A IA não conseguiu gerar a motivação/classificação completa. Preencha manualmente os campos faltantes."
-          );
+          addToast({
+            type: "warning",
+            message: "A IA não preencheu tudo. Verifique os campos.",
+          });
         }
 
         if (suggestion.cover_url) {
@@ -214,9 +215,10 @@ export default function BookForm({
       }
     } catch (err) {
       console.error(err);
-      alert(
-        "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
-      );
+      addToast({
+        type: "error",
+        message: "Erro de conexão com o servidor.",
+      });
     } finally {
       setAiLoading(false);
     }
@@ -226,9 +228,10 @@ export default function BookForm({
     if (suggestedCoverUrl) {
       setFormData((prev) => ({ ...prev, cover_image: suggestedCoverUrl }));
       setSuggestedCoverUrl(null);
-      alert(
-        "✅ Capa da API adicionada! Será exibida via URL (sem ocupar espaço no servidor)."
-      );
+      addToast({
+        type: "success",
+        message: "Capa da IA aplicada!",
+      });
     }
   };
 
@@ -237,15 +240,15 @@ export default function BookForm({
 
     // Validation
     if (!formData.title || !formData.title.trim()) {
-      alert("O Título é obrigatório!");
+      addToast({ type: "error", message: "O Título é obrigatório!" });
       return;
     }
     if (!formData.author || !formData.author.trim()) {
-      alert("O Autor é obrigatório!");
+      addToast({ type: "error", message: "O Autor é obrigatório!" });
       return;
     }
     if (formData.status === "Lido" && !formData.date_read) {
-      alert("Para livros 'Lidos', a Data de Leitura é obrigatória!");
+      addToast({ type: "error", message: "Data de leitura obrigatória!" });
       return;
     }
 
@@ -254,6 +257,7 @@ export default function BookForm({
 
     try {
       let savedBook;
+      console.log("Saving book...", bookToEdit ? "PUT" : "POST");
       if (bookToEdit) {
         const res = await api.put(`/books/${bookToEdit.id}`, formData);
         savedBook = res.data;
@@ -264,17 +268,35 @@ export default function BookForm({
 
       // Only upload file if user selected a local file
       if (coverFile && savedBook.id) {
+        console.log("Uploading cover for book ID:", savedBook.id);
         const formDataUpload = new FormData();
         formDataUpload.append("file", coverFile);
+
+        // Debug Log
+        console.log("Cover Upload URL:", `/books/${savedBook.id}/cover`);
+
         await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
 
+      addToast({ type: "success", message: "Livro salvo com sucesso!" });
       onSuccess();
     } catch (err) {
-      alert("Erro ao salvar livro.");
-      console.error(err);
+      console.error("Erro ao salvar livro:", err);
+      if (err.response) {
+        console.error("Status:", err.response.status);
+        console.error("Data:", err.response.data);
+        addToast({
+          type: "error",
+          message:
+            err.response.status === 405
+              ? "Erro 405: Rota incorreta."
+              : `Erro: ${err.response.data?.detail || "Ao salvar livro"}`,
+        });
+      } else {
+        addToast({ type: "error", message: "Erro de conexão ao salvar." });
+      }
     } finally {
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);

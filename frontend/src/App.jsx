@@ -21,7 +21,7 @@ import FormulaSettings from "./pages/Settings/FormulaSettings";
 import AuditSettings from "./pages/Settings/AuditSettings";
 import ListSettings from "./pages/Settings/ListSettings";
 import PreferencesSettings from "./pages/Settings/PreferencesSettings";
-import GuideSettings from "./pages/Settings/GuideSettings";
+import GuideSettings from "./pages/Guide";
 import ScrollToTopBottom from "./components/ScrollToTopBottom";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -95,6 +95,7 @@ export default function App() {
       // Security Check: ensure token exists
       if (!session?.access_token) return;
 
+      setLoading(true);
       console.log("Fetching books from /books/...");
 
       // Explicitly pass token to avoid race conditions with interceptors/defaults
@@ -105,7 +106,7 @@ export default function App() {
       };
 
       // Enforce a small minimum loading time to avoid "empty state" flash (reduced)
-      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 500));
+      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
       const [res] = await Promise.all([
         api.get("/books/", config),
         minLoadTime,
@@ -141,6 +142,11 @@ export default function App() {
     setEditingBook(null);
     navigate("/create");
   };
+
+  const isDataRoute =
+    !location.pathname.startsWith("/guide") &&
+    !location.pathname.startsWith("/settings");
+  const showLoader = (authLoading || (loading && isDataRoute)) && !isLoginPage;
 
   return (
     <ToastProvider>
@@ -201,7 +207,7 @@ export default function App() {
               </div>
             )}
 
-            {(loading || authLoading) && !isLoginPage && (
+            {showLoader && (
               <div className="flex flex-col items-center justify-center h-[50vh] animate-fade-in gap-4 text-center px-4">
                 <Loader2
                   className="animate-spin text-emerald-600 dark:text-emerald-400"
@@ -223,7 +229,7 @@ export default function App() {
               </div>
             )}
 
-            {(!loading && !authLoading) || isLoginPage ? (
+            {!showLoader ? (
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />

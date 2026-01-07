@@ -692,18 +692,33 @@ export default function BooksTable({
                       let coverUrl = null;
                       if (book.cover_image) {
                         if (book.cover_image.startsWith("http"))
-                          coverUrl = book.cover_image;
+                          coverUrl = book.cover_image.replace(
+                            /^http:/,
+                            "https:"
+                          );
                         else
                           coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
                             book.cover_image
                           )}`;
                       }
+
+                      const bgColor = "f1f5f9"; // slate-100 default
+                      const textColor = "475569"; // slate-600 default
+
                       return coverUrl ? (
-                        <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded overflow-hidden border border-slate-200 dark:border-neutral-700">
+                        <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded overflow-hidden border border-slate-200 dark:border-neutral-700 relative">
                           <img
                             src={coverUrl}
                             alt=""
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+                                book.title
+                              )}`;
+                            }}
                           />
                         </div>
                       ) : (

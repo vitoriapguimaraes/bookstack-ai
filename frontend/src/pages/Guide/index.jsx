@@ -13,7 +13,7 @@ import {
 
 export default function GuideSettings() {
   return (
-    <div className="w-full h-[calc(100vh-9rem)] animate-fade-in flex flex-col gap-4 overflow-y-auto md:overflow-hidden">
+    <div className="w-full min-h-full animate-fade-in flex flex-col gap-4">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0">
         <div>
@@ -28,7 +28,7 @@ export default function GuideSettings() {
       </div>
 
       {/* Main Grid - 4 Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Step 1: Inteligência & IA */}
         <section className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col h-full overflow-y-auto">
           <div className="flex items-center gap-3 mb-4 shrink-0">
@@ -187,7 +187,7 @@ export default function GuideSettings() {
       </div>
 
       {/* Quick Links Card */}
-      <div className="bg-slate-900 rounded-xl p-10 text-white relative overflow-hidden group shrink-0">
+      <div className="bg-slate-900 rounded-xl p-10 text-white relative overflow-hidden group shrink-0 mt-auto sticky bottom-4 z-50 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-black mb-1">Pronta para começar?</h3>

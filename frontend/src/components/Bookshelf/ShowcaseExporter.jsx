@@ -189,14 +189,21 @@ export default function ShowcaseExporter({
                       const API_URL =
                         import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-                      const coverUrl =
-                        book.cover_image && book.cover_image.startsWith("/")
-                          ? book.cover_image
-                          : book.cover_image
-                          ? `${API_URL}/proxy/image?url=${encodeURIComponent(
-                              book.cover_image
-                            )}`
-                          : null;
+                      let coverUrl = null;
+                      if (book.cover_image) {
+                        if (book.cover_image.startsWith("http")) {
+                          coverUrl = book.cover_image.replace(
+                            /^http:/,
+                            "https:"
+                          );
+                        } else if (book.cover_image.startsWith("/")) {
+                          coverUrl = book.cover_image;
+                        } else {
+                          coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
+                            book.cover_image
+                          )}`;
+                        }
+                      }
 
                       return (
                         <div
@@ -208,6 +215,15 @@ export default function ShowcaseExporter({
                               src={coverUrl}
                               alt={book.title}
                               className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                const bgColor = "f3e8ff"; // purple-100
+                                const textColor = "581c87"; // purple-900
+                                e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+                                  book.title
+                                )}`;
+                              }}
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center p-2">
