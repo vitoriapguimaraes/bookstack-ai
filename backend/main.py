@@ -19,6 +19,14 @@ import codecs
 from pydantic import BaseModel
 from models_preferences import UserPreference, Profile
 from security import encrypt_value, decrypt_value
+from supabase import create_client, Client
+import os
+
+# Initialize Supabase Client (for Storage)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+# Prefer specific service role key, fallback to generic key
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 class TitleRequest(BaseModel):
     title: str
@@ -37,6 +45,9 @@ app.add_middleware(
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+
 
 
 def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
@@ -546,3 +557,58 @@ async def proxy_image(url: str):
     except Exception as e:
         print(f"Erro no proxy de imagem: {e}")
         raise HTTPException(status_code=500, detail="Internal server error fetching image")
+
+
+@app.post("/books/{book_id}/cover", response_model=Book)
+async def upload_book_cover(book_id: int, file: UploadFile = File(...), session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    """
+    Uploads a book cover for a specific book to Supabase Storage and updates the book record.
+    """
+    book = session.get(Book, book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+        
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    # 1. Supabase Storage Upload
+    if not supabase:
+         print("WARNING: Supabase Storage keys missing.")
+         raise HTTPException(status_code=503, detail="Supabase Storage not configured")
+    
+    try:
+        content = await file.read()
+        
+        # Sanitize filename
+        original_name = file.filename.replace(" ", "_")
+        file_ext = Path(original_name).suffix
+        if not file_ext: file_ext = ".jpg" 
+        
+        # Unique Name: userID_BookID_Timestamp
+        filename = f"{user['id']}_{book_id}_{int(time.time())}{file_ext}"
+        bucket_name = "book-covers"
+
+        # Upload
+        supabase.storage.from_(bucket_name).upload(
+            path=filename,
+            file=content,
+            file_options={"content-type": file.content_type}
+        )
+        
+        # Get URL
+        public_url = supabase.storage.from_(bucket_name).get_public_url(filename)
+        
+        # 2. Update DB
+        book.cover_image = public_url
+        session.add(book)
+        session.commit()
+        session.refresh(book)
+        
+        return book
+
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        detail = str(e)
+        if "Bucket not found" in detail:
+            detail = "Bucket 'book-covers' does not exist."
+        raise HTTPException(status_code=500, detail=f"Upload Failed: {detail}")
