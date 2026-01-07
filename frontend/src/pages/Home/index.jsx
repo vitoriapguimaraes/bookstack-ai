@@ -9,8 +9,8 @@ import {
   Camera,
 } from "lucide-react";
 import { useAnalyticsData } from "../../components/Dashboard/useAnalyticsData.js";
-import BookshelfShowcase from "../../components/Showcase/BookshelfShowcase.jsx";
-import ShowcaseExporter from "../../components/Showcase/ShowcaseExporter.jsx";
+import BookshelfShowcase from "../../components/Bookshelf/BookshelfShowcase.jsx";
+import ShowcaseExporter from "../../components/Bookshelf/ShowcaseExporter.jsx";
 
 export default function HomeView({ books }) {
   const navigate = useNavigate();
