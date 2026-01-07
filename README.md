@@ -2,7 +2,7 @@
 
 > Um sistema completo de gerenciamento de biblioteca pessoal com classificação hierárquica, sugestões inteligentes de IA e analytics avançados. Organize sua lista de leitura, acompanhe seu progresso, defina metas anuais e exporte showcases visuais da sua estante.
 
-![Demonstração do sistema](https://placehold.co/1200x630/4f46e5/ffffff?text=BookStack+AI+Preview)
+![Demonstração do sistema](https://github.com/vitoriapguimaraes/bookstack-ai/blob/main/demonstracions/screenshot_home.png)
 
 ## Funcionalidades Principais
 
