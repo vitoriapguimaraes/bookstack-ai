@@ -628,6 +628,11 @@ async def upload_book_cover(book_id: int, file: UploadFile = File(...), session:
         
         return book
 
+        return book
+
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        detail = str(e)
         if "Bucket not found" in detail:
             detail = "Bucket 'book-covers' does not exist."
         raise HTTPException(status_code=500, detail=f"Upload Failed: {detail}")
