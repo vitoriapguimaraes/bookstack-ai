@@ -467,3 +467,5 @@ function AvailabilityManager({ options, setOptions }) {
     </div>
   );
 }
+
+export default ListSettings;
