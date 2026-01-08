@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
-import { Shield, Users, Mail, List, Layers } from "lucide-react";
+import {
+  Shield,
+  Users,
+  Mail,
+  List,
+  Layers,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
@@ -10,6 +19,11 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal States
+  const [deleteModal, setDeleteModal] = useState({ open: false, user: null });
+  const [statusModal, setStatusModal] = useState({ open: false, user: null });
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -29,6 +43,38 @@ export default function Admin() {
       setError("Falha ao carregar usuários. Verifique se você tem permissão.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteModal.user) return;
+    setActionLoading(true);
+    try {
+      await api.delete(`/admin/users/${deleteModal.user.id}`);
+      setUsers(users.filter((x) => x.id !== deleteModal.user.id));
+      setDeleteModal({ open: false, user: null });
+    } catch (e) {
+      alert("Erro ao excluir usuário");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!statusModal.user) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/admin/users/${statusModal.user.id}/toggle_active`);
+      // Refresh
+      const updatedUsers = users.map((u) =>
+        u.id === statusModal.user.id ? { ...u, is_active: !u.is_active } : u
+      );
+      setUsers(updatedUsers);
+      setStatusModal({ open: false, user: null });
+    } catch (e) {
+      alert("Erro ao alterar status");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -255,22 +301,9 @@ export default function Admin() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={async () => {
-                            try {
-                              await api.post(
-                                `/admin/users/${u.id}/toggle_active`
-                              );
-                              // Refresh
-                              const updatedUsers = users.map((user) =>
-                                user.id === u.id
-                                  ? { ...user, is_active: !user.is_active }
-                                  : user
-                              );
-                              setUsers(updatedUsers);
-                            } catch (e) {
-                              alert("Erro ao alterar status");
-                            }
-                          }}
+                          onClick={() =>
+                            setStatusModal({ open: true, user: u })
+                          }
                           className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded border transition-all ${
                             u.is_active
                               ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
@@ -280,20 +313,9 @@ export default function Admin() {
                           {u.is_active ? "Ativo" : "Inativo"}
                         </button>
                         <button
-                          onClick={async () => {
-                            if (
-                              window.confirm(
-                                `Apagar usuário ${u.email}? Isso removerá TUDO.`
-                              )
-                            ) {
-                              try {
-                                await api.delete(`/admin/users/${u.id}`);
-                                setUsers(users.filter((x) => x.id !== u.id));
-                              } catch (e) {
-                                alert("Erro ao excluir usuário");
-                              }
-                            }
-                          }}
+                          onClick={() =>
+                            setDeleteModal({ open: true, user: u })
+                          }
                           className="w-8 h-8 flex items-center justify-center rounded bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
                           title="Excluir Usuário"
                         >
@@ -322,6 +344,124 @@ export default function Admin() {
           </table>
         </div>
       </div>
+
+      {/* DELETE CONFIRMATION MODAL - PORTAL */}
+      {deleteModal.open &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-100 dark:border-red-900/30 animate-scale-in">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30">
+                  <AlertTriangle
+                    size={32}
+                    className="text-red-600 dark:text-red-400"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                    Excluir Usuário?
+                  </h3>
+                  <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2 p-2 bg-red-50 rounded">
+                    {deleteModal.user?.email}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Essa ação apagará <strong>todos os livros</strong> e
+                    configurações deste usuário. É irreversível.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 w-full mt-4">
+                  <button
+                    onClick={() => setDeleteModal({ open: false, user: null })}
+                    className="flex-1 px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+                    disabled={actionLoading}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleDeleteUser}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 flex items-center justify-center"
+                  >
+                    {actionLoading ? "Excluindo..." : "Sim, Excluir"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* TOGGLE STATUS CONFIRMATION MODAL - PORTAL */}
+      {statusModal.open &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-neutral-800 animate-scale-in">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div
+                  className={`p-3 rounded-full ${
+                    statusModal.user?.is_active
+                      ? "bg-red-100 dark:bg-red-900/30 text-red-600"
+                      : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600"
+                  }`}
+                >
+                  {statusModal.user?.is_active ? (
+                    <AlertTriangle size={32} />
+                  ) : (
+                    <CheckCircle size={32} />
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                    {statusModal.user?.is_active
+                      ? "Desativar Usuário?"
+                      : "Reativar Usuário?"}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    O usuário <strong>{statusModal.user?.email}</strong> será{" "}
+                    {statusModal.user?.is_active ? (
+                      <span className="text-red-600 font-bold">bloqueado</span>
+                    ) : (
+                      <span className="text-emerald-600 font-bold">
+                        desbloqueado
+                      </span>
+                    )}{" "}
+                    e {statusModal.user?.is_active ? "perderá" : "terá"} acesso
+                    ao sistema.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 w-full mt-4">
+                  <button
+                    onClick={() => setStatusModal({ open: false, user: null })}
+                    className="flex-1 px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+                    disabled={actionLoading}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleToggleStatus}
+                    disabled={actionLoading}
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-white transition-all shadow-lg flex items-center justify-center ${
+                      statusModal.user?.is_active
+                        ? "bg-red-600 hover:bg-red-700 shadow-red-500/30"
+                        : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30"
+                    }`}
+                  >
+                    {actionLoading
+                      ? "Processando..."
+                      : statusModal.user?.is_active
+                      ? "Confirmar Bloqueio"
+                      : "Confirmar Ativação"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

@@ -676,6 +676,11 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
             raise HTTPException(status_code=403, detail="Acesso negado")
 
     try:
+        # Prevent actions on Super Admin
+        target_profile_check = session.get(Profile, target_user_id)
+        if target_profile_check and target_profile_check.email == 'vipistori@gmail.com':
+             raise HTTPException(status_code=403, detail="Não é permitido modificar o Super Admin.")
+
         # 1. Delete User Preferences
         pref = session.get(UserPreference, target_user_id)
         if pref: session.delete(pref)
@@ -691,6 +696,8 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
             
         session.commit()
         return {"message": f"Usuário {target_user_id} excluído com sucesso."}
+    except HTTPException:
+        raise
     except Exception as e:
         session.rollback()
         print(f"Erro ao excluir usuário: {e}")
@@ -708,6 +715,9 @@ def toggle_user_active(target_user_id: str, session: Session = Depends(get_sessi
         profile = session.get(Profile, target_user_id)
         if not profile:
              raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        
+        if profile.email == 'vipistori@gmail.com':
+             raise HTTPException(status_code=403, detail="Não é permitido desativar o Super Admin.")
              
         # Toggle current status (default to True if not set)
         current_status = getattr(profile, 'is_active', True)
