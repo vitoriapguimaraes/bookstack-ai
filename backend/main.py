@@ -442,6 +442,23 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
         # If empty, it uses default implementation-wise, so it's NOT custom
         pref.has_custom_classes = False
 
+    # 5. Custom Availability: True if list is different from default
+    from utils import DEFAULT_AVAILABILITY_OPTIONS
+    current_availability = pref_data.availability_options or pref.availability_options
+    
+    # Update field
+    if pref_data.availability_options is not None:
+         pref.availability_options = pref_data.availability_options
+
+    if current_availability:
+        # Sort to compare content irrespective of order? Or order matters? Order matters for UI.
+        if current_availability != DEFAULT_AVAILABILITY_OPTIONS:
+            pref.has_custom_availability = True
+        else:
+             pref.has_custom_availability = False
+    else:
+        pref.has_custom_availability = False
+
     pref.updated_at = datetime.utcnow()
     
     session.add(pref)
@@ -466,6 +483,9 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
         has_api_keys=pref.has_api_keys,
         has_custom_prompts=pref.has_custom_prompts,
         has_custom_formula=pref.has_custom_formula,
+        has_custom_classes=pref.has_custom_classes,
+        has_custom_availability=pref.has_custom_availability,
+        availability_options=pref.availability_options,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
@@ -512,7 +532,9 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
             "created_at": profile.created_at,
             "has_api_keys": pref.has_api_keys if pref else False,
             "has_custom_prompts": pref.has_custom_prompts if pref else False,
-            "has_custom_formula": pref.has_custom_formula if pref else False
+            "has_custom_prompts": pref.has_custom_prompts if pref else False,
+            "has_custom_formula": pref.has_custom_formula if pref else False,
+            "has_custom_availability": pref.has_custom_availability if pref else False
         }
         output.append(user_data)
         

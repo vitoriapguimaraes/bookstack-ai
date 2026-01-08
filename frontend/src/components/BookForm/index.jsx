@@ -52,6 +52,14 @@ const DEFAULT_CLASS_CATEGORIES = {
   ],
 };
 
+const DEFAULT_AVAILABILITY_OPTIONS = [
+  "Físico",
+  "Virtual",
+  "A comprar",
+  "Emprestado",
+  "NA",
+];
+
 export default function BookForm({
   bookToEdit,
   onSuccess,
@@ -67,7 +75,7 @@ export default function BookForm({
     book_class: "Desenvolvimento Pessoal",
     category: "Geral",
     priority: "2 - Média",
-    availability: "Estante",
+    availability: "Físico",
     type: "Não Técnico",
     year: new Date().getFullYear(),
     rating: 0,
@@ -84,6 +92,9 @@ export default function BookForm({
   const [googleRating, setGoogleRating] = useState(null);
   const [classCategories, setClassCategories] = useState(
     DEFAULT_CLASS_CATEGORIES
+  );
+  const [availabilityOptions, setAvailabilityOptions] = useState(
+    DEFAULT_AVAILABILITY_OPTIONS
   );
 
   useEffect(() => {
@@ -102,11 +113,20 @@ export default function BookForm({
   const fetchPreferences = async () => {
     try {
       const res = await api.get("/preferences/");
-      if (
-        res.data?.class_categories &&
-        Object.keys(res.data.class_categories).length > 0
-      ) {
-        setClassCategories(res.data.class_categories);
+      if (res.data) {
+        if (
+          res.data.class_categories &&
+          Object.keys(res.data.class_categories).length > 0
+        ) {
+          setClassCategories(res.data.class_categories);
+        }
+
+        if (
+          res.data.availability_options &&
+          res.data.availability_options.length > 0
+        ) {
+          setAvailabilityOptions(res.data.availability_options);
+        }
       }
     } catch (err) {
       console.error("Erro ao carregar listas no BookForm:", err);
@@ -557,16 +577,12 @@ export default function BookForm({
                 onChange={handleChange}
                 className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500"
               >
-                <option value="N/A">N/A</option>
-                <option value="Estante">Estante</option>
-                <option value="Estante Araçatuba">Estante Araçatuba</option>
-                <option value="Kindle">Kindle (E-book)</option>
-                <option value="PDF">PDF / Digital</option>
-                <option value="Audiobook">Audiobook</option>
-                <option value="Emprestado">Emprestado</option>
-                <option value="Biblioteca">Biblioteca</option>
-                <option value="Online">Web / Online</option>
-                <option value="A Comprar">Desejado / A Comprar</option>
+                {/* Dynamically render options */}
+                {availabilityOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
               </select>
             </div>
 

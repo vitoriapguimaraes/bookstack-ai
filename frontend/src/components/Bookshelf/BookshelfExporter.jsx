@@ -3,7 +3,7 @@ import { Download, Share2, X, Sparkles, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { useToast } from "../../context/ToastContext";
 
-export default function ShowcaseExporter({
+export default function BookshelfExporter({
   books,
   selectedYears,
   filterClass,
@@ -22,7 +22,7 @@ export default function ShowcaseExporter({
     setIsExporting(true);
 
     // Wait for layout to settle
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
       const canvas = await html2canvas(exportRef.current, {
@@ -31,8 +31,7 @@ export default function ShowcaseExporter({
         useCORS: true,
         allowTaint: true,
         logging: false,
-        height: exportRef.current.scrollHeight,
-        windowHeight: exportRef.current.scrollHeight,
+        scrollY: 0,
       });
 
       const dataUrl = canvas.toDataURL("image/png");
@@ -62,12 +61,39 @@ export default function ShowcaseExporter({
   // Get books with covers for display
   const displayBooks = books.filter((b) => b.cover_image);
 
-  // Dynamic Grid Configuration
-  const getGridConfig = () => {
+  // Dynamic Grid Configuration (Auto-Adaptive)
+  const getGridStyle = () => {
     const count = displayBooks.length;
-    if (count > 24) return "grid-cols-8 gap-2";
-    if (count > 12) return "grid-cols-7 gap-3";
-    return "grid-cols-6 gap-4";
+    let minWidth = "150px"; // Default (~6 cols)
+    let gap = "16px";
+
+    if (count > 60) {
+      minWidth = "55px";
+      gap = "4px";
+    } // ~19 cols
+    else if (count > 42) {
+      minWidth = "65px";
+      gap = "5px";
+    } // ~16 cols (45/16 = 2.8 rows) -> FITS
+    else if (count > 32) {
+      minWidth = "75px";
+      gap = "6px";
+    } // ~14 cols
+    else if (count > 20) {
+      minWidth = "90px";
+      gap = "8px";
+    } // ~11 cols
+    else if (count > 12) {
+      minWidth = "120px";
+      gap = "10px";
+    } // ~8 cols
+
+    return {
+      display: "grid",
+      gridTemplateColumns: `repeat(auto-fill, minmax(${minWidth}, 1fr))`,
+      gap: gap,
+      alignContent: "start",
+    };
   };
 
   // Generate filter summary
@@ -184,21 +210,17 @@ export default function ShowcaseExporter({
                   </div>
 
                   {/* Books Grid */}
-                  <div className={`flex-1 grid ${getGridConfig()}`}>
+                  <div className="flex-1" style={getGridStyle()}>
                     {displayBooks.map((book, idx) => {
                       const API_URL =
                         import.meta.env.VITE_API_URL || "http://localhost:8000";
 
                       let coverUrl = null;
                       if (book.cover_image) {
-                        if (book.cover_image.startsWith("http")) {
-                          coverUrl = book.cover_image.replace(
-                            /^http:/,
-                            "https:"
-                          );
-                        } else if (book.cover_image.startsWith("/")) {
+                        if (book.cover_image.startsWith("/")) {
                           coverUrl = book.cover_image;
                         } else {
+                          // External URL (http/https), use proxy to avoid CORS issues in html2canvas
                           coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
                             book.cover_image
                           )}`;

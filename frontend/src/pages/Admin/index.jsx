@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
-import { Shield, Users, Mail } from "lucide-react";
+import { Shield, Users, Mail, List, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Admin() {
@@ -225,6 +225,23 @@ export default function Admin() {
                           </div>
                           <span className="text-[8px] text-slate-400 mt-0.5">
                             Classes
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`w-4 h-4 rounded border flex items-center justify-center ${
+                              u.has_custom_availability
+                                ? "bg-amber-500 border-amber-600"
+                                : "bg-slate-100 border-slate-300"
+                            }`}
+                            title="Disponibilidade Personalizada"
+                          >
+                            {u.has_custom_availability && (
+                              <Layers size={10} className="text-white" />
+                            )}
+                          </div>
+                          <span className="text-[8px] text-slate-400 mt-0.5">
+                            Disp.
                           </span>
                         </div>
                       </div>
