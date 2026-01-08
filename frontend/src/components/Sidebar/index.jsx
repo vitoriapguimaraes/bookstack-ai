@@ -16,12 +16,24 @@ import {
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import {
+  AVATAR_ICONS,
+  AVATAR_COLORS,
+  AVATAR_BACKGROUNDS,
+} from "../../utils/avatarIcons";
 
 export default function Sidebar({ onAddBook, isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { isAdmin } = useAuth();
+  const { isAdmin, userAvatar, userAvatarColor, userAvatarBg } = useAuth();
+
+  const AvatarIcon = AVATAR_ICONS[userAvatar] || AVATAR_ICONS["User"];
+  const currentColorObj =
+    AVATAR_COLORS.find((c) => c.id === userAvatarColor) || AVATAR_COLORS[0];
+  const currentBgObj =
+    AVATAR_BACKGROUNDS.find((b) => b.id === userAvatarBg) ||
+    AVATAR_BACKGROUNDS[0];
 
   const menuItems = [
     {
@@ -207,13 +219,13 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
               navigate("/settings");
               if (window.innerWidth < 768 && onClose) onClose();
             }}
-            className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-2 rounded-full md:rounded-full bg-slate-200 dark:bg-neutral-800 text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:bg-slate-300 dark:hover:bg-neutral-700 transition-all border border-slate-300 dark:border-neutral-700 relative group"
+            className={`w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-2 rounded-full md:rounded-full ${currentBgObj.class} text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all border border-slate-300 dark:border-neutral-700 relative group`}
           >
-            <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-neutral-700 flex items-center justify-center shrink-0">
-              VF
-            </div>
+            <AvatarIcon
+              size={24}
+              className={`md:w-[24px] md:h-[24px] shrink-0 ${currentColorObj.class}`}
+            />
             <span className="md:hidden font-medium">Configurações</span>
-
             <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
               Configurações
             </span>

@@ -8,9 +8,17 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react"; // Added useState
+import { useAuth } from "../../context/AuthContext";
+import { AVATAR_ICONS } from "../../utils/avatarIcons";
+import ProfileSelectionModal from "../../components/ProfileSelectionModal";
 
 export default function OverviewSettings() {
   const navigate = useNavigate();
+  const { userAvatar } = useAuth();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const CurrentAvatar = AVATAR_ICONS[userAvatar] || AVATAR_ICONS["User"];
 
   return (
     <div className="w-full animate-fade-in pb-20 md:pb-0 font-sans">
@@ -87,8 +95,8 @@ export default function OverviewSettings() {
           onClick={() => navigate("/settings/preferences")}
           color="bg-blue-500"
           features={[
+            "Escolha seu Avatar",
             "Meta de Leitura Anual",
-            "Aparência do Dashboard",
             "Configurações de Conta",
           ]}
         />
