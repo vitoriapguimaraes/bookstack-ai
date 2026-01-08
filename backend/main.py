@@ -522,13 +522,6 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
     # Simple Admin Check
     requester_profile = session.get(Profile, user['id'])
     
-
-    if requester_profile:
-        # Profile found
-
-    else:
-
-
     is_admin = False
     if requester_profile and requester_profile.role == 'admin':
         is_admin = True
