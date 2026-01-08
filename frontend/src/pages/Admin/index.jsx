@@ -103,7 +103,7 @@ export default function Admin() {
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider">
                   Data de Cadastro
                 </th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-right">
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-right min-w-[140px]">
                   Ações
                 </th>
               </tr>

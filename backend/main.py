@@ -35,10 +35,15 @@ app = FastAPI(title="Reading List API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex='.*',
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "https://bookstack-interface.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+    allow_headers=["*"],
 )
 
 # Mount uploads directory to serve static files (images)

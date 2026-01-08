@@ -23,9 +23,10 @@ export function DistributionChart({
 }) {
   const getDynamicHeight = (data) => {
     if (chartType === "pie") return "16rem"; // h-64
-    const headerOffset = 40;
+    const headerOffset = 60; // Increased to account for margins
     const itemHeight = 50;
-    return `${headerOffset + data.length * itemHeight}px`;
+    const calculated = headerOffset + data.length * itemHeight;
+    return `${Math.max(calculated, 150)}px`; // Enforce min height
   };
 
   const resolveColor = (entry, index) => {
