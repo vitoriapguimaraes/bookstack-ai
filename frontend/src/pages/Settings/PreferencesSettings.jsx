@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Target, Save, User, Copy, ShieldAlert, Smile } from "lucide-react";
+import {
+  Target,
+  Save,
+  User,
+  ShieldAlert,
+  Smile,
+  AlertTriangle,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -15,9 +22,13 @@ export default function PreferencesSettings() {
   const { addToast } = useToast();
   const [yearlyGoal, setYearlyGoal] = useState(20);
   const [isSaved, setIsSaved] = useState(false);
-  const [copied, setCopied] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Custom Reset Modal State
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetCountdown, setResetCountdown] = useState(0);
 
   const CurrentAvatar = AVATAR_ICONS[userAvatar] || AVATAR_ICONS["User"];
   const currentColorObj =
@@ -43,6 +54,40 @@ export default function PreferencesSettings() {
     }
   };
 
+  // Countdown timer logic
+  useEffect(() => {
+    let timer;
+    if (showResetModal && resetCountdown > 0) {
+      timer = setInterval(() => {
+        setResetCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [showResetModal, resetCountdown]);
+
+  const handleResetClick = () => {
+    setResetCountdown(5); // Start 5 seconds countdown
+    setShowResetModal(true);
+  };
+
+  const confirmReset = async () => {
+    try {
+      await api.delete("/books/reset");
+      setShowResetModal(false);
+      addToast({
+        type: "success",
+        message: "Conta resetada com sucesso.",
+      });
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err) {
+      addToast({
+        type: "error",
+        message: "Erro ao resetar conta.",
+      });
+      setShowResetModal(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       await api.put("/preferences/", { yearly_goal: yearlyGoal });
@@ -59,19 +104,6 @@ export default function PreferencesSettings() {
         type: "error",
         message: "Erro ao salvar preferências no servidor.",
       });
-    }
-  };
-
-  const handleCopyId = () => {
-    if (user?.id) {
-      navigator.clipboard.writeText(user.id);
-      setCopied(true);
-      addToast({
-        type: "success",
-        message: "ID copiado para a área de transferência",
-        duration: 2000,
-      });
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -151,40 +183,13 @@ export default function PreferencesSettings() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="col-span-2">
             <label className="block text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
               Email
             </label>
             <div className="px-4 py-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white font-medium">
               {user?.email || "Email não disponível"}
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
-              User ID (UUID)
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1 px-4 py-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 font-mono text-sm truncate">
-                {user?.id || "ID não disponível"}
-              </div>
-              <button
-                onClick={handleCopyId}
-                className="px-4 py-2 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded-lg border border-slate-200 dark:border-neutral-700 transition-colors flex items-center justify-center text-slate-600 dark:text-slate-300"
-                title="Copiar ID"
-              >
-                {copied ? (
-                  <span className="text-emerald-600 font-bold text-xs">
-                    Copiado!
-                  </span>
-                ) : (
-                  <Copy size={18} />
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Necessário para suporte ou migração de dados.
-            </p>
           </div>
         </div>
       </div>
@@ -275,33 +280,7 @@ export default function PreferencesSettings() {
             </p>
           </div>
           <button
-            onClick={async () => {
-              if (
-                window.confirm(
-                  "ATENÇÃO: Você tem certeza absoluta que deseja apagar TODOS os seus livros? Essa ação é irreversível."
-                )
-              ) {
-                if (
-                  window.confirm(
-                    "Última chance: Todos os dados serão perdidos. Confirmar reset?"
-                  )
-                ) {
-                  try {
-                    await api.delete("/books/reset");
-                    addToast({
-                      type: "success",
-                      message: "Conta resetada com sucesso.",
-                    });
-                    setTimeout(() => window.location.reload(), 1000);
-                  } catch (err) {
-                    addToast({
-                      type: "error",
-                      message: "Erro ao resetar conta.",
-                    });
-                  }
-                }
-              }
-            }}
+            onClick={handleResetClick}
             className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 transition-colors uppercase tracking-wider"
           >
             Resetar Conta
@@ -313,6 +292,54 @@ export default function PreferencesSettings() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
       />
+
+      {/* Custom Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-100 dark:border-red-900/30 animate-scale-in">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30 animate-pulse">
+                <AlertTriangle
+                  size={32}
+                  className="text-red-600 dark:text-red-400"
+                />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                  Zona de Perigo
+                </h3>
+                <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+                  ATENÇÃO: Você tem certeza absoluta que deseja apagar TODOS os
+                  seus livros? Essa ação é irreversível.
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Todos os dados de leitura, notas e histórico serão perdidos
+                  permanentemente.
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full mt-4">
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={resetCountdown > 0}
+                  onClick={confirmReset}
+                  className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {resetCountdown > 0
+                    ? `Aguarde ${resetCountdown}s`
+                    : "Sim, Resetar Tudo"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
