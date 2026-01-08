@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { SUPER_ADMIN_EMAIL } from "../../utils/constants";
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
@@ -300,41 +301,49 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() =>
-                            setStatusModal({ open: true, user: u })
-                          }
-                          className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded border transition-all ${
-                            u.is_active
-                              ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
-                              : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                          }`}
-                        >
-                          {u.is_active ? "Ativo" : "Inativo"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            setDeleteModal({ open: true, user: u })
-                          }
-                          className="w-8 h-8 flex items-center justify-center rounded bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
-                          title="Excluir Usuário"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                          </svg>
-                        </button>
+                        {u.email === SUPER_ADMIN_EMAIL ? (
+                          <span className="text-[10px] text-slate-400 font-medium px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded border border-slate-200 dark:border-neutral-700">
+                            Super Admin
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                setStatusModal({ open: true, user: u })
+                              }
+                              className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded border transition-all ${
+                                u.is_active
+                                  ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                                  : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                              }`}
+                            >
+                              {u.is_active ? "Ativo" : "Inativo"}
+                            </button>
+                            <button
+                              onClick={() =>
+                                setDeleteModal({ open: true, user: u })
+                              }
+                              className="w-8 h-8 flex items-center justify-center rounded bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
+                              title="Excluir Usuário"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 6h18" />
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

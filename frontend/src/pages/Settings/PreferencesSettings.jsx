@@ -29,6 +29,7 @@ export default function PreferencesSettings() {
 
   // Custom Reset Modal State
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // DELETION modal
   const [resetCountdown, setResetCountdown] = useState(0);
 
   const CurrentAvatar = AVATAR_ICONS[userAvatar] || AVATAR_ICONS["User"];
@@ -55,20 +56,25 @@ export default function PreferencesSettings() {
     }
   };
 
-  // Countdown timer logic
+  // Countdown timer logic (Reusable for both modals ideally, but keeping simple)
   useEffect(() => {
     let timer;
-    if (showResetModal && resetCountdown > 0) {
+    if ((showResetModal || showDeleteModal) && resetCountdown > 0) {
       timer = setInterval(() => {
         setResetCountdown((prev) => prev - 1);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [showResetModal, resetCountdown]);
+  }, [showResetModal, showDeleteModal, resetCountdown]);
 
   const handleResetClick = () => {
     setResetCountdown(5); // Start 5 seconds countdown
     setShowResetModal(true);
+  };
+
+  const handleDeleteAccountClick = () => {
+    setResetCountdown(10); // Longer countdown for deletion
+    setShowDeleteModal(true);
   };
 
   const confirmReset = async () => {
@@ -86,6 +92,25 @@ export default function PreferencesSettings() {
         message: "Erro ao resetar conta.",
       });
       setShowResetModal(false);
+    }
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      await api.delete("/users/me");
+      setShowDeleteModal(false);
+      addToast({
+        type: "success",
+        message: "Conta excluída. Até logo!",
+      });
+      // Force logout / redirect
+      setTimeout(() => (window.location.href = "/login"), 1500);
+    } catch (err) {
+      addToast({
+        type: "error",
+        message: "Erro ao excluir conta.",
+      });
+      setShowDeleteModal(false);
     }
   };
 
@@ -280,21 +305,43 @@ export default function PreferencesSettings() {
               Zona de Perigo
             </h3>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-600 dark:text-red-300 font-medium">
-                Resetar Conta
-              </p>
-              <p className="text-xs text-red-500 dark:text-red-400">
-                Apagar todos os livros e começar do zero.
-              </p>
+
+          <div className="space-y-4">
+            {/* Reset Data */}
+            <div className="flex items-center justify-between pb-4 border-b border-red-200 dark:border-red-800/50">
+              <div>
+                <p className="text-sm text-red-600 dark:text-red-300 font-medium">
+                  Resetar Biblioteca
+                </p>
+                <p className="text-xs text-red-500 dark:text-red-400 opacity-80">
+                  Apagar todos os livros e começar do zero.
+                </p>
+              </div>
+              <button
+                onClick={handleResetClick}
+                className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 transition-colors uppercase tracking-wider"
+              >
+                Resetar Livros
+              </button>
             </div>
-            <button
-              onClick={handleResetClick}
-              className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 transition-colors uppercase tracking-wider"
-            >
-              Resetar Conta
-            </button>
+
+            {/* Delete Account */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-600 dark:text-red-300 font-medium">
+                  Excluir Conta
+                </p>
+                <p className="text-xs text-red-500 dark:text-red-400 opacity-80">
+                  Apagar sua conta e todos os dados definitivamente.
+                </p>
+              </div>
+              <button
+                onClick={handleDeleteAccountClick}
+                className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 hover:shadow-lg transition-all uppercase tracking-wider"
+              >
+                Excluir Conta
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -319,15 +366,14 @@ export default function PreferencesSettings() {
 
                 <div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-                    Zona de Perigo
+                    Resetar Biblioteca
                   </h3>
-                  <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
-                    ATENÇÃO: Você tem certeza absoluta que deseja apagar TODOS
-                    os seus livros? Essa ação é irreversível.
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+                    Isso apagará <b>TODOS</b> os seus livros. Sua conta
+                    continuará existindo, mas sua estante ficará vazia.
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Todos os dados de leitura, notas e histórico serão perdidos
-                    permanentemente.
+                    Tem certeza?
                   </p>
                 </div>
 
@@ -345,7 +391,56 @@ export default function PreferencesSettings() {
                   >
                     {resetCountdown > 0
                       ? `Aguarde ${resetCountdown}s`
-                      : "Sim, Resetar Tudo"}
+                      : "Sim, Resetar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Custom Delete Account Confirmation Modal */}
+      {showDeleteModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500 dark:border-red-600 animate-scale-in">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30 animate-pulse">
+                  <ShieldAlert
+                    size={32}
+                    className="text-red-600 dark:text-red-400"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-red-600 dark:text-red-500 mb-2">
+                    EXCLUIR CONTA DEFINITIVAMENTE
+                  </h3>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+                    Essa ação é <b>IRREVERSÍVEL</b>. Sua conta, todos os livros,
+                    configurações e histórico serão apagados para sempre.
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Nós sentiremos sua falta! 😢
+                  </p>
+                </div>
+
+                <div className="flex gap-3 w-full mt-4">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    disabled={resetCountdown > 0}
+                    onClick={confirmDeleteAccount}
+                    className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {resetCountdown > 0
+                      ? `Confirmar (${resetCountdown}s)`
+                      : "ADEUS, APAGAR TUDO"}
                   </button>
                 </div>
               </div>

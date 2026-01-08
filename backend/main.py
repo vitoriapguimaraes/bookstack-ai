@@ -20,7 +20,10 @@ from pydantic import BaseModel
 from models_preferences import UserPreference, Profile
 from security import encrypt_value, decrypt_value
 from supabase import create_client, Client
+from security import encrypt_value, decrypt_value
+from supabase import create_client, Client
 import os
+from mailer import send_email
 
 # Initialize Supabase Client (for Storage)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -50,10 +53,6 @@ app.add_middleware(
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
-
-
-
 
 def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
     """
@@ -644,10 +643,12 @@ async def upload_book_cover(book_id: int, file: UploadFile = File(...), session:
 
 # --- Account Reset ---
 
+# --- Account Reset & Deletion ---
+
 @app.delete("/books/reset")
 def reset_account(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     """
-    Apaga TODOS os livros do usuário atual. Ação irreversível.
+    Apaga TODOS os livros do usuário atual (mas mantém a conta). Ação irreversível.
     """
     try:
         # Delete all books for this user
@@ -664,6 +665,59 @@ def reset_account(session: Session = Depends(get_session), user: dict = Depends(
         print(f"Erro ao resetar conta: {e}")
         raise HTTPException(status_code=500, detail="Erro ao resetar conta")
 
+@app.delete("/users/me")
+def delete_own_account(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    """
+    Usuário exclui sua PRÓPRIA conta e todos os dados.
+    """
+    user_id = user['id']
+    user_email = user.get('email')
+    
+    # Prevent Super Admin self-delete
+    if user_email == 'vipistori@gmail.com':
+         raise HTTPException(status_code=403, detail="Super Admin cannot delete themselves via this endpoint.")
+
+    try:
+        # 1. Delete Books
+        books = session.exec(select(Book).where(Book.user_id == user_id)).all()
+        for book in books:
+            session.delete(book)
+            
+        # 2. Delete Preferences
+        pref = session.get(UserPreference, user_id)
+        if pref: session.delete(pref)
+        
+        # 3. Delete Profile (Soft OR Hard delete? Hard delete requested)
+        profile = session.get(Profile, user_id)
+        if profile: session.delete(profile)
+        
+        session.commit()
+        
+        # 4. Send Goodbye Email
+        if user_email:
+            send_email(
+                to_email=user_email,
+                subject="Sua conta foi excluída - BookStack",
+                body_html=f"""
+                <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #d9534f;">Sua conta foi excluída</h2>
+                    <p>Olá,</p>
+                    <p>Confirmamos que sua conta e todos os seus dados foram excluídos permanentemente do BookStack conforme sua solicitação.</p>
+                    <p>Esperamos te ver novamente em breve!</p>
+                    <br>
+                    <p><i>Equipe BookStack</i></p>
+                </div>
+                """
+            )
+        
+        return {"message": "Conta excluída com sucesso."}
+        
+    except Exception as e:
+        session.rollback()
+        print(f"Erro ao excluir própria conta: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao excluir conta")
+
+
 # --- Admin User Management ---
 
 @app.delete("/admin/users/{target_user_id}")
@@ -671,23 +725,26 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
     # Check Admin
     requester_profile = session.get(Profile, user['id'])
     if not requester_profile or requester_profile.role != 'admin':
-        # Fallback hardcoded check
         if user.get('email') != 'vipistori@gmail.com':
             raise HTTPException(status_code=403, detail="Acesso negado")
 
     try:
         # Prevent actions on Super Admin
-        target_profile_check = session.get(Profile, target_user_id)
-        if target_profile_check and target_profile_check.email == 'vipistori@gmail.com':
-             raise HTTPException(status_code=403, detail="Não é permitido modificar o Super Admin.")
+        target_profile = session.get(Profile, target_user_id)
+        if target_profile:
+             if target_profile.email == 'vipistori@gmail.com':
+                 raise HTTPException(status_code=403, detail="Não é permitido modificar o Super Admin.")
+             
+             target_email = target_profile.email
+        else:
+             target_email = None
 
         # 1. Delete User Preferences
         pref = session.get(UserPreference, target_user_id)
         if pref: session.delete(pref)
         
         # 2. Delete User Profile
-        profile = session.get(Profile, target_user_id)
-        if profile: session.delete(profile)
+        if target_profile: session.delete(target_profile)
         
         # 3. Delete User Books
         books = session.exec(select(Book).where(Book.user_id == target_user_id)).all()
@@ -695,6 +752,22 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
             session.delete(book)
             
         session.commit()
+        
+        # 4. Notify User
+        if target_email:
+             send_email(
+                to_email=target_email,
+                subject="Aviso: Sua conta foi excluída",
+                body_html=f"""
+                <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #d9534f;">Conta Excluída</h2>
+                    <p>Olá,</p>
+                    <p>Informamos que sua conta no BookStack foi <b>excluída permanentemente</b> por um administrador.</p>
+                    <p>Se você acredita que isso foi um erro, entre em contato com o suporte.</p>
+                </div>
+                """
+            )
+
         return {"message": f"Usuário {target_user_id} excluído com sucesso."}
     except HTTPException:
         raise
@@ -721,9 +794,27 @@ def toggle_user_active(target_user_id: str, session: Session = Depends(get_sessi
              
         # Toggle current status (default to True if not set)
         current_status = getattr(profile, 'is_active', True)
-        profile.is_active = not current_status
+        new_status = not current_status
+        profile.is_active = new_status
         session.add(profile)
         session.commit()
+        
+        # Notify User
+        status_text = "ATIVADA" if new_status else "DESATIVADA"
+        color = "#28a745" if new_status else "#dc3545"
+        
+        send_email(
+            to_email=profile.email,
+            subject=f"Sua conta foi {status_text}",
+            body_html=f"""
+            <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                <h2>Alteração de Status</h2>
+                <p>Olá,</p>
+                <p>Sua conta no BookStack foi <b style="color: {color};">{status_text}</b> por um administrador.</p>
+                {'<p>Agora você pode acessar o sistema normalmente.</p>' if new_status else '<p>Você não poderá mais fazer login até que ela seja reativada.</p>'}
+            </div>
+            """
+        )
         
         return {"message": "Status alterado com sucesso", "is_active": profile.is_active}
 

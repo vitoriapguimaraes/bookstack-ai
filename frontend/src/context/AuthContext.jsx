@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { supabase } from "../services/supabase";
+import { SUPER_ADMIN_EMAIL } from "../utils/constants";
 
 const AuthContext = createContext({});
 
@@ -61,7 +62,7 @@ export function AuthProvider({ children }) {
     setSession(null);
   };
 
-  const isAdmin = user?.email === "vipistori@gmail.com";
+  const isAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
   const [userAvatar, setUserAvatarState] = useState(
     localStorage.getItem("user_avatar") || "User"
