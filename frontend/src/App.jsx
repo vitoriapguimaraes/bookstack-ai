@@ -28,10 +28,9 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import { useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
-import { ConfirmationProvider } from "./context/ConfirmationContext"; // Import Context
+import { ConfirmationProvider } from "./context/ConfirmationContext";
 import PrivateRoute from "./components/PrivateRoute";
 
-import axios from "axios";
 import { api } from "./services/api";
 import { CONTACT_EMAIL } from "./utils/constants";
 

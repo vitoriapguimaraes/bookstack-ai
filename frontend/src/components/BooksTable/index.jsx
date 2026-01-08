@@ -6,7 +6,6 @@ import {
   Trash2,
   Search,
   X,
-  Check,
   Edit3,
   Trash,
   ChevronDown,
@@ -15,8 +14,8 @@ import {
 import { api } from "../../services/api";
 import BulkEditModal from "../BulkEditModal";
 import MobileBookItem from "./MobileBookItem";
-import { useToast } from "../../context/ToastContext"; // Import Toast
-import { useConfirm } from "../../context/ConfirmationContext"; // Global Context
+import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmationContext";
 
 export default function BooksTable({
   books,

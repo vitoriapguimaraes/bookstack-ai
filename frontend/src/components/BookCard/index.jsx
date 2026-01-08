@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Star, Pencil, Trash2, Info, X } from "lucide-react";
-import { api } from "../../services/api"; // Use shared instance
 import { useTheme } from "../../context/ThemeContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -9,7 +8,6 @@ export default function BookCard({
   book,
   compact = false,
   onEdit,
-  onDelete,
   onRequestDelete,
 }) {
   const { theme } = useTheme();
@@ -61,7 +59,6 @@ export default function BookCard({
         book.cover_image
       )}`;
     }
-    // No debug log needed for missing cover
   }
 
   const handleDelete = async (e) => {

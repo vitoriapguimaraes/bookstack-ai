@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -13,7 +13,7 @@ import {
 import BookCard from "../../components/BookCard";
 import ScrollToTopBottom from "../../components/ScrollToTopBottom";
 import { useToast } from "../../context/ToastContext";
-import { useConfirm } from "../../context/ConfirmationContext"; // Global Context
+import { useConfirm } from "../../context/ConfirmationContext";
 import { api } from "../../services/api";
 
 const ITEMS_PER_PAGE_ACTIVE = 12;
@@ -29,11 +29,10 @@ export default function MuralView({
   const navigate = useNavigate();
   const { status } = useParams();
   const [yearlyGoal, setYearlyGoal] = useState(20);
-  const scrollContainerRef = useRef(null);
+
   const { addToast } = useToast();
   const { confirm } = useConfirm();
 
-  // Default to 'reading' if no status in URL
   // Default to 'reading' if no status in URL
   const activeStatus = status || "reading";
 
@@ -60,9 +59,6 @@ export default function MuralView({
       setYearlyGoal(parseInt(savedGoal));
     }
   }, []);
-
-  // NOTE: Removed useEffect that resets page on status change,
-  // because we now want to persist per-status page in App state.
 
   // Filter books by status
   const getFilteredBooks = () => {
