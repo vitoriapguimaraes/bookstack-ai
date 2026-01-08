@@ -39,21 +39,36 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     }
     
     # Verify token with Supabase
+    # Verify token with Supabase
     try:
-        print(f"DEBUG: Requesting user from Supabase: {SUPABASE_URL}/auth/v1/user")
-        response = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=2)
+        # print(f"DEBUG: Requesting user from Supabase: {SUPABASE_URL}/auth/v1/user")
+        response = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=5)
         
-        print(f"DEBUG: Supabase response status: {response.status_code}")
         if response.status_code != 200:
             print(f"DEBUG: Supabase response text: {response.text}")
             raise HTTPException(status_code=401, detail="Invalid or Expired Token")
             
-        return response.json()
+        user_data = response.json()
+        user_id = user_data.get("id")
+
+        # --- Enforce Local IS_ACTIVE Check ---
+        # We need a quick database session here to check the profile status
+        from database import get_session
+        from models_preferences import Profile
+        
+        # Manually create a session since we are inside a dependency
+        session = next(get_session()) 
+        try:
+            profile = session.get(Profile, user_id)
+            if profile and not profile.is_active:
+                raise HTTPException(status_code=403, detail="User account is inactive. Contact admin.")
+        finally:
+            session.close() # Important to close!
+            
+        return user_data
+
     except requests.exceptions.Timeout:
         print("Auth Check Timeout: Supabase not reachable")
-        # For debugging purposes, if timeout, maybe we simulate a success for the admin email if hardcoded? 
-        # No, that requires decoding the token which we can't do without library.
-        # We will just raise the 401 with specific message.
         raise HTTPException(status_code=401, detail="Authentication Timeout (Supabase unreachable)")
     except HTTPException:
         raise
