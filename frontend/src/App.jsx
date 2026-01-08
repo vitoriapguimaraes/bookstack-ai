@@ -20,6 +20,7 @@ import AISettings from "./pages/Settings/AISettings";
 import FormulaSettings from "./pages/Settings/FormulaSettings";
 import AuditSettings from "./pages/Settings/AuditSettings";
 import ListSettings from "./pages/Settings/ListSettings";
+import AvailabilitySettings from "./pages/Settings/AvailabilitySettings";
 import PreferencesSettings from "./pages/Settings/PreferencesSettings";
 import GuideSettings from "./pages/Guide";
 import ScrollToTopBottom from "./components/ScrollToTopBottom";
@@ -333,6 +334,10 @@ export default function App() {
                   <Route path="ai" element={<AISettings />} />
                   <Route path="formula" element={<FormulaSettings />} />
                   <Route path="lists" element={<ListSettings />} />
+                  <Route
+                    path="availability"
+                    element={<AvailabilitySettings />}
+                  />
                   <Route path="audit" element={<AuditSettings />} />
                   <Route path="audit" element={<AuditSettings />} />
                   <Route path="preferences" element={<PreferencesSettings />} />
