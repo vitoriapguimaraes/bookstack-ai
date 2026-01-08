@@ -1,13 +1,36 @@
 import { useState } from "react";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BookForm from "../../components/BookForm";
+import { api } from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 export default function FormView({ editingBook, onFormSuccess, onCancel }) {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const { addToast } = useToast();
 
   const handleCancel = onCancel || (() => navigate(-1));
+
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir "${editingBook.title}"? Esta ação não pode ser desfeita.`
+      )
+    )
+      return;
+
+    setIsSaving(true);
+    try {
+      await api.delete(`/books/${editingBook.id}`);
+      addToast({ type: "success", message: "Livro excluído com sucesso!" });
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      addToast({ type: "error", message: "Erro ao excluir livro." });
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-[1600px] mx-auto p-4 md:p-8 animate-fade-in pb-20">
@@ -35,6 +58,16 @@ export default function FormView({ editingBook, onFormSuccess, onCancel }) {
           >
             <X size={18} /> Cancelar
           </button>
+
+          {editingBook && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="flex-none justify-center flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-sm font-bold"
+            >
+              <Trash2 size={18} /> Excluir
+            </button>
+          )}
           <button
             type="submit"
             form="book-form-main"

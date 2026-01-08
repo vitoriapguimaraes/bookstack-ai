@@ -167,29 +167,52 @@ export default function AuditSettings() {
 
         // Exact match
         if (t1 === t2) {
+          const groupId = crypto.randomUUID();
           foundIssues.push({
             ...b1,
             issueId: crypto.randomUUID(),
             issueType: "duplicate",
-            reason: `Título idêntico a "${b2.title}" (ID: ${b2.id})`,
+            matchGroupId: groupId,
+            reason: "Duplicidade Exata",
+            extraInfo: `Idêntico ao livro "${b2.title}" (ID: ${b2.id})`,
+          });
+          foundIssues.push({
+            ...b2,
+            issueId: crypto.randomUUID(),
+            issueType: "duplicate",
+            matchGroupId: groupId,
+            reason: "Duplicidade Exata",
+            extraInfo: `Idêntico ao livro "${b1.title}" (ID: ${b1.id})`,
           });
           continue;
         }
 
         // Fuzzy match
-        // Heuristic: If similarity is > 80% or distance < 3
         const dist = levenshteinDistance(t1, t2);
         const maxLength = Math.max(t1.length, t2.length);
         const similarity = 1 - dist / maxLength;
 
         if (similarity > 0.85 || (dist <= 2 && maxLength > 5)) {
+          const groupId = crypto.randomUUID();
           foundIssues.push({
             ...b1,
             issueId: crypto.randomUUID(),
             issueType: "duplicate",
-            reason: `Possível duplicata de "${b2.title}" (${(
+            matchGroupId: groupId,
+            reason: "Título Similar",
+            extraInfo: `Similar a "${b2.title}" (ID: ${b2.id}) - ${(
               similarity * 100
-            ).toFixed(0)}% similar)`,
+            ).toFixed(0)}%`,
+          });
+          foundIssues.push({
+            ...b2,
+            issueId: crypto.randomUUID(),
+            issueType: "duplicate",
+            matchGroupId: groupId,
+            reason: "Título Similar",
+            extraInfo: `Similar a "${b1.title}" (ID: ${b1.id}) - ${(
+              similarity * 100
+            ).toFixed(0)}%`,
           });
         }
       }
@@ -222,15 +245,26 @@ export default function AuditSettings() {
     }
   }, [aggregatedIssues, selectedReason]);
 
-  const filteredIssues = issues.filter((issue) => {
-    // If a specific reason is selected from the summary, show only that reason (ignore tabs)
-    if (selectedReason) return issue.reason === selectedReason;
+  const filteredIssues = issues
+    .filter((issue) => {
+      // If a specific reason is selected from the summary, show only that reason (ignore tabs)
+      if (selectedReason) return issue.reason === selectedReason;
 
-    // Otherwise respect the tab filter
-    if (filter !== "all") return issue.issueType === filter;
+      // Otherwise respect the tab filter
+      if (filter !== "all") return issue.issueType === filter;
 
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => {
+      // Keep duplicate pairs together
+      if (a.matchGroupId && b.matchGroupId) {
+        if (a.matchGroupId === b.matchGroupId) {
+          return a.title.localeCompare(b.title);
+        }
+        return a.matchGroupId.localeCompare(b.matchGroupId);
+      }
+      return 0;
+    });
 
   const handleSetFilter = (newFilter) => {
     setFilter(newFilter);
@@ -585,6 +619,17 @@ export default function AuditSettings() {
                           })()}
                         </div>
                         <div className="min-w-0 flex-1 overflow-hidden">
+                          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-mono mb-0.5">
+                            <span className="bg-slate-100 dark:bg-neutral-800 px-1 rounded border border-slate-200 dark:border-neutral-700">
+                              #{issue.id}
+                            </span>
+                            {issue.order !== null &&
+                              issue.order !== undefined && (
+                                <span className="text-purple-500 font-bold">
+                                  Ordem: {issue.order}
+                                </span>
+                              )}
+                          </div>
                           <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate pr-2">
                             {issue.title}
                           </div>
@@ -634,9 +679,16 @@ export default function AuditSettings() {
                     </td>
                     <td className="px-4 py-4 min-w-0">
                       <div className="flex items-start gap-2 min-w-0">
-                        <span className="text-[10px] text-slate-600 dark:text-slate-400 leading-snug whitespace-normal break-words">
-                          {issue.reason}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                            {issue.reason}
+                          </span>
+                          {issue.extraInfo && (
+                            <span className="text-[9px] text-slate-500 dark:text-slate-400">
+                              {issue.extraInfo}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right">
@@ -646,6 +698,34 @@ export default function AuditSettings() {
                         title="Corrigir"
                       >
                         <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (
+                            window.confirm(
+                              `Desesja realmente excluir "${issue.title}"?`
+                            )
+                          ) {
+                            try {
+                              await api.delete(`/books/${issue.id}`);
+                              addToast({
+                                type: "success",
+                                message: "Livro excluído!",
+                              });
+                              fetchData();
+                            } catch (err) {
+                              addToast({
+                                type: "error",
+                                message: "Erro ao excluir.",
+                              });
+                            }
+                          }
+                        }}
+                        className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm ml-2"
+                        title="Excluir"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </td>
                   </tr>

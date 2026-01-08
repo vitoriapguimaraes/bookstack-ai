@@ -156,8 +156,8 @@ def calculate_book_score(book: Book, config: dict = None) -> float:
     score += weights_type.get(book.type, weights_type.get('default', 2))
         
     # 2. Disponibilidade (H212)
-    if book.availability == "Estante":
-        score += weights_availability.get('Estante', 2)
+    if book.availability == "Físico":
+        score += weights_availability.get('Físico', 2)
     else:
         score += weights_availability.get('default', 0)
         

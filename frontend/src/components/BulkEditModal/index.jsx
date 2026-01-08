@@ -53,6 +53,13 @@ export default function BulkEditModal({ count, onClose, onSave }) {
   const [classCategories, setClassCategories] = useState(
     DEFAULT_CLASS_CATEGORIES
   );
+  const [availabilityOptions, setAvailabilityOptions] = useState([
+    "Físico",
+    "Virtual",
+    "Desejado",
+    "Emprestado",
+    "N/A",
+  ]);
 
   useEffect(() => {
     fetchPreferences();
@@ -66,6 +73,12 @@ export default function BulkEditModal({ count, onClose, onSave }) {
         Object.keys(res.data.class_categories).length > 0
       ) {
         setClassCategories(res.data.class_categories);
+      }
+      if (
+        res.data?.availability_options &&
+        res.data.availability_options.length > 0
+      ) {
+        setAvailabilityOptions(res.data.availability_options);
       }
     } catch (err) {
       console.error("Erro ao carregar listas no BulkEditModal:", err);
@@ -184,16 +197,11 @@ export default function BulkEditModal({ count, onClose, onSave }) {
                 className="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-white focus:border-purple-500 outline-none"
               >
                 <option value="">(Não Alterar)</option>
-                <option value="N/A">N/A</option>
-                <option value="Estante">Estante</option>
-                <option value="Estante Araçatuba">Estante Araçatuba</option>
-                <option value="Kindle">Kindle (E-book)</option>
-                <option value="PDF">PDF / Digital</option>
-                <option value="Audiobook">Audiobook</option>
-                <option value="Emprestado">Emprestado</option>
-                <option value="Biblioteca">Biblioteca</option>
-                <option value="Online">Web / Online</option>
-                <option value="A Comprar">Desejado / A Comprar</option>
+                {availabilityOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
