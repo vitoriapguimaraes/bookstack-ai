@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import BulkEditModal from "../../components/BulkEditModal";
+import { useConfirm } from "../../context/ConfirmationContext"; // Global Context
 import { useToast } from "../../context/ToastContext";
 
 // Levenshtein distance for fuzzy matching
@@ -73,6 +74,7 @@ export default function AuditSettings() {
   const [selectedIssues, setSelectedIssues] = useState([]);
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const { confirm } = useConfirm();
 
   // Clear selection when filter changes
   useEffect(() => {
@@ -285,28 +287,32 @@ export default function AuditSettings() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Tem certeza que deseja apagar ${selectedIssues.length} livros? Esta ação não pode ser desfeita.`
-      )
-    )
-      return;
-
-    setIsBulkProcessing(true);
-    try {
-      for (const id of selectedIssues) {
-        await api.delete(`/books/${id}`);
-      }
-      addToast({ type: "success", message: "Livros apagados com sucesso!" });
-      fetchData(); // Refresh to run audit again
-      setSelectedIssues([]);
-    } catch (err) {
-      console.error(err);
-      addToast({ type: "error", message: "Erro ao apagar alguns livros." });
-    } finally {
-      setIsBulkProcessing(false);
-    }
+  const handleBulkDelete = () => {
+    confirm({
+      title: "Confirmar Exclusão em Massa",
+      description: `Tem certeza que deseja apagar ${selectedIssues.length} livros? Esta ação não pode ser desfeita.`,
+      confirmText: "Sim, Excluir",
+      isDanger: true,
+      onConfirm: async () => {
+        setIsBulkProcessing(true);
+        try {
+          for (const id of selectedIssues) {
+            await api.delete(`/books/${id}`);
+          }
+          addToast({
+            type: "success",
+            message: "Livros apagados com sucesso!",
+          });
+          fetchData(); // Refresh to run audit again
+          setSelectedIssues([]);
+        } catch (err) {
+          console.error(err);
+          addToast({ type: "error", message: "Erro ao apagar alguns livros." });
+        } finally {
+          setIsBulkProcessing(false);
+        }
+      },
+    });
   };
 
   const handleBulkSave = async (updates) => {
@@ -702,25 +708,27 @@ export default function AuditSettings() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (
-                            window.confirm(
-                              `Desesja realmente excluir "${issue.title}"?`
-                            )
-                          ) {
-                            try {
-                              await api.delete(`/books/${issue.id}`);
-                              addToast({
-                                type: "success",
-                                message: "Livro excluído!",
-                              });
-                              fetchData();
-                            } catch (err) {
-                              addToast({
-                                type: "error",
-                                message: "Erro ao excluir.",
-                              });
-                            }
-                          }
+                          confirm({
+                            title: "Excluir Livro",
+                            description: `Deseja realmente excluir "${issue.title}"?`,
+                            confirmText: "Excluir",
+                            isDanger: true,
+                            onConfirm: async () => {
+                              try {
+                                await api.delete(`/books/${issue.id}`);
+                                addToast({
+                                  type: "success",
+                                  message: "Livro excluído!",
+                                });
+                                fetchData();
+                              } catch (err) {
+                                addToast({
+                                  type: "error",
+                                  message: "Erro ao excluir.",
+                                });
+                              }
+                            },
+                          });
                         }}
                         className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm ml-2"
                         title="Excluir"

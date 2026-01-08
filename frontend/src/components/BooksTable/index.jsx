@@ -6,17 +6,16 @@ import {
   Trash2,
   Search,
   X,
-  Check,
   Edit3,
   Trash,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import axios from "axios";
+import { api } from "../../services/api";
 import BulkEditModal from "../BulkEditModal";
 import MobileBookItem from "./MobileBookItem";
-
-const api = axios.create();
+import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmationContext";
 
 export default function BooksTable({
   books,
@@ -42,6 +41,8 @@ export default function BooksTable({
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const { addToast } = useToast();
+  const { confirm } = useConfirm();
 
   // Clear selection when filters change (to avoid operating on hidden items? or keep them? better clear to be safe)
   useEffect(() => {
@@ -213,16 +214,23 @@ export default function BooksTable({
     setTableState((prev) => ({ ...prev, sortConfig: { key, direction } }));
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Tem certeza que deseja apagar este livro?")) {
-      try {
-        await api.delete(`/api/books/${id}`);
-        onDelete(id);
-      } catch (err) {
-        alert("Erro ao deletar livro.");
-        console.error(err);
-      }
-    }
+  const handleDelete = (id) => {
+    confirm({
+      title: "Excluir Livro",
+      description: "Tem certeza que deseja apagar este livro?",
+      confirmText: "Excluir",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/api/books/${id}`);
+          onDelete(id);
+          addToast({ type: "success", message: "Livro deletado com sucesso!" });
+        } catch (err) {
+          addToast({ type: "error", message: "Erro ao deletar livro." });
+          console.error(err);
+        }
+      },
+    });
   };
 
   // --- Bulk Actions Handlers ---
@@ -241,29 +249,36 @@ export default function BooksTable({
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Tem certeza que deseja apagar ${selectedBooks.length} livros? Esta ação não pode ser desfeita.`
-      )
-    )
-      return;
-
-    setIsBulkProcessing(true);
-    try {
-      // Process sequentially to allow partial success and avoid overwhelming backend
-      for (const id of selectedBooks) {
-        await api.delete(`/api/books/${id}`);
-        onDelete(id); // Update parent list locally
-      }
-      setSelectedBooks([]);
-      alert("Livros apagados com sucesso!");
-    } catch (err) {
-      console.error(err);
-      alert("Houve um erro ao apagar alguns livros.");
-    } finally {
-      setIsBulkProcessing(false);
-    }
+  const handleBulkDelete = () => {
+    confirm({
+      title: "Exclusão em Massa",
+      description: `Tem certeza que deseja apagar ${selectedBooks.length} livros? Esta ação não pode ser desfeita.`,
+      confirmText: "Sim, Excluir",
+      isDanger: true,
+      onConfirm: async () => {
+        setIsBulkProcessing(true);
+        try {
+          // Process sequentially
+          for (const id of selectedBooks) {
+            await api.delete(`/api/books/${id}`);
+            onDelete(id); // Update parent list locally
+          }
+          setSelectedBooks([]);
+          addToast({
+            type: "success",
+            message: "Livros apagados com sucesso!",
+          });
+        } catch (err) {
+          console.error(err);
+          addToast({
+            type: "error",
+            message: "Houve um erro ao apagar alguns livros.",
+          });
+        } finally {
+          setIsBulkProcessing(false);
+        }
+      },
+    });
   };
 
   const handleBulkSave = async (updates) => {
@@ -283,10 +298,10 @@ export default function BooksTable({
       else window.location.reload(); // Fallback if no refresh handler
 
       setSelectedBooks([]);
-      alert("Atualização em massa concluída!");
+      addToast({ type: "success", message: "Atualização em massa concluída!" });
     } catch (err) {
       console.error(err);
-      alert("Erro ao atualizar livros.");
+      addToast({ type: "error", message: "Erro ao atualizar livros." });
     } finally {
       setIsBulkProcessing(false);
     }
@@ -885,6 +900,7 @@ export default function BooksTable({
           />,
           document.body
         )}
+      {/* Confirmation Modal - REMOVED (Global) */}
     </div>
   );
 }

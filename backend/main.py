@@ -247,6 +247,24 @@ def update_book(book_id: int, book_data: Book, session: Session = Depends(get_se
     session.refresh(book)
     return book
 
+@app.delete("/books/{book_id}")
+def delete_book(book_id: int, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    book = session.get(Book, book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Ownership Check
+    if book.user_id != user['id']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    # Handle Reordering
+    if book.order:
+        reorder_books(session, 'delete', user_id=user['id'], deleted_order=book.order)
+
+    session.delete(book)
+    session.commit()
+    return {"ok": True}
+
 
 # ... Preferences Endpoints ...
 
@@ -504,12 +522,12 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
     # Simple Admin Check
     requester_profile = session.get(Profile, user['id'])
     
-    print(f"DEBUG: Requesting user ID: {user['id']}")
-    print(f"DEBUG: Requesting user email: {user.get('email')}")
+
     if requester_profile:
-        print(f"DEBUG: Profile found. Role: {requester_profile.role}")
+        # Profile found
+
     else:
-        print("DEBUG: No profile found for this user.")
+
 
     is_admin = False
     if requester_profile and requester_profile.role == 'admin':
@@ -518,7 +536,7 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
         is_admin = True
         
     if not is_admin:
-        print("DEBUG: Access Denied. Not an admin.")
+
         raise HTTPException(status_code=403, detail="Admin access required")
         
     # Join Profile with UserPreference to get flags

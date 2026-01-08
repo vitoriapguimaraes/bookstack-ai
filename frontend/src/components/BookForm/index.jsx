@@ -180,7 +180,10 @@ export default function BookForm({
   };
 
   const handleAiSuggest = async () => {
-    if (!formData.title) return alert("Digite um título primeiro!");
+    if (!formData.title) {
+      addToast({ type: "warning", message: "Digite um título primeiro!" });
+      return;
+    }
 
     setAiLoading(true);
     setSuggestedCoverUrl(null);

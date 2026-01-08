@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { Star, Pencil, Trash2, Info, X } from "lucide-react";
-import { api } from "../../services/api"; // Use shared instance
 import { useTheme } from "../../context/ThemeContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export default function BookCard({ book, compact = false, onEdit, onDelete }) {
+export default function BookCard({
+  book,
+  compact = false,
+  onEdit,
+  onRequestDelete,
+}) {
   const { theme } = useTheme();
   const [showMotivation, setShowMotivation] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -55,19 +59,14 @@ export default function BookCard({ book, compact = false, onEdit, onDelete }) {
         book.cover_image
       )}`;
     }
-    // No debug log needed for missing cover
   }
 
   const handleDelete = async (e) => {
     e.stopPropagation();
-    if (window.confirm(`Tem certeza que deseja apagar "${book.title}"?`)) {
-      try {
-        await api.delete(`/books/${book.id}`); // Corrected endpoint usage
-        onDelete(book.id);
-      } catch (err) {
-        alert("Erro ao deletar");
-        console.error(err);
-      }
+    if (onRequestDelete) {
+      onRequestDelete(book);
+    } else {
+      console.error("Delete handler not provided for BookCard");
     }
   };
 

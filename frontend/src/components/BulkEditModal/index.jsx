@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { api } from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 const DEFAULT_CLASS_CATEGORIES = {
   "Tecnologia & IA": [
@@ -44,6 +45,7 @@ const DEFAULT_CLASS_CATEGORIES = {
 };
 
 export default function BulkEditModal({ count, onClose, onSave }) {
+  const { addToast } = useToast();
   const [updates, setUpdates] = useState({
     availability: "",
     book_class: "",
@@ -97,7 +99,10 @@ export default function BulkEditModal({ count, onClose, onSave }) {
     });
 
     if (Object.keys(cleanUpdates).length === 0) {
-      alert("Selecione pelo menos um campo para alterar.");
+      addToast({
+        type: "warning",
+        message: "Selecione pelo menos um campo para alterar.",
+      });
       return;
     }
 
