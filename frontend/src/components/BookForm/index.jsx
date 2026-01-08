@@ -57,7 +57,7 @@ const DEFAULT_AVAILABILITY_OPTIONS = [
   "Virtual",
   "A comprar",
   "Emprestado",
-  "NA",
+  "N/A",
 ];
 
 export default function BookForm({

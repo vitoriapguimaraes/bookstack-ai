@@ -20,6 +20,46 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import BulkEditModal from "../../components/BulkEditModal";
 import { useToast } from "../../context/ToastContext";
 
+// Levenshtein distance for fuzzy matching
+const levenshteinDistance = (a, b) => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+};
+
+const DEFAULT_AVAILABILITY_OPTIONS = [
+  "Físico",
+  "Virtual",
+  "A comprar",
+  "Emprestado",
+  "NA",
+];
+
 export default function AuditSettings() {
   const [books, setBooks] = useState([]);
   const [config, setConfig] = useState(null);
@@ -52,8 +92,11 @@ export default function AuditSettings() {
       ]);
       setBooks(booksRes.data);
       const classCats = configRes.data?.class_categories || {};
+      const availOptions =
+        configRes.data?.availability_options || DEFAULT_AVAILABILITY_OPTIONS;
+
       setConfig(classCats);
-      runAudit(booksRes.data, classCats);
+      runAudit(booksRes.data, classCats, availOptions);
     } catch (err) {
       console.error("Erro na auditoria:", err);
     } finally {
@@ -61,12 +104,14 @@ export default function AuditSettings() {
     }
   };
 
-  const runAudit = (allBooks, classCats) => {
+  const runAudit = (allBooks, classCats, availOptions) => {
     const foundIssues = [];
 
+    // 1. Check Metadata (Class, Category, Availability)
     allBooks.forEach((book) => {
       const bookClass = book.book_class || "";
       const category = book.category || "";
+      const availability = book.availability || "";
 
       const validClasses = Object.keys(classCats);
       const isClassValid = validClasses.includes(bookClass);
@@ -76,8 +121,11 @@ export default function AuditSettings() {
         const validCategories = classCats[bookClass] || [];
         isCategoryValid = validCategories.includes(category);
       } else {
-        isCategoryValid = false; // If class is invalid, category is implicitly problematic
+        isCategoryValid = false;
       }
+
+      // Check Availability
+      const isAvailabilityValid = availOptions.includes(availability);
 
       if (!isClassValid || !isCategoryValid) {
         foundIssues.push({
@@ -88,7 +136,60 @@ export default function AuditSettings() {
             : `Categoria "${category}" não existe na classe "${bookClass}".`,
         });
       }
+
+      if (!isAvailabilityValid) {
+        foundIssues.push({
+          ...book,
+          issueType: "availability",
+          reason: `Status "${availability}" não está na lista permitida.`,
+        });
+      }
     });
+
+    // 2. Check Duplicates (Fuzzy Matching)
+    // We compare every pair. For 1000 books, this is ~500k ops, which is fine in client JS.
+    const processedPairs = new Set();
+
+    for (let i = 0; i < allBooks.length; i++) {
+      for (let j = i + 1; j < allBooks.length; j++) {
+        const b1 = allBooks[i];
+        const b2 = allBooks[j];
+
+        // Skip if already flagged in metadata check? No, can be both.
+
+        // Normalize for comparison
+        const t1 = b1.title.toLowerCase().trim();
+        const t2 = b2.title.toLowerCase().trim();
+
+        if (t1.length < 3 || t2.length < 3) continue; // too short
+
+        // Exact match
+        if (t1 === t2) {
+          foundIssues.push({
+            ...b1,
+            issueType: "duplicate",
+            reason: `Título idêntico a "${b2.title}" (ID: ${b2.id})`,
+          });
+          continue;
+        }
+
+        // Fuzzy match
+        // Heuristic: If similarity is > 80% or distance < 3
+        const dist = levenshteinDistance(t1, t2);
+        const maxLength = Math.max(t1.length, t2.length);
+        const similarity = 1 - dist / maxLength;
+
+        if (similarity > 0.85 || (dist <= 2 && maxLength > 5)) {
+          foundIssues.push({
+            ...b1,
+            issueType: "duplicate",
+            reason: `Possível duplicata de "${b2.title}" (${(
+              similarity * 100
+            ).toFixed(0)}% similar)`,
+          });
+        }
+      }
+    }
 
     setIssues(foundIssues);
   };
@@ -118,14 +219,19 @@ export default function AuditSettings() {
   }, [aggregatedIssues, selectedReason]);
 
   const filteredIssues = issues.filter((issue) => {
-    let matchesType = true;
-    if (filter !== "all") matchesType = issue.issueType === filter;
+    // If a specific reason is selected from the summary, show only that reason (ignore tabs)
+    if (selectedReason) return issue.reason === selectedReason;
 
-    let matchesReason = true;
-    if (selectedReason) matchesReason = issue.reason === selectedReason;
+    // Otherwise respect the tab filter
+    if (filter !== "all") return issue.issueType === filter;
 
-    return matchesType && matchesReason;
+    return true;
   });
+
+  const handleSetFilter = (newFilter) => {
+    setFilter(newFilter);
+    setSelectedReason(null); // Clear specific selection when changing tabs
+  };
 
   const toggleSelectIssue = (id) => {
     setSelectedIssues((prev) =>
@@ -313,7 +419,11 @@ export default function AuditSettings() {
                       className={`p-2 rounded-xl scale-90 ${
                         agg.type === "class"
                           ? "bg-red-50 text-red-500"
-                          : "bg-orange-50 text-orange-500"
+                          : agg.type === "category"
+                          ? "bg-orange-50 text-orange-500"
+                          : agg.type === "availability"
+                          ? "bg-cyan-50 text-cyan-500"
+                          : "bg-blue-50 text-blue-500"
                       } dark:bg-neutral-800`}
                     >
                       <AlertTriangle size={16} />
@@ -370,10 +480,12 @@ export default function AuditSettings() {
               { id: "all", label: "Tudo" },
               { id: "class", label: "Classes" },
               { id: "category", label: "Categorias" },
+              { id: "availability", label: "Disponib." },
+              { id: "duplicate", label: "Duplicatas" },
             ].map((t) => (
               <button
                 key={t.id}
-                onClick={() => setFilter(t.id)}
+                onClick={() => handleSetFilter(t.id)}
                 className={`flex-1 md:flex-initial px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
                   filter === t.id
                     ? "bg-white dark:bg-neutral-700 shadow-sm text-purple-600 dark:text-purple-400"
@@ -429,28 +541,44 @@ export default function AuditSettings() {
                     <td className="px-4 py-4 min-w-0">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded flex-shrink-0 border border-slate-200 dark:border-neutral-700 flex items-center justify-center font-black text-[10px] text-slate-300 overflow-hidden shadow-sm">
-                          {issue.cover_image ? (
-                            <img
-                              src={
-                                issue.cover_image.startsWith("http")
-                                  ? `/api/proxy/image?url=${encodeURIComponent(
-                                      issue.cover_image
-                                    )}`
-                                  : issue.cover_image.startsWith("/")
-                                  ? issue.cover_image
-                                  : `/${issue.cover_image}`
+                          {(() => {
+                            const API_URL =
+                              import.meta.env.VITE_API_URL ||
+                              "http://localhost:8000";
+                            let coverUrl = null;
+                            const cover = issue.cover_image;
+
+                            if (cover) {
+                              if (cover.startsWith("http")) {
+                                coverUrl = cover.replace(/^http:/, "https:");
+                              } else {
+                                // Assume relative or needs proxy if not http?
+                                // Actually BooksTable logic says: if NOT http, use proxy.
+                                // But if it's a relative path "/foo.jpg", proxy?url=/foo.jpg fails.
+                                // Let's try direct usage if it starts with /
+                                if (cover.startsWith("/")) coverUrl = cover;
+                                else
+                                  coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
+                                    cover
+                                  )}`;
                               }
-                              alt={issue.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.style.display = "none";
-                                e.target.parentNode.innerHTML = issue.title[0];
-                              }}
-                            />
-                          ) : (
-                            issue.title[0]
-                          )}
+                            }
+
+                            return coverUrl ? (
+                              <img
+                                src={coverUrl}
+                                alt={issue.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.parentNode.innerText =
+                                    issue.title[0];
+                                }}
+                              />
+                            ) : (
+                              issue.title[0]
+                            );
+                          })()}
                         </div>
                         <div className="min-w-0 flex-1 overflow-hidden">
                           <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate pr-2">
@@ -484,6 +612,18 @@ export default function AuditSettings() {
                             }`}
                           >
                             {issue.category || "Nula"}
+                          </span>
+                        </div>
+                        {/* Status Tag for Availability */}
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                              issue.issueType === "availability"
+                                ? "bg-red-50 text-red-600 border border-red-100"
+                                : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                            }`}
+                          >
+                            {issue.availability || "Status Nulo"}
                           </span>
                         </div>
                       </div>
