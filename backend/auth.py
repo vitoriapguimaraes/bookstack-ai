@@ -23,7 +23,7 @@ def get_current_user(authorization: Optional[str] = Header(None)):
          raise HTTPException(status_code=401, detail="Missing Authentication Token")
     
     token = authorization.replace("Bearer ", "")
-    print(f"DEBUG: Checking Auth Token: {token[:10]}...")
+
     
     # Check Env
     if not SUPABASE_URL:
@@ -41,11 +41,11 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     # Verify token with Supabase
     # Verify token with Supabase
     try:
-        # print(f"DEBUG: Requesting user from Supabase: {SUPABASE_URL}/auth/v1/user")
+
         response = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=5)
         
         if response.status_code != 200:
-            print(f"DEBUG: Supabase response text: {response.text}")
+
             raise HTTPException(status_code=401, detail="Invalid or Expired Token")
             
         user_data = response.json()
