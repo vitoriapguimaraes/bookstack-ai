@@ -274,8 +274,37 @@ export default function PreferencesSettings() {
               Apagar todos os livros e começar do zero.
             </p>
           </div>
-          <button className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors uppercase tracking-wider">
-            Em Breve
+          <button
+            onClick={async () => {
+              if (
+                window.confirm(
+                  "ATENÇÃO: Você tem certeza absoluta que deseja apagar TODOS os seus livros? Essa ação é irreversível."
+                )
+              ) {
+                if (
+                  window.confirm(
+                    "Última chance: Todos os dados serão perdidos. Confirmar reset?"
+                  )
+                ) {
+                  try {
+                    await api.delete("/books/reset");
+                    addToast({
+                      type: "success",
+                      message: "Conta resetada com sucesso.",
+                    });
+                    setTimeout(() => window.location.reload(), 1000);
+                  } catch (err) {
+                    addToast({
+                      type: "error",
+                      message: "Erro ao resetar conta.",
+                    });
+                  }
+                }
+              }
+            }}
+            className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 transition-colors uppercase tracking-wider"
+          >
+            Resetar Conta
           </button>
         </div>
       </div>

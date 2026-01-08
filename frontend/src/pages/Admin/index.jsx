@@ -103,13 +103,16 @@ export default function Admin() {
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider">
                   Data de Cadastro
                 </th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-right">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
               {loading ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="6"
                     className="px-6 py-12 text-center text-slate-500 animate-pulse"
                   >
                     Carregando dados...
@@ -118,7 +121,7 @@ export default function Admin() {
               ) : users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="6"
                     className="px-6 py-12 text-center text-slate-500"
                   >
                     Nenhum usuário encontrado.
@@ -248,6 +251,69 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-slate-500 text-xs">
                       {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await api.post(
+                                `/admin/users/${u.id}/toggle_active`
+                              );
+                              // Refresh
+                              const updatedUsers = users.map((user) =>
+                                user.id === u.id
+                                  ? { ...user, is_active: !user.is_active }
+                                  : user
+                              );
+                              setUsers(updatedUsers);
+                            } catch (e) {
+                              alert("Erro ao alterar status");
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded border transition-all ${
+                            u.is_active
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                              : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                          }`}
+                        >
+                          {u.is_active ? "Ativo" : "Inativo"}
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (
+                              window.confirm(
+                                `Apagar usuário ${u.email}? Isso removerá TUDO.`
+                              )
+                            ) {
+                              try {
+                                await api.delete(`/admin/users/${u.id}`);
+                                setUsers(users.filter((x) => x.id !== u.id));
+                              } catch (e) {
+                                alert("Erro ao excluir usuário");
+                              }
+                            }
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
+                          title="Excluir Usuário"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

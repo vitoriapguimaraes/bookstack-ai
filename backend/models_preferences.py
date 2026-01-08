@@ -32,4 +32,5 @@ class Profile(SQLModel, table=True):
     id: str = Field(primary_key=True)
     email: str
     role: str = Field(default="user")
+    is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
