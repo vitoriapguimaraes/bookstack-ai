@@ -537,9 +537,9 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
             "created_at": profile.created_at,
             "has_api_keys": pref.has_api_keys if pref else False,
             "has_custom_prompts": pref.has_custom_prompts if pref else False,
-            "has_custom_prompts": pref.has_custom_prompts if pref else False,
             "has_custom_formula": pref.has_custom_formula if pref else False,
-            "has_custom_availability": pref.has_custom_availability if pref else False
+            "has_custom_availability": pref.has_custom_availability if pref else False,
+            "is_active": profile.is_active if profile else True
         }
         output.append(user_data)
         
