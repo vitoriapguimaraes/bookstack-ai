@@ -20,12 +20,12 @@ if database_url:
         database_url = database_url.replace("?pgbouncer=true", "")
         database_url = database_url.replace("&pgbouncer=true", "")
 
-    print("🔌 Conectando ao Banco de Dados REMOTO (PostgreSQL/Supabase)...")
+    print("Conectando ao Banco de Dados REMOTO (PostgreSQL/Supabase)...")
 else:
     # Fallback to local SQLite
     sqlite_file_name = os.path.join(BASE_DIR, "database.db")
     database_url = f"sqlite:///{sqlite_file_name}"
-    print("💾 Conectando ao Banco de Dados LOCAL (SQLite)")
+    print("Conectando ao Banco de Dados LOCAL (SQLite)")
 
 # Create engine
 # echo=False by default to avoid log spam, can be enabled for debugging

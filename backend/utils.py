@@ -45,6 +45,16 @@ CATEGORY_WEIGHTS = {
     "Engenharia de ML & MLOps": 5,
 }
 
+
+# Availability Options Default
+DEFAULT_AVAILABILITY_OPTIONS = [
+    "Físico",
+    "Virtual",
+    "A comprar",
+    "Emprestado",
+    "NA"
+]
+
 # Hierarchical classification: Classes and their Categories
 CLASS_CATEGORIES = {
     "Tecnologia & IA": [

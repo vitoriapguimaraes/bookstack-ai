@@ -19,6 +19,10 @@ class UserPreference(SQLModel, table=True):
     has_custom_prompts: bool = Field(default=False)
     has_custom_formula: bool = Field(default=False)
     has_custom_classes: bool = Field(default=False)
+    has_custom_availability: bool = Field(default=False)
+    
+    # Custom Lists
+    availability_options: Optional[list] = Field(default=None, sa_type=JSON)
     
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
