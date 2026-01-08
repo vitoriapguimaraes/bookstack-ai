@@ -57,7 +57,7 @@ const DEFAULT_AVAILABILITY_OPTIONS = [
   "Virtual",
   "A comprar",
   "Emprestado",
-  "NA",
+  "N/A",
 ];
 
 export default function AuditSettings() {
@@ -130,6 +130,7 @@ export default function AuditSettings() {
       if (!isClassValid || !isCategoryValid) {
         foundIssues.push({
           ...book,
+          issueId: crypto.randomUUID(),
           issueType: !isClassValid ? "class" : "category",
           reason: !isClassValid
             ? `Classe "${bookClass}" não existe no sistema.`
@@ -140,6 +141,7 @@ export default function AuditSettings() {
       if (!isAvailabilityValid) {
         foundIssues.push({
           ...book,
+          issueId: crypto.randomUUID(),
           issueType: "availability",
           reason: `Status "${availability}" não está na lista permitida.`,
         });
@@ -167,6 +169,7 @@ export default function AuditSettings() {
         if (t1 === t2) {
           foundIssues.push({
             ...b1,
+            issueId: crypto.randomUUID(),
             issueType: "duplicate",
             reason: `Título idêntico a "${b2.title}" (ID: ${b2.id})`,
           });
@@ -182,6 +185,7 @@ export default function AuditSettings() {
         if (similarity > 0.85 || (dist <= 2 && maxLength > 5)) {
           foundIssues.push({
             ...b1,
+            issueId: crypto.randomUUID(),
             issueType: "duplicate",
             reason: `Possível duplicata de "${b2.title}" (${(
               similarity * 100
@@ -523,7 +527,7 @@ export default function AuditSettings() {
               <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
                 {filteredIssues.map((issue) => (
                   <tr
-                    key={issue.id}
+                    key={issue.issueId}
                     className={`group hover:bg-slate-50/30 dark:hover:bg-neutral-800/30 transition-all font-medium ${
                       selectedIssues.includes(issue.id)
                         ? "bg-purple-50/50 dark:bg-purple-900/10"
