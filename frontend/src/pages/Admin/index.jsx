@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
 import {
   Shield,
@@ -16,6 +17,7 @@ import { SUPER_ADMIN_EMAIL } from "../../utils/constants";
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,8 +56,15 @@ export default function Admin() {
       await api.delete(`/admin/users/${deleteModal.user.id}`);
       setUsers(users.filter((x) => x.id !== deleteModal.user.id));
       setDeleteModal({ open: false, user: null });
+      addToast({
+        type: "success",
+        message: "Usuário excluído com sucesso!",
+      });
     } catch (e) {
-      alert("Erro ao excluir usuário");
+      addToast({
+        type: "error",
+        message: "Erro ao excluir usuário (verifique se já foi removido).",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -72,8 +81,19 @@ export default function Admin() {
       );
       setUsers(updatedUsers);
       setStatusModal({ open: false, user: null });
+      addToast({
+        type: "success",
+        message: `Status alterado para ${
+          updatedUsers.find((u) => u.id === statusModal.user.id)?.is_active
+            ? "ATIVO"
+            : "INATIVO"
+        }`,
+      });
     } catch (e) {
-      alert("Erro ao alterar status");
+      addToast({
+        type: "error",
+        message: "Erro ao alterar status do usuário.",
+      });
     } finally {
       setActionLoading(false);
     }

@@ -709,6 +709,13 @@ def delete_own_account(session: Session = Depends(get_session), user: dict = Dep
                 </div>
                 """
             )
+            
+            # COPY TO ADMIN
+            send_email(
+                to_email="bookstackai@gmail.com",
+                subject=f"ALERTA: Conta Excluída ({user_email})",
+                body_html=f"<p>O usuário <b>{user_email}</b> excluiu a própria conta.</p>"
+            )
         
         return {"message": "Conta excluída com sucesso."}
         
@@ -767,6 +774,13 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
                 </div>
                 """
             )
+
+        # COPY TO ADMIN
+        send_email(
+            to_email="bookstackai@gmail.com",
+            subject=f"ALERTA: Conta Excluída por Admin ({target_email})",
+            body_html=f"<p>O usuário <b>{target_email}</b> foi excluído por um administrador.</p>"
+        )
 
         return {"message": f"Usuário {target_user_id} excluído com sucesso."}
     except HTTPException:
