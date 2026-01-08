@@ -12,6 +12,7 @@ import {
   LogOut,
   Shield,
   AlertTriangle,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
@@ -35,6 +36,7 @@ export default function SettingsLayout({ onEdit }) {
       ai: "IA & Prompts",
       formula: "Fórmula de Score",
       lists: "Listas e Opções",
+      availability: "Disponibilidade",
       audit: "Auditoria de Dados",
       preferences: "Preferências",
       administrador: "Painel do Administrador",
@@ -84,6 +86,12 @@ export default function SettingsLayout({ onEdit }) {
             icon={List}
           />
           <SidebarItem
+            to="availability"
+            title="Disponibilidade"
+            subtitle="Opções de Status"
+            icon={Layers}
+          />
+          <SidebarItem
             to="audit"
             title="Auditoria"
             subtitle="Consistência de dados"
@@ -130,6 +138,7 @@ export default function SettingsLayout({ onEdit }) {
         <MobileTab to="ai" label="IA" icon={Sparkles} />
         <MobileTab to="formula" label="Score" icon={Calculator} />
         <MobileTab to="lists" label="Listas" icon={List} />
+        <MobileTab to="availability" label="Disp." icon={Layers} />
         <MobileTab to="audit" label="Audit" icon={Shield} />
 
         <MobileTab to="preferences" label="Pref." icon={User} />

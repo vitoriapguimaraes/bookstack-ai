@@ -32,9 +32,9 @@ def migrate():
                 try:
                     conn.execute(text(f"ALTER TABLE user_preferences ADD COLUMN availability_options {col_type}"))
                     conn.commit()
-                    print("✅ availability_options added.")
+                    print("availability_options added.")
                 except Exception as e:
-                    print(f"❌ Error adding availability_options: {e}")
+                    print(f"Error adding availability_options: {e}")
             else:
                 print("availability_options already exists.")
 
@@ -48,9 +48,9 @@ def migrate():
                 try:
                     conn.execute(text(f"ALTER TABLE user_preferences ADD COLUMN has_custom_availability {col_type} DEFAULT {default_val}"))
                     conn.commit()
-                    print("✅ has_custom_availability added.")
+                    print("has_custom_availability added.")
                 except Exception as e:
-                    print(f"❌ Error adding has_custom_availability: {e}")
+                    print(f"Error adding has_custom_availability: {e}")
             else:
                 print("has_custom_availability already exists.")
 

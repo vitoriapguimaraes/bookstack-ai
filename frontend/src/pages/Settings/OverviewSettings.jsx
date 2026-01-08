@@ -76,6 +76,19 @@ export default function OverviewSettings() {
         />
 
         <FeatureCard
+          icon={List}
+          title="Disponibilidade"
+          description="Personalize as opções de status físico/virtual."
+          onClick={() => navigate("/settings/availability")}
+          color="bg-cyan-500"
+          features={[
+            "Gerenciar Tipos de Mídia",
+            "Opções Personalizadas",
+            "Controle de Estoque",
+          ]}
+        />
+
+        <FeatureCard
           icon={Shield}
           title="Auditoria de Dados"
           description="Mantenha a integridade da sua biblioteca em dia."

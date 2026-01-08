@@ -17,7 +17,7 @@ import { hslToString, getClassBaseHSL } from "../../utils/analyticsUtils.js";
 
 const DEFAULT_CONFIG = {
   type: { Técnico: 0, default: 0 },
-  availability: { Estante: 0, default: 0 },
+  availability: { Físico: 0, default: 0 },
   priority: {
     "1 - Baixa": 0,
     "2 - Média": 0,
@@ -88,7 +88,7 @@ export default function FormulaSettings() {
   // Simulation State
   const [simBook, setSimBook] = useState({
     type: "Técnico",
-    availability: "Estante",
+    availability: "Físico",
     priority: "4 - Alta",
     year: new Date().getFullYear(),
     book_class: "Tecnologia & IA",
@@ -296,9 +296,9 @@ export default function FormulaSettings() {
                 onChange={(v) => updateType("default", v)}
               />
               <InputGroup
-                label="Na Estante Física"
-                value={config.availability?.["Estante"] || 0}
-                onChange={(v) => updateAvail("Estante", v)}
+                label="Livro Físico"
+                value={config.availability?.["Físico"] || 0}
+                onChange={(v) => updateAvail("Físico", v)}
               />
             </div>
           </div>
@@ -548,9 +548,8 @@ export default function FormulaSettings() {
                                     availability: e.target.value,
                                   })
                                 }
-                                className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none cursor-pointer"
                               >
-                                <option value="Estante">Estante</option>
+                                <option value="Físico">Físico</option>
                                 <option value="Digital">Digital</option>
                               </select>
                             </div>
