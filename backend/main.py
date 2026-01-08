@@ -628,9 +628,85 @@ async def upload_book_cover(book_id: int, file: UploadFile = File(...), session:
         
         return book
 
-    except Exception as e:
-        print(f"Upload Error: {e}")
-        detail = str(e)
         if "Bucket not found" in detail:
             detail = "Bucket 'book-covers' does not exist."
         raise HTTPException(status_code=500, detail=f"Upload Failed: {detail}")
+
+# --- Account Reset ---
+
+@app.delete("/books/reset")
+def reset_account(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    """
+    Apaga TODOS os livros do usuário atual. Ação irreversível.
+    """
+    try:
+        # Delete all books for this user
+        statement = select(Book).where(Book.user_id == user['id'])
+        books = session.exec(statement).all()
+        
+        for book in books:
+            session.delete(book)
+            
+        session.commit()
+        return {"message": "Conta resetada com sucesso. Todos os livros foram apagados."}
+    except Exception as e:
+        session.rollback()
+        print(f"Erro ao resetar conta: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao resetar conta")
+
+# --- Admin User Management ---
+
+@app.delete("/admin/users/{target_user_id}")
+def delete_user(target_user_id: str, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Check Admin
+    requester_profile = session.get(Profile, user['id'])
+    if not requester_profile or requester_profile.role != 'admin':
+        # Fallback hardcoded check
+        if user.get('email') != 'vipistori@gmail.com':
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
+    try:
+        # 1. Delete User Preferences
+        pref = session.get(UserPreference, target_user_id)
+        if pref: session.delete(pref)
+        
+        # 2. Delete User Profile
+        profile = session.get(Profile, target_user_id)
+        if profile: session.delete(profile)
+        
+        # 3. Delete User Books
+        books = session.exec(select(Book).where(Book.user_id == target_user_id)).all()
+        for book in books:
+            session.delete(book)
+            
+        session.commit()
+        return {"message": f"Usuário {target_user_id} excluído com sucesso."}
+    except Exception as e:
+        session.rollback()
+        print(f"Erro ao excluir usuário: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao excluir usuário")
+
+@app.post("/admin/users/{target_user_id}/toggle_active")
+def toggle_user_active(target_user_id: str, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+    # Check Admin
+    requester_profile = session.get(Profile, user['id'])
+    if not requester_profile or requester_profile.role != 'admin':
+        if user.get('email') != 'vipistori@gmail.com':
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
+    try:
+        profile = session.get(Profile, target_user_id)
+        if not profile:
+             raise HTTPException(status_code=404, detail="Usuário não encontrado")
+             
+        # Toggle current status (default to True if not set)
+        current_status = getattr(profile, 'is_active', True)
+        profile.is_active = not current_status
+        session.add(profile)
+        session.commit()
+        
+        return {"message": "Status alterado com sucesso", "is_active": profile.is_active}
+
+    except Exception as e:
+        print(f"Erro ao alterar status: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao alterar status")
