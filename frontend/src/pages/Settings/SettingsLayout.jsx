@@ -26,8 +26,13 @@ export default function SettingsLayout({ onEdit }) {
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
-    await signOut();
-    navigate("/login");
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      navigate("/login");
+    }
   };
 
   const getCurrentSection = () => {

@@ -51,10 +51,6 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-
-
-
-
 def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
     """
     Reorganiza a ordem dos livros baseado na operação.
