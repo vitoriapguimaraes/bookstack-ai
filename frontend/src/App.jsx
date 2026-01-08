@@ -32,6 +32,7 @@ import PrivateRoute from "./components/PrivateRoute";
 
 import axios from "axios";
 import { api } from "./services/api";
+import { CONTACT_EMAIL } from "./utils/constants";
 
 export default function App() {
   const location = useLocation();
@@ -210,7 +211,7 @@ export default function App() {
                   <p className="text-xs opacity-80">
                     Aguarde um momento e recarregue a página. Se o erro
                     persistir, entre em contato:{" "}
-                    <b className="select-all">vipistori@gmail.com</b>
+                    <b className="select-all">{CONTACT_EMAIL}</b>
                   </p>
                 </div>
               </div>

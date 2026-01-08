@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { SUPER_ADMIN_EMAIL } from "../../utils/constants";
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
@@ -300,7 +301,7 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {u.email === "vipistori@gmail.com" ? (
+                        {u.email === SUPER_ADMIN_EMAIL ? (
                           <span className="text-[10px] text-slate-400 font-medium px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded border border-slate-200 dark:border-neutral-700">
                             Super Admin
                           </span>
