@@ -1,16 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  BookOpen,
-  Star,
-  Activity,
-  Layers,
-  Library,
-  Camera,
-} from "lucide-react";
+import { BookOpen, Star, Library, Camera } from "lucide-react";
 import { useAnalyticsData } from "../../components/Dashboard/useAnalyticsData.js";
 import BookshelfShowcase from "../../components/Bookshelf/BookshelfShowcase.jsx";
-import ShowcaseExporter from "../../components/Bookshelf/ShowcaseExporter.jsx";
+import BookshelfExporter from "../../components/Bookshelf/BookshelfExporter.jsx";
 
 export default function HomeView({ books }) {
   const navigate = useNavigate();
@@ -349,7 +342,7 @@ export default function HomeView({ books }) {
 
       {/* Export Modal */}
       {showExporter && (
-        <ShowcaseExporter
+        <BookshelfExporter
           books={filteredBooks}
           selectedYears={selectedYears}
           filterClass={filterClass}
