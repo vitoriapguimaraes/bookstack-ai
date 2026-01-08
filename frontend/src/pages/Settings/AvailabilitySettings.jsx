@@ -6,9 +6,9 @@ import { useToast } from "../../context/ToastContext";
 const DEFAULT_AVAILABILITY_OPTIONS = [
   "Físico",
   "Virtual",
-  "A comprar",
+  "Desejado",
   "Emprestado",
-  "NA",
+  "N/A",
 ];
 
 export default function AvailabilitySettings() {

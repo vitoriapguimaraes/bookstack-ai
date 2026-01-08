@@ -55,7 +55,7 @@ const DEFAULT_CLASS_CATEGORIES = {
 const DEFAULT_AVAILABILITY_OPTIONS = [
   "Físico",
   "Virtual",
-  "A comprar",
+  "Desejado",
   "Emprestado",
   "N/A",
 ];

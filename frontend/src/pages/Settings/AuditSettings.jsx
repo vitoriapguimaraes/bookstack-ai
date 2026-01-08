@@ -55,7 +55,7 @@ const levenshteinDistance = (a, b) => {
 const DEFAULT_AVAILABILITY_OPTIONS = [
   "Físico",
   "Virtual",
-  "A comprar",
+  "Desejado",
   "Emprestado",
   "N/A",
 ];

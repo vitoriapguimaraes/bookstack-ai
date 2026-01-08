@@ -50,9 +50,9 @@ CATEGORY_WEIGHTS = {
 DEFAULT_AVAILABILITY_OPTIONS = [
     "Físico",
     "Virtual",
-    "A comprar",
+    "Desejado",
     "Emprestado",
-    "NA"
+    "N/A"
 ]
 
 # Hierarchical classification: Classes and their Categories
