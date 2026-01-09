@@ -51,8 +51,8 @@ export function DistributionChart({
               {dataLidos.reduce((a, b) => a + b.value, 0)}
             </span>
           </p>
-          <div className="flex-1 min-h-0 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-h-0 min-w-0 w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               {chartType === "pie" ? (
                 <PieChart>
                   <Pie
@@ -159,8 +159,8 @@ export function DistributionChart({
               {dataNaoLidos.reduce((a, b) => a + b.value, 0)}
             </span>
           </p>
-          <div className="flex-1 min-h-0 w-full pl-0 md:pl-6">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-h-0 min-w-0 w-full pl-0 md:pl-6">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               {chartType === "pie" ? (
                 <PieChart>
                   <Pie

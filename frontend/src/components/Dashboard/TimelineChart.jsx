@@ -138,7 +138,7 @@ export function TimelineChart({ stats, timelineType, timelinePeriod }) {
   return (
     <div className="w-full flex flex-col md:flex-row gap-4">
       <div className="w-full h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart
             data={currentData}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}

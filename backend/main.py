@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -678,7 +678,7 @@ def reset_account(session: Session = Depends(get_session), user: dict = Depends(
         raise HTTPException(status_code=500, detail="Erro ao resetar conta")
 
 @app.delete("/users/me")
-def delete_own_account(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+def delete_own_account(background_tasks: BackgroundTasks, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     """
     Usuário exclui sua PRÓPRIA conta e todos os dados.
     """
@@ -706,8 +706,10 @@ def delete_own_account(session: Session = Depends(get_session), user: dict = Dep
         session.commit()
         
         # 4. Send Goodbye Email
+        # 4. Send Goodbye Email (Background)
         if user_email:
-            send_email(
+            background_tasks.add_task(
+                send_email,
                 to_email=user_email,
                 subject="Sua conta foi excluída - BookStack",
                 body_html=f"""
@@ -722,8 +724,9 @@ def delete_own_account(session: Session = Depends(get_session), user: dict = Dep
                 """
             )
             
-            # COPY TO ADMIN
-            send_email(
+            # COPY TO ADMIN (Background)
+            background_tasks.add_task(
+                send_email,
                 to_email="bookstackai@gmail.com",
                 subject=f"ALERTA: Conta Excluída ({user_email})",
                 body_html=f"<p>O usuário <b>{user_email}</b> excluiu a própria conta.</p>"
@@ -740,7 +743,7 @@ def delete_own_account(session: Session = Depends(get_session), user: dict = Dep
 # --- Admin User Management ---
 
 @app.delete("/admin/users/{target_user_id}")
-def delete_user(target_user_id: str, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+def delete_user(target_user_id: str, background_tasks: BackgroundTasks, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     # Check Admin
     requester_profile = session.get(Profile, user['id'])
     if not requester_profile or requester_profile.role != 'admin':
@@ -773,8 +776,10 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
         session.commit()
         
         # 4. Notify User
+        # 4. Notify User (Background)
         if target_email:
-             send_email(
+             background_tasks.add_task(
+                send_email,
                 to_email=target_email,
                 subject="Aviso: Sua conta foi excluída",
                 body_html=f"""
@@ -787,8 +792,9 @@ def delete_user(target_user_id: str, session: Session = Depends(get_session), us
                 """
             )
 
-        # COPY TO ADMIN
-        send_email(
+        # COPY TO ADMIN (Background)
+        background_tasks.add_task(
+            send_email,
             to_email="bookstackai@gmail.com",
             subject=f"ALERTA: Conta Excluída por Admin ({target_email})",
             body_html=f"<p>O usuário <b>{target_email}</b> foi excluído por um administrador.</p>"
