@@ -190,7 +190,7 @@ export default function BookshelfExporter({
                   <div className="mb-6 flex items-center justify-between border-b border-slate-200/60 pb-4">
                     <div className="flex items-baseline gap-3">
                       <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                        Minha Estante Virtual
+                        Minha Estante
                       </h1>
                       <span className="text-2xl font-light text-slate-400">
                         {filterSummary()}
