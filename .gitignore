@@ -1,1 +1,3 @@
-/original_streamlit_app
+.env
+marketing.txt
+__pycache__
