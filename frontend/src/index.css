@@ -7,9 +7,49 @@
   color-scheme: light dark;
 }
 
-body {
+@layer base {
+  :root {
+    --tooltip-bg: #ffffff;
+    --tooltip-border: #e2e8f0;
+    --tooltip-text: #1e293b;
+    --tooltip-cursor: #f1f5f9;
+    --text-secondary: #64748b;
+  }
+
+  .dark {
+    --tooltip-bg: #171717;
+    --tooltip-border: #262626;
+    --tooltip-text: #ffffff;
+    --tooltip-cursor: #262626;
+    --text-secondary: #a3a3a3;
+  }
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  @apply bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-slate-100 transition-colors duration-300;
+}
+
+body {
   min-width: 320px;
   min-height: 100vh;
-  @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100;
+}
+
+/* Custom Scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-600;
 }

@@ -1,204 +1,397 @@
-import { useState, useEffect } from 'react'
-import { BookOpen, Layers, CheckCircle } from 'lucide-react'
-import Sidebar from './components/Sidebar'
-import BookCard from './components/BookCard'
-import BooksTable from './components/BooksTable'
-import BookForm from './components/BookForm'
-import Analytics from './components/Analytics'
-import axios from 'axios'
+import { useState, useEffect, useRef } from "react";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import Sidebar from "./components/Sidebar";
+import MobileHeader from "./components/Layout/MobileHeader";
+import Mural from "./pages/Mural";
+import BooksList from "./pages/BooksList";
+import Analytics from "./pages/Analytics";
+import BookFormPage from "./pages/BookForm";
+import Home from "./pages/Home";
+import SettingsLayout from "./pages/Settings/SettingsLayout";
+import OverviewSettings from "./pages/Settings/OverviewSettings";
+import AISettings from "./pages/Settings/AISettings";
+import FormulaSettings from "./pages/Settings/FormulaSettings";
+import AuditSettings from "./pages/Settings/AuditSettings";
+import ListSettings from "./pages/Settings/ListSettings";
+import AvailabilitySettings from "./pages/Settings/AvailabilitySettings";
+import PreferencesSettings from "./pages/Settings/PreferencesSettings";
+import GuideSettings from "./pages/Guide";
+import ScrollToTopBottom from "./components/ScrollToTopBottom";
+import Login from "./pages/Login";
+import Admin from "./pages/Admin";
+import { useAuth } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
+import { ConfirmationProvider } from "./context/ConfirmationContext";
+import PrivateRoute from "./components/PrivateRoute";
 
-// Configura o Axios (sem baseURL fixa para usar o proxy do Vite)
-const api = axios.create()
+import { api } from "./services/api";
+import { CONTACT_EMAIL } from "./utils/constants";
 
-function App() {
-  const [books, setBooks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [tab, setTab] = useState('mural') // 'mural', 'table', 'analytics'
-  const [editingBook, setEditingBook] = useState(null)
-  
-  // States for Sidebar Filters
-  const [searchTerm, setSearchTerm] = useState('')
-  const [activeStatuses, setActiveStatuses] = useState(['Lendo', 'A Ler', 'Lido'])
+export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
+  const mainRef = useRef(null);
 
+  // Scroll to top on route change
   useEffect(() => {
-    fetchBooks()
-  }, [])
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.pathname]);
+
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingBook, setEditingBook] = useState(null);
+
+  // Configure Axios Token
+  useEffect(() => {
+    if (session?.access_token) {
+      api.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${session.access_token}`;
+    } else {
+      delete api.defaults.headers.common["Authorization"];
+    }
+  }, [session]);
+
+  // Table Persistence State
+  const [tableState, setTableState] = useState({
+    sortConfig: { key: "order", direction: "asc" },
+    searchTerm: "",
+    selectedClasses: [],
+    selectedCategories: [],
+    selectedStatuses: [],
+    selectedPriorities: [],
+    selectedAvailabilities: [],
+    yearRange: null,
+  });
+
+  // Mural Persistence State
+  const [muralState, setMuralState] = useState(() => {
+    const saved = localStorage.getItem("muralState");
+    return saved ? JSON.parse(saved) : { reading: 1, "to-read": 1, read: 1 };
+  });
+
+  // Persist Mural State
+  useEffect(() => {
+    localStorage.setItem("muralState", JSON.stringify(muralState));
+  }, [muralState]);
+
+  // --- Mobile Menu State ---
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isLoginPage = location.pathname === "/login";
+
+  // Fetch books only when session is ready
+  useEffect(() => {
+    if (!authLoading && session) {
+      fetchBooks();
+    } else if (!authLoading && !session) {
+      setLoading(false);
+    }
+  }, [authLoading, session]);
 
   const fetchBooks = async () => {
     try {
-      console.log("Fetching books from /api/books/...")
-      const res = await api.get('/api/books/')
-      setBooks(res.data)
-      setError(null)
+      // Security Check: ensure token exists
+      if (!session?.access_token) return;
+
+      setLoading(true);
+
+      // Explicitly pass token to avoid race conditions with interceptors/defaults
+      const config = {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      };
+
+      // Enforce a small minimum loading time to avoid "empty state" flash (reduced)
+      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
+      const [res] = await Promise.all([
+        api.get("/books/", config),
+        minLoadTime,
+      ]);
+
+      setBooks(res.data);
+      setError(null);
     } catch (err) {
-      console.error("Erro ao buscar livros:", err)
-      setError("Não foi possível conectar ao backend python. Detalhes no console.")
+      console.error("Erro ao buscar livros:", err);
+      setError("Falha de Conexão");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (book) => {
-    setEditingBook(book)
-    setTab('admin')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+    setEditingBook(book);
+    navigate("/edit");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleDelete = (id) => {
-    setBooks(prev => prev.filter(b => b.id !== id))
-  }
+    setBooks((prev) => prev.filter((b) => b.id !== id));
+  };
 
   const handleFormSuccess = () => {
-    setEditingBook(null)
-    fetchBooks()
-    setTab('mural') 
-  }
+    setEditingBook(null);
+    fetchBooks();
+    navigate(-1);
+  };
 
-  const handleFilterChange = (type, value, checked) => {
-      if (type === 'search') {
-          setSearchTerm(value.toLowerCase())
-      }
-      if (type === 'status') {
-          setActiveStatuses(prev => 
-            checked ? [...prev, value] : prev.filter(s => s !== value)
-          )
-      }
-  }
+  const handleOpenForm = () => {
+    setEditingBook(null);
+    navigate("/create");
+  };
 
-  // Filter Logic
-  const filteredBooks = books.filter(book => {
-      // 1. Search (Title or Author)
-      const matchesSearch = book.title.toLowerCase().includes(searchTerm) || 
-                            book.author.toLowerCase().includes(searchTerm)
-      // 2. Status
-      // Note: 'status' in DB might differ slightly ('A Ler' vs 'A ler'), normalize if needed.
-      // But we mapped strictly in migration.
-      const matchesStatus = activeStatuses.includes(book.status)
-      
-      return matchesSearch && matchesStatus
-  })
-
-  // Derived lists for Mural
-  const reading = filteredBooks.filter(b => b.status === 'Lendo')
-  const toRead = filteredBooks.filter(b => b.status === 'A Ler')
-  const read = filteredBooks.filter(b => b.status === 'Lido')
+  const isDataRoute =
+    !location.pathname.startsWith("/guide") &&
+    !location.pathname.startsWith("/settings");
+  const showLoader = (authLoading || (loading && isDataRoute)) && !isLoginPage;
 
   return (
-    <div className="min-h-screen bg-black text-slate-100 font-sans flex">
-      {/* Sidebar Navigation */}
-      <Sidebar 
-          currentTab={tab === 'admin' ? 'table' : tab}
-          setTab={setTab} 
-          onAddBook={() => { setEditingBook(null); setTab('admin'); }}
-          filters={{ searchTerm, activeStatuses }}
-          onFilterChange={handleFilterChange}
-      />
-      
-      {/* Main Content Area */}
-      <main className="flex-1 ml-20 p-8 transition-all duration-300">
-        <div className="w-full">
-            {error && (
-                <div className="bg-red-900/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-6">
-                    <p>⚠️ {error}</p>
-                    <p className="text-sm">Dica: Rode `uvicorn main:app --reload` na pasta backend.</p>
+    <ToastProvider>
+      <ConfirmationProvider>
+        <div
+          className={
+            // ...
+            isLoginPage
+              ? "min-h-screen w-full bg-slate-50 dark:bg-neutral-950"
+              : "h-screen bg-slate-50 dark:bg-neutral-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 flex flex-col md:flex-row overflow-hidden w-full"
+          }
+        >
+          {/* Mobile Header (Visible < md) */}
+          {!isLoginPage && (
+            <PrivateRoute>
+              <MobileHeader
+                onMenuClick={() => setIsMobileMenuOpen(true)}
+                onAddBook={() => handleOpenForm()}
+              />
+            </PrivateRoute>
+          )}
+
+          {/* Sidebar (Desktop Fixed / Mobile Drawer) */}
+          {!isLoginPage && (
+            <PrivateRoute>
+              <Sidebar
+                onAddBook={() => handleOpenForm()}
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+              />
+            </PrivateRoute>
+          )}
+
+          {/* Main Content Area - Scrollable */}
+          <main
+            ref={mainRef}
+            className={
+              isLoginPage
+                ? "w-full h-full"
+                : "flex-1 h-full overflow-y-auto overflow-x-hidden transition-all duration-300 w-full md:ml-20 ml-0 pt-16 md:pt-0"
+            }
+          >
+            <div className={isLoginPage ? "h-full" : "w-full min-h-full"}>
+              {error && !isLoginPage && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 px-4 py-4 rounded-lg mb-6 flex items-start gap-3 animate-fade-in mx-4 mt-4">
+                  <div className="text-xl">⚠️</div>
+                  <div>
+                    <h3 className="font-bold text-sm uppercase tracking-wider mb-1">
+                      Conexão Interrompida
+                    </h3>
+                    <p className="text-sm mb-2">
+                      Não foi possível carregar seus livros no momento. Pode
+                      haver uma instabilidade temporária no banco de dados.
+                    </p>
+                    <p className="text-xs opacity-80">
+                      Aguarde um momento e recarregue a página. Se o erro
+                      persistir, entre em contato:{" "}
+                      <b className="select-all">{CONTACT_EMAIL}</b>
+                    </p>
+                  </div>
                 </div>
-            )}
+              )}
 
-            {loading && <p className="text-center mt-20 text-lg animate-pulse text-neutral-500">Carregando biblioteca...</p>}
-            
-            {!loading && tab === 'mural' && (
-            <div className="space-y-12 pb-20 animate-fade-in">
-                {/* Lendo Agora */}
-                {reading.length > 0 && (
-                    <section>
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Lendo Agora
-                           <span className="bg-purple-500/20 text-purple-400 text-xs font-medium px-2 py-0.5 rounded border border-purple-500/30">
-                               {reading.length}
-                           </span>
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {reading.map(book => <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />)}
+              {showLoader && (
+                <div className="flex flex-col items-center justify-center h-[50vh] animate-fade-in gap-4 text-center px-4">
+                  <Loader2
+                    className="animate-spin text-emerald-600 dark:text-emerald-400"
+                    size={48}
+                  />
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
+                      Carregando sua Biblioteca...
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
+                      O servidor pode estar "acordando" se ficou inativo. Isso
+                      pode levar até 1 minuto.
+                      <br />
+                      <span className="text-xs opacity-70 mt-1 block">
+                        Agradecemos sua paciência! ☕
+                      </span>
+                    </p>
+                  </div>
                 </div>
-              </section>
-                )}
+              )}
 
-                {/* A Ler (Fila) */}
-                {toRead.length > 0 && (
-                    <section>
-                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Próximos da Fila
-                           <span className="bg-amber-500/20 text-amber-400 text-xs font-medium px-2 py-0.5 rounded border border-amber-500/30">
-                               {toRead.length}
-                           </span>
-                         </h2>
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                           {toRead
-                              .sort((a,b) => (a.order||999) - (b.order||999))
-                              .map(book => (
-                                <BookCard key={book.id} book={book} onEdit={handleEdit} onDelete={handleDelete} />
-                           ))}
-                         </div>
-                    </section>
-                )}
-                
-                {/* Lidos */}
-                {read.length > 0 && (
-                    <section>
-                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                           Já Lidos
-                           <span className="bg-emerald-500/20 text-emerald-400 text-xs font-medium px-2 py-0.5 rounded border border-emerald-500/30">
-                               {read.length}
-                           </span>
-                         </h2>
-                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                           {read.map(book => (
-                             <BookCard key={book.id} book={book} compact onEdit={handleEdit} onDelete={handleDelete} />
-                           ))}
-                         </div>
-                    </section>
-                )}
+              {!showLoader ? (
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<Login />} />
 
-                {filteredBooks.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-neutral-500">Nenhum livro encontrado com os filtros atuais.</p>
-                    </div>
-                )}
+                  {/* Dashboard Protected Routes */}
+                  <Route
+                    path="/"
+                    element={
+                      <PrivateRoute>
+                        <div className="max-w-[1600px] mx-auto">
+                          <Home books={books} />
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* Mural routes with nested status routes */}
+                  <Route
+                    path="/mural/:status"
+                    element={
+                      <PrivateRoute>
+                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                          <Mural
+                            books={books}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            muralState={muralState}
+                            setMuralState={setMuralState}
+                          />
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/mural"
+                    element={<Navigate to="/mural/reading" replace />}
+                  />
+
+                  {/* Table route */}
+                  <Route
+                    path="/table"
+                    element={
+                      <PrivateRoute>
+                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                          <BooksList
+                            books={books}
+                            onUpdate={fetchBooks}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
+                            tableState={tableState}
+                            setTableState={setTableState}
+                          />
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* Analytics route */}
+                  <Route
+                    path="/analytics"
+                    element={
+                      <PrivateRoute>
+                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                          <Analytics books={books} />
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* User Guide Route */}
+                  <Route
+                    path="/guide"
+                    element={
+                      <PrivateRoute>
+                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                          <GuideSettings />
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* Settings Routes */}
+                  <Route
+                    path="/settings"
+                    element={
+                      <PrivateRoute>
+                        <SettingsLayout onEdit={handleEdit} />
+                      </PrivateRoute>
+                    }
+                  >
+                    <Route index element={<Navigate to="overview" replace />} />
+                    <Route path="overview" element={<OverviewSettings />} />
+                    <Route path="ai" element={<AISettings />} />
+                    <Route path="formula" element={<FormulaSettings />} />
+                    <Route path="lists" element={<ListSettings />} />
+                    <Route
+                      path="availability"
+                      element={<AvailabilitySettings />}
+                    />
+                    <Route path="audit" element={<AuditSettings />} />
+
+                    <Route
+                      path="preferences"
+                      element={<PreferencesSettings />}
+                    />
+                    <Route path="administrador" element={<Admin />} />
+                  </Route>
+
+                  {/* Book Form routes */}
+                  <Route
+                    path="/create"
+                    element={
+                      <PrivateRoute>
+                        <BookFormPage
+                          editingBook={null}
+                          onFormSuccess={handleFormSuccess}
+                          onCancel={() => {
+                            setEditingBook(null);
+                            navigate(-1);
+                          }}
+                        />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/edit"
+                    element={
+                      <PrivateRoute>
+                        <BookFormPage
+                          editingBook={editingBook}
+                          onFormSuccess={handleFormSuccess}
+                          onCancel={() => {
+                            setEditingBook(null);
+                            navigate(-1);
+                          }}
+                        />
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              ) : null}
             </div>
-            )}
+          </main>
 
-            {!loading && tab === 'table' && (
-            <div className="pb-20 animate-fade-in">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 className="text-3xl font-bold text-white">Gerenciar Biblioteca</h2>
-                        <p className="text-slate-400 text-sm mt-1">Visualize e gerencie todos os seus livros em formato de lista.</p>
-                    </div>
-                </div>
-                <BooksTable books={filteredBooks} onDelete={handleDelete} onEdit={handleEdit} />
-            </div>
-            )}
-            
-            {!loading && tab === 'analytics' && (
-               <div className="mx-auto">
-                  <Analytics />
-               </div>
-            )}
-
-            {!loading && tab === 'admin' && (
-            <div className="max-w-2xl mx-auto pb-20 animate-fade-in">
-                <BookForm 
-                    bookToEdit={editingBook} 
-                    onSuccess={handleFormSuccess} 
-                    onCancel={() => { setEditingBook(null); setTab('mural'); }}
-                />
-            </div>
-            )}
+          {/* Button Scroll to Top */}
+          {!isLoginPage && (
+            <ScrollToTopBottom currentPath={location.pathname} />
+          )}
         </div>
-      </main>
-    </div>
-  )
+      </ConfirmationProvider>
+    </ToastProvider>
+  );
 }
-
-export default App

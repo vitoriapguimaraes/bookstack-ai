@@ -1,0 +1,356 @@
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Star, Library, Camera } from "lucide-react";
+import { useAnalyticsData } from "../../components/Dashboard/useAnalyticsData.js";
+import BookshelfShowcase from "../../components/Bookshelf/BookshelfShowcase.jsx";
+import BookshelfExporter from "../../components/Bookshelf/BookshelfExporter.jsx";
+
+export default function HomeView({ books }) {
+  const navigate = useNavigate();
+  const [yearlyGoal, setYearlyGoal] = useState(20);
+  const [selectedYears, setSelectedYears] = useState(() => {
+    const saved = localStorage.getItem("bookstack_bookshelf_filters");
+    return saved ? JSON.parse(saved).selectedYears : [];
+  });
+  const [filterClass, setFilterClass] = useState(() => {
+    const saved = localStorage.getItem("bookstack_bookshelf_filters");
+    return saved ? JSON.parse(saved).filterClass : "all";
+  });
+  const [showExporter, setShowExporter] = useState(false);
+
+  useEffect(() => {
+    const savedGoal = localStorage.getItem("yearlyReadingGoal");
+    if (savedGoal) {
+      setYearlyGoal(parseInt(savedGoal));
+    }
+  }, []);
+
+  // Get available years from read books
+  const availableYears = useMemo(() => {
+    const readBooks = books.filter((b) => b.status === "Lido" && b.date_read);
+    const uniqueYears = [
+      ...new Set(readBooks.map((b) => new Date(b.date_read).getFullYear())),
+    ].sort((a, b) => b - a);
+    return uniqueYears;
+  }, [books]);
+
+  // Initialize with most recent year ONLY if no saved filters
+  useEffect(() => {
+    const hasSavedFilters = localStorage.getItem("bookstack_bookshelf_filters");
+    if (
+      !hasSavedFilters &&
+      availableYears.length > 0 &&
+      selectedYears.length === 0
+    ) {
+      setSelectedYears([availableYears[0]]);
+    }
+  }, [availableYears]);
+
+  // Persist filters
+  useEffect(() => {
+    localStorage.setItem(
+      "bookstack_bookshelf_filters",
+      JSON.stringify({
+        selectedYears,
+        filterClass,
+      })
+    );
+  }, [selectedYears, filterClass]);
+
+  // Get available classes
+  const availableClasses = useMemo(() => {
+    const readBooks = books.filter((b) => b.status === "Lido");
+    const uniqueClasses = [
+      ...new Set(
+        readBooks.filter((b) => b.book_class).map((b) => b.book_class)
+      ),
+    ].sort();
+    return uniqueClasses;
+  }, [books]);
+
+  // Filter books based on selected filters
+  const filteredBooks = useMemo(() => {
+    let result = books.filter((b) => b.status === "Lido");
+
+    // Year filter (multiple selection)
+    if (selectedYears.length > 0) {
+      result = result.filter((b) => {
+        if (!b.date_read) return false;
+        const readYear = new Date(b.date_read).getFullYear();
+        return selectedYears.includes(readYear);
+      });
+    }
+
+    // Class filter
+    if (filterClass !== "all") {
+      result = result.filter((b) => b.book_class === filterClass);
+    }
+
+    return result.sort((a, b) => {
+      if (!a.date_read) return 1;
+      if (!b.date_read) return -1;
+      return b.date_read.localeCompare(a.date_read);
+    });
+  }, [books, selectedYears, filterClass]);
+
+  // Use filtered books for stats
+  const stats = useAnalyticsData(filteredBooks);
+
+  // Calculate most recent read book from filtered books
+  const mostRecentBook = useMemo(() => {
+    const readBooks = filteredBooks.filter((b) => b.date_read);
+    if (readBooks.length === 0) return null;
+
+    return readBooks.sort((a, b) => {
+      const dateA = new Date(a.date_read);
+      const dateB = new Date(b.date_read);
+      return dateB - dateA;
+    })[0];
+  }, [filteredBooks]);
+
+  // Toggle year selection
+  const toggleYear = (year) => {
+    setSelectedYears((prev) =>
+      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]
+    );
+  };
+
+  // Select all years
+  const selectAllYears = () => {
+    setSelectedYears(availableYears);
+  };
+
+  // Clear all years
+  const clearAllYears = () => {
+    setSelectedYears([]);
+  };
+
+  if (books && books.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 animate-fade-in">
+        <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-6">
+          <BookOpen
+            size={48}
+            className="text-purple-600 dark:text-purple-400"
+          />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
+          Sua estante está vazia
+        </h2>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-8">
+          Parece que você ainda não adicionou nenhum livro ou seus livros
+          antigos precisam ser migrados para sua nova conta.
+        </p>
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate("/create")}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium shadow-lg shadow-purple-500/20 transition-all active:scale-95 flex items-center gap-2"
+          >
+            <BookOpen size={20} />
+            Adicionar Primeiro Livro
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex items-center justify-center h-screen text-neutral-500">
+        Carregando estatísticas...
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in min-h-[calc(100vh-4rem)] pb-20 md:pb-0">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-0">
+        {/* Left Column - Metrics Cards (25% - col-span-3) */}
+        <div className="w-full md:col-span-3 flex flex-col gap-4 md:sticky md:top-0 md:self-start md:h-screen md:overflow-hidden pl-4 md:pl-8 pt-4 md:pt-8 pr-4 md:pr-4 border-r border-transparent z-10">
+          {/* Header with dynamic title */}
+          <div className="mb-2 hidden md:block">
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+              Minha Estante
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              Explore sua coleção
+            </p>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col gap-2 pb-3 border-b border-slate-200 dark:border-neutral-800">
+            {/* Year Filter - Multi-select */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-slate-600 dark:text-neutral-400 mb-1">
+                Anos
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {availableYears.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => toggleYear(year)}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      selectedYears.includes(year)
+                        ? "bg-purple-600 text-white"
+                        : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700"
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1 mt-1">
+                <button
+                  onClick={selectAllYears}
+                  className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline"
+                >
+                  Todos
+                </button>
+                <span className="text-[10px] text-slate-400">•</span>
+                <button
+                  onClick={clearAllYears}
+                  className="text-[10px] text-slate-500 dark:text-neutral-500 hover:underline"
+                >
+                  Limpar
+                </button>
+              </div>
+            </div>
+
+            {/* Class Filter */}
+            <div>
+              <label className="block text-xs font-medium text-slate-600 dark:text-neutral-400 mb-1">
+                Classe
+              </label>
+              <select
+                value={filterClass}
+                onChange={(e) => setFilterClass(e.target.value)}
+                className="w-full px-2 py-1.5 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded text-xs text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">Todas as classes</option>
+                {availableClasses.map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Metrics Grid - NO SCROLL */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Total de Livros */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-28 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <Library
+                  size={16}
+                  className="text-blue-600 dark:text-blue-400"
+                />
+                <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">
+                  Total
+                </span>
+              </div>
+              <div className="text-3xl font-bold text-slate-800 dark:text-white">
+                {stats.kpi.total}
+              </div>
+            </div>
+
+            {/* Nota Média */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-28 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <Star size={16} className="text-red-600 dark:text-red-400" />
+                <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">
+                  Nota Média
+                </span>
+              </div>
+              <div className="text-3xl font-bold text-slate-800 dark:text-white">
+                {stats.kpi.avgRating.toFixed(1)}
+              </div>
+            </div>
+
+            {/* Lendo Agora */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-36 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen
+                  size={16}
+                  className="text-purple-600 dark:text-purple-400"
+                />
+                <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">
+                  Lendo Agora
+                </span>
+              </div>
+              {books.find((b) => b.status === "Lendo") ? (
+                <>
+                  <div className="text-base font-semibold text-slate-800 dark:text-white line-clamp-2 flex-1">
+                    {books.find((b) => b.status === "Lendo")?.title}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-neutral-500 mt-auto">
+                    {books.find((b) => b.status === "Lendo")?.author ||
+                      "Autor desconhecido"}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-slate-500 dark:text-neutral-500 flex-1 flex items-center">
+                  Nenhum livro em leitura
+                </div>
+              )}
+            </div>
+
+            {/* Último Lido */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-2.5 border border-slate-200 dark:border-neutral-700 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-neutral-600 h-36 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen
+                  size={16}
+                  className="text-emerald-600 dark:text-emerald-400"
+                />
+                <span className="text-sm font-medium text-slate-600 dark:text-neutral-400">
+                  Último Lido
+                </span>
+              </div>
+              {mostRecentBook ? (
+                <>
+                  <div className="text-base font-semibold text-slate-800 dark:text-white line-clamp-2 flex-1">
+                    {mostRecentBook.title}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-neutral-500 mt-auto">
+                    {mostRecentBook.author || "Autor desconhecido"}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-slate-500 dark:text-neutral-500 flex-1 flex items-center">
+                  Nenhum livro lido
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Share Button */}
+          <button
+            onClick={() => setShowExporter(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm mt-3"
+            title="Compartilhar Estante"
+          >
+            <Camera size={16} />
+            Compartilhar Estante
+          </button>
+        </div>
+
+        {/* Right Column - Bookshelf (75% - col-span-9) */}
+        <div className="w-full md:col-span-9 flex flex-col pl-4 md:pl-6 pr-4 md:pr-8 pt-4 md:pt-8">
+          <BookshelfShowcase books={filteredBooks} />
+        </div>
+      </div>
+
+      {/* Export Modal */}
+      {showExporter && (
+        <BookshelfExporter
+          books={filteredBooks}
+          selectedYears={selectedYears}
+          filterClass={filterClass}
+          stats={stats}
+          activeBook={books.find((b) => b.status === "Lendo")}
+          onClose={() => setShowExporter(false)}
+        />
+      )}
+    </div>
+  );
+}
