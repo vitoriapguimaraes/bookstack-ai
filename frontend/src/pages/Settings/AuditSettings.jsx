@@ -558,10 +558,18 @@ export default function AuditSettings() {
                       onChange={toggleSelectAll}
                     />
                   </th>
-                  <th className="px-4 py-4 w-[45%] truncate">Livro</th>
-                  <th className="px-4 py-4 w-[12%] truncate">Valores</th>
-                  <th className="px-4 py-4 w-[32%] truncate">Diagnóstico</th>
-                  <th className="px-4 py-4 w-[8%] text-right truncate">Ação</th>
+                  <th className="px-4 py-4 w-auto md:w-[45%] truncate">
+                    Livro
+                  </th>
+                  <th className="px-4 py-4 w-[15%] truncate hidden md:table-cell">
+                    Valores
+                  </th>
+                  <th className="px-4 py-4 w-[29%] truncate hidden md:table-cell">
+                    Diagnóstico
+                  </th>
+                  <th className="px-4 py-4 w-[60px] md:w-[8%] text-right truncate">
+                    Ação
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
@@ -574,7 +582,7 @@ export default function AuditSettings() {
                         : ""
                     }`}
                   >
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 top-0 align-top">
                       <input
                         type="checkbox"
                         className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
@@ -582,8 +590,8 @@ export default function AuditSettings() {
                         onChange={() => toggleSelectIssue(issue.id)}
                       />
                     </td>
-                    <td className="px-4 py-4 min-w-0">
-                      <div className="flex items-center gap-3 overflow-hidden">
+                    <td className="px-4 py-4 min-w-0 align-top">
+                      <div className="flex items-start gap-3 overflow-hidden">
                         <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded flex-shrink-0 border border-slate-200 dark:border-neutral-700 flex items-center justify-center font-black text-[10px] text-slate-300 overflow-hidden shadow-sm">
                           {(() => {
                             const API_URL =
@@ -596,10 +604,6 @@ export default function AuditSettings() {
                               if (cover.startsWith("http")) {
                                 coverUrl = cover.replace(/^http:/, "https:");
                               } else {
-                                // Assume relative or needs proxy if not http?
-                                // Actually BooksTable logic says: if NOT http, use proxy.
-                                // But if it's a relative path "/foo.jpg", proxy?url=/foo.jpg fails.
-                                // Let's try direct usage if it starts with /
                                 if (cover.startsWith("/")) coverUrl = cover;
                                 else
                                   coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
@@ -642,10 +646,64 @@ export default function AuditSettings() {
                           <div className="text-[9px] text-slate-400 truncate pr-2">
                             {issue.author}
                           </div>
+
+                          {/* Mobile Only: Diagnosis and Values displayed inline */}
+                          <div className="md:hidden mt-2 flex flex-col gap-1.5">
+                            <div className="flex items-start gap-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider shrink-0 w-12">
+                                Motivo:
+                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">
+                                  {issue.reason}
+                                </span>
+                                {issue.extraInfo && (
+                                  <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight">
+                                    {issue.extraInfo}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider shrink-0 w-12">
+                                Dados:
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "class"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.book_class || "Nula"}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "category"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.category || "Nula"}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "availability"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.availability || "Nulo"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 min-w-0 overflow-hidden">
+                    <td className="px-4 py-4 min-w-0 overflow-hidden hidden md:table-cell align-top">
                       <div className="flex flex-col gap-1 overflow-hidden">
                         <div className="flex items-center gap-1.5 overflow-hidden">
                           <span
@@ -683,7 +741,7 @@ export default function AuditSettings() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 min-w-0">
+                    <td className="px-4 py-4 min-w-0 hidden md:table-cell align-top">
                       <div className="flex items-start gap-2 min-w-0">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
@@ -697,44 +755,46 @@ export default function AuditSettings() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => onEdit(issue)}
-                        className="inline-flex items-center justify-center w-8 h-8 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-600 hover:text-white transition-all border border-purple-100 dark:border-purple-500/20 shadow-sm"
-                        title="Corrigir"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          confirm({
-                            title: "Excluir Livro",
-                            description: `Deseja realmente excluir "${issue.title}"?`,
-                            confirmText: "Excluir",
-                            isDanger: true,
-                            onConfirm: async () => {
-                              try {
-                                await api.delete(`/books/${issue.id}`);
-                                addToast({
-                                  type: "success",
-                                  message: "Livro excluído!",
-                                });
-                                fetchData();
-                              } catch (err) {
-                                addToast({
-                                  type: "error",
-                                  message: "Erro ao excluir.",
-                                });
-                              }
-                            },
-                          });
-                        }}
-                        className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm ml-2"
-                        title="Excluir"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <td className="px-4 py-4 text-right align-top">
+                      <div className="flex flex-col md:flex-row justify-end gap-2">
+                        <button
+                          onClick={() => onEdit(issue)}
+                          className="inline-flex items-center justify-center w-8 h-8 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-600 hover:text-white transition-all border border-purple-100 dark:border-purple-500/20 shadow-sm"
+                          title="Corrigir"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            confirm({
+                              title: "Excluir Livro",
+                              description: `Deseja realmente excluir "${issue.title}"?`,
+                              confirmText: "Excluir",
+                              isDanger: true,
+                              onConfirm: async () => {
+                                try {
+                                  await api.delete(`/books/${issue.id}`);
+                                  addToast({
+                                    type: "success",
+                                    message: "Livro excluído!",
+                                  });
+                                  fetchData();
+                                } catch (err) {
+                                  addToast({
+                                    type: "error",
+                                    message: "Erro ao excluir.",
+                                  });
+                                }
+                              },
+                            });
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm"
+                          title="Excluir"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
