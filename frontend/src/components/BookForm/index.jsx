@@ -94,12 +94,31 @@ export default function BookForm({
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
 
-      // Logic: If status becomes 'Lido', set priority to 'Concluído'
       if (name === "status") {
         if (value === "Lido") {
           newData.priority = "Concluído";
-        } else if (prev.status === "Lido" && value !== "Lido") {
-          // If moving back from Lido, reset priority to default if it was Concluído
+        } else if (value === "Lendo" && prev.status !== "Lendo") {
+          // We need to fetch books to calculate order, but we can't await here.
+          // We'll set a placeholder or fire an effect, but simplest is to fire promise side-effect
+          api
+            .get("/books/")
+            .then((res) => {
+              const allBooks = res.data;
+              const readingBooks = allBooks.filter((b) => b.status === "Lendo");
+              const maxOrder = readingBooks.reduce(
+                (max, b) => (b.order > max ? b.order : max),
+                0
+              );
+
+              setFormData((curr) => ({
+                ...curr,
+                order: maxOrder + 1,
+              }));
+            })
+            .catch((err) =>
+              console.error("Error auto-calculating order:", err)
+            );
+        } else if (prev.status === "Lido") {
           if (prev.priority === "Concluído") {
             newData.priority = "1 - Baixa";
           }
@@ -501,21 +520,10 @@ export default function BookForm({
                   <button
                     key={s}
                     type="button"
-                    onClick={() =>
-                      setFormData((prev) => {
-                        const newData = { ...prev, status: s };
-                        if (s === "Lido") {
-                          newData.priority = "Concluído";
-                        } else if (s === "Lendo" && prev.status !== "Lendo") {
-                          newData.order = 1; // Prioridade máxima ao começar a ler
-                        } else if (prev.status === "Lido") {
-                          if (prev.priority === "Concluído") {
-                            newData.priority = "1 - Baixa";
-                          }
-                        }
-                        return newData;
-                      })
-                    }
+                    onClick={() => {
+                      // Trigger same logic as handleChange manually or just simulate event
+                      handleChange({ target: { name: "status", value: s } });
+                    }}
                     className={`py-1.5 rounded text-xs font-bold border transition-all ${
                       formData.status === s
                         ? s === "Lido"
