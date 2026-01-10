@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from sqlmodel import Session, select
 from typing import List
-from database import create_db_and_tables, get_session
+from database import create_db_and_tables, get_session, engine
 from models import Book
 from utils import calculate_book_score, get_book_details_hybrid
 from auth import get_current_user
@@ -163,7 +163,7 @@ def health_check():
     env_vars = {
         "DATABASE_URL": "Set" if os.getenv("DATABASE_URL") else "Missing",
         "SUPABASE_URL": "Set" if os.getenv("SUPABASE_URL") else "Missing",
-        "SUPABASE_KEY": "Set" if os.getenv("SUPABASE_KEY") else "Missing",
+        "SUPABASE_KEY": "Set" if (os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")) else "Missing",
     }
     
     db_status = "Unknown"
