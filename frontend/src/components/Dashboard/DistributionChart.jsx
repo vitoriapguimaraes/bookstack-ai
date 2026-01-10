@@ -43,7 +43,11 @@ export function DistributionChart({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div
           className="flex flex-col"
-          style={{ height: getDynamicHeight(dataLidos) }}
+          style={{
+            height: getDynamicHeight(dataLidos),
+            width: "100%",
+            minHeight: 0,
+          }}
         >
           <p className="text-sm font-medium text-slate-500 dark:text-neutral-500 mb-4 flex justify-between uppercase tracking-widest flex-shrink-0">
             <span>Lidos</span>
