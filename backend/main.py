@@ -154,6 +154,38 @@ def on_startup():
 def read_root():
     return {"message": "Reading List API is Running! 🚀"}
 
+@app.get("/health")
+def health_check():
+    """
+    Endpoint de diagnóstico para verificar status do ambiente e banco de dados.
+    Útil para debugar erros 500 na Vercel.
+    """
+    env_vars = {
+        "DATABASE_URL": "Set" if os.getenv("DATABASE_URL") else "Missing",
+        "SUPABASE_URL": "Set" if os.getenv("SUPABASE_URL") else "Missing",
+        "SUPABASE_KEY": "Set" if os.getenv("SUPABASE_KEY") else "Missing",
+    }
+    
+    db_status = "Unknown"
+    db_error = None
+    
+    try:
+        from sqlmodel import text
+        with Session(engine) as session:
+            session.exec(text("SELECT 1"))
+        db_status = "Connected"
+    except Exception as e:
+        db_status = "Disconnected"
+        db_error = str(e)
+        
+    return {
+        "status": "online",
+        "environment": env_vars,
+        "database_connection": db_status,
+        "database_error": db_error,
+        "timestamp": datetime.now().isoformat()
+    }
+
 @app.get("/books/", response_model=List[Book])
 def read_books(session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     # Filter by user_id
