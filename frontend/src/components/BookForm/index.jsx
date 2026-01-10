@@ -279,12 +279,20 @@ export default function BookForm({
     if (onLoadingChange) onLoadingChange(true);
 
     try {
+      // Ensure numeric types
+      const payload = {
+        ...formData,
+        year: formData.year ? parseInt(formData.year) : null,
+        // rating: formData.rating ? parseInt(formData.rating) : 0, // rating kept as is
+        order: formData.order ? parseInt(formData.order) : null,
+      };
+
       let savedBook;
       if (bookToEdit) {
-        const res = await api.put(`/books/${bookToEdit.id}`, formData);
+        const res = await api.put(`/books/${bookToEdit.id}`, payload);
         savedBook = res.data;
       } else {
-        const res = await api.post("/books/", formData);
+        const res = await api.post("/books/", payload);
         savedBook = res.data;
       }
 
@@ -543,6 +551,8 @@ export default function BookForm({
                         const newData = { ...prev, status: s };
                         if (s === "Lido") {
                           newData.priority = "Concluído";
+                        } else if (s === "Lendo" && prev.status !== "Lendo") {
+                          newData.order = 1; // Prioridade máxima ao começar a ler
                         } else if (prev.status === "Lido") {
                           if (prev.priority === "Concluído") {
                             newData.priority = "1 - Baixa";
