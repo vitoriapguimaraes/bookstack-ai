@@ -2,47 +2,10 @@ import { useState, useEffect } from "react";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
-
-const DEFAULT_CLASS_CATEGORIES = {
-  "Tecnologia & IA": [
-    "Análise de Dados",
-    "Ciência de Dados",
-    "IA",
-    "Visão Computacional",
-    "Machine Learning",
-    "Programação",
-    "Sistemas de IA & LLMs",
-  ],
-  "Engenharia & Arquitetura": [
-    "Arquitetura de Software",
-    "Engenharia de Dados",
-    "MLOps",
-  ],
-  "Conhecimento & Ciências": [
-    "Conhecimento Geral",
-    "Estatística",
-    "Cosmologia",
-  ],
-  "Negócios & Finanças": [
-    "Finanças Pessoais",
-    "Negócios",
-    "Liberdade Econômica",
-  ],
-  "Literatura & Cultura": [
-    "Diversidade e Inclusão",
-    "História/Ficção",
-    "Literatura Brasileira",
-  ],
-  "Desenvolvimento Pessoal": [
-    "Bem-estar",
-    "Comunicação",
-    "Criatividade",
-    "Inteligência Emocional",
-    "Liderança",
-    "Produtividade",
-    "Biohacking & Existência",
-  ],
-};
+import {
+  DEFAULT_CLASS_CATEGORIES,
+  DEFAULT_AVAILABILITY_OPTIONS,
+} from "../../utils/constants";
 
 export default function BulkEditModal({ count, onClose, onSave }) {
   const { addToast } = useToast();
@@ -55,13 +18,9 @@ export default function BulkEditModal({ count, onClose, onSave }) {
   const [classCategories, setClassCategories] = useState(
     DEFAULT_CLASS_CATEGORIES
   );
-  const [availabilityOptions, setAvailabilityOptions] = useState([
-    "Físico",
-    "Virtual",
-    "Desejado",
-    "Emprestado",
-    "N/A",
-  ]);
+  const [availabilityOptions, setAvailabilityOptions] = useState(
+    DEFAULT_AVAILABILITY_OPTIONS
+  );
 
   useEffect(() => {
     fetchPreferences();

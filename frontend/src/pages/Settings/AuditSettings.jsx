@@ -20,46 +20,10 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import BulkEditModal from "../../components/BulkEditModal";
 import { useConfirm } from "../../context/ConfirmationContext"; // Global Context
 import { useToast } from "../../context/ToastContext";
+import { getCoverUrl } from "../../utils/imageUtils";
+import { levenshteinDistance } from "../../utils/stringUtils";
 
-// Levenshtein distance for fuzzy matching
-const levenshteinDistance = (a, b) => {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-};
-
-const DEFAULT_AVAILABILITY_OPTIONS = [
-  "Físico",
-  "Virtual",
-  "Desejado",
-  "Emprestado",
-  "N/A",
-];
+import { DEFAULT_AVAILABILITY_OPTIONS } from "../../utils/constants";
 
 export default function AuditSettings() {
   const [books, setBooks] = useState([]);
@@ -594,23 +558,7 @@ export default function AuditSettings() {
                       <div className="flex items-start gap-3 overflow-hidden">
                         <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded flex-shrink-0 border border-slate-200 dark:border-neutral-700 flex items-center justify-center font-black text-[10px] text-slate-300 overflow-hidden shadow-sm">
                           {(() => {
-                            const API_URL =
-                              import.meta.env.VITE_API_URL ||
-                              "http://localhost:8000";
-                            let coverUrl = null;
-                            const cover = issue.cover_image;
-
-                            if (cover) {
-                              if (cover.startsWith("http")) {
-                                coverUrl = cover.replace(/^http:/, "https:");
-                              } else {
-                                if (cover.startsWith("/")) coverUrl = cover;
-                                else
-                                  coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-                                    cover
-                                  )}`;
-                              }
-                            }
+                            const coverUrl = getCoverUrl(issue.cover_image);
 
                             return coverUrl ? (
                               <img

@@ -3,13 +3,7 @@ import { Plus, Trash2, X, RotateCcw, Save, Check, Layers } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 
-const DEFAULT_AVAILABILITY_OPTIONS = [
-  "Físico",
-  "Virtual",
-  "Desejado",
-  "Emprestado",
-  "N/A",
-];
+import { DEFAULT_AVAILABILITY_OPTIONS } from "../../utils/constants";
 
 export default function AvailabilitySettings() {
   const { addToast } = useToast();

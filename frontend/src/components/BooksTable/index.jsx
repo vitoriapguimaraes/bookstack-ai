@@ -16,6 +16,7 @@ import BulkEditModal from "../BulkEditModal";
 import MobileBookItem from "./MobileBookItem";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmationContext";
+import { getCoverUrl } from "../../utils/imageUtils";
 
 export default function BooksTable({
   books,
@@ -702,20 +703,7 @@ export default function BooksTable({
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {(() => {
-                      const API_URL =
-                        import.meta.env.VITE_API_URL || "http://localhost:8000";
-                      let coverUrl = null;
-                      if (book.cover_image) {
-                        if (book.cover_image.startsWith("http"))
-                          coverUrl = book.cover_image.replace(
-                            /^http:/,
-                            "https:"
-                          );
-                        else
-                          coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-                            book.cover_image
-                          )}`;
-                      }
+                      const coverUrl = getCoverUrl(book.cover_image);
 
                       const bgColor = "f1f5f9"; // slate-100 default
                       const textColor = "475569"; // slate-600 default
