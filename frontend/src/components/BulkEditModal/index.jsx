@@ -69,7 +69,7 @@ export default function BulkEditModal({ count, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-neutral-800/50 p-4 border-b border-neutral-700 flex justify-between items-center">
           <h3 className="font-bold text-white flex items-center gap-2">
