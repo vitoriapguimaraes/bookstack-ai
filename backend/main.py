@@ -51,9 +51,17 @@ app.add_middleware(
 )
 
 # Mount uploads directory to serve static files (images)
+# Mount uploads directory to serve static files (images)
 UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+try:
+    UPLOAD_DIR.mkdir(exist_ok=True)
+except Exception:
+    pass
+
+# Only mount if directory exists/can be created (or just mount and let it handle 404s?)
+# StaticFiles requires directory to exist
+if UPLOAD_DIR.exists():
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 def reorder_books(session: Session, operation: str, user_id: str, **kwargs):
     """
@@ -562,8 +570,15 @@ def list_users(session: Session = Depends(get_session), user: dict = Depends(get
     return output
 
 import hashlib
-CACHE_DIR = Path("image_cache")
-CACHE_DIR.mkdir(exist_ok=True)
+import tempfile
+
+# Use temporary directory for cache in serverless environments
+CACHE_DIR = Path(tempfile.gettempdir()) / "image_cache"
+try:
+    CACHE_DIR.mkdir(exist_ok=True)
+except Exception:
+    # Fallback if we can't create dir (rare in /tmp but possible)
+    pass
 
 @app.get("/proxy/image")
 async def proxy_image(url: str):
@@ -575,13 +590,17 @@ async def proxy_image(url: str):
     cache_path = CACHE_DIR / url_hash
     
     # Se já existe no cache, servimos o arquivo local
-    if cache_path.exists():
-        # Tenta adivinhar o media type ou usa jpeg como padrão
-        content_type = "image/jpeg"
-        if url.lower().endswith('.png'): content_type = "image/png"
-        elif url.lower().endswith('.webp'): content_type = "image/webp"
-        
-        return Response(content=cache_path.read_bytes(), media_type=content_type)
+    try:
+        if cache_path.exists():
+            # Tenta adivinhar o media type ou usa jpeg como padrão
+            content_type = "image/jpeg"
+            if url.lower().endswith('.png'): content_type = "image/png"
+            elif url.lower().endswith('.webp'): content_type = "image/webp"
+            
+            return Response(content=cache_path.read_bytes(), media_type=content_type)
+    except Exception:
+        # If cache read fails, ignore and fetch fresh
+        pass
     
     try:
         # Busca a imagem externa
