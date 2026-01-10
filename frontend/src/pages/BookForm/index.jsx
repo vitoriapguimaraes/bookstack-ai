@@ -4,32 +4,35 @@ import { useNavigate } from "react-router-dom";
 import BookForm from "../../components/BookForm";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmationContext";
 
 export default function FormView({ editingBook, onFormSuccess, onCancel }) {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const { addToast } = useToast();
+  const { confirm } = useConfirm();
 
   const handleCancel = onCancel || (() => navigate(-1));
 
-  const handleDelete = async () => {
-    if (
-      !window.confirm(
-        `Tem certeza que deseja excluir "${editingBook.title}"? Esta ação não pode ser desfeita.`
-      )
-    )
-      return;
-
-    setIsSaving(true);
-    try {
-      await api.delete(`/books/${editingBook.id}`);
-      addToast({ type: "success", message: "Livro excluído com sucesso!" });
-      navigate("/");
-    } catch (err) {
-      console.error(err);
-      addToast({ type: "error", message: "Erro ao excluir livro." });
-      setIsSaving(false);
-    }
+  const handleDelete = () => {
+    confirm({
+      title: "Confirmar Exclusão",
+      description: `Tem certeza que deseja excluir "${editingBook.title}"? Esta ação não pode ser desfeita.`,
+      confirmText: "Sim, Excluir",
+      isDanger: true,
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await api.delete(`/books/${editingBook.id}`);
+          addToast({ type: "success", message: "Livro excluído com sucesso!" });
+          navigate("/");
+        } catch (err) {
+          console.error(err);
+          addToast({ type: "error", message: "Erro ao excluir livro." });
+          setIsSaving(false);
+        }
+      },
+    });
   };
 
   return (
@@ -54,27 +57,39 @@ export default function FormView({ editingBook, onFormSuccess, onCancel }) {
           <button
             type="button"
             onClick={handleCancel}
-            className="flex-none justify-center flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-700 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-bold"
+            className="flex-none justify-center flex items-center gap-2 px-3 md:px-4 py-2 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-700 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-bold"
+            title="Cancelar"
           >
-            <X size={18} /> Cancelar
+            <X size={18} /> <span className="hidden md:inline">Cancelar</span>
           </button>
 
           {editingBook && (
             <button
               type="button"
               onClick={handleDelete}
-              className="flex-none justify-center flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-sm font-bold"
+              className="flex-none justify-center flex items-center gap-2 px-3 md:px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-sm font-bold"
+              title="Excluir"
             >
-              <Trash2 size={18} /> Excluir
+              <Trash2 size={18} />{" "}
+              <span className="hidden md:inline">Excluir</span>
             </button>
           )}
           <button
             type="submit"
             form="book-form-main"
             disabled={isSaving}
-            className="flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-2 bg-emerald-600 dark:bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 dark:hover:bg-emerald-500 disabled:opacity-50 transition-all text-sm font-bold shadow-lg shadow-emerald-500/20"
+            className="flex-1 md:flex-none justify-center flex items-center gap-2 px-4 md:px-6 py-2 bg-emerald-600 dark:bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 dark:hover:bg-emerald-500 disabled:opacity-50 transition-all text-sm font-bold shadow-lg shadow-emerald-500/20"
           >
-            <Save size={18} /> {isSaving ? "Salvando..." : "Salvar Alterações"}
+            <Save size={18} />
+            <span>
+              {isSaving ? (
+                "Salvando..."
+              ) : (
+                <span className="flex items-center gap-1">
+                  Salvar <span className="hidden md:inline">Alterações</span>
+                </span>
+              )}
+            </span>
           </button>
         </div>
       </div>

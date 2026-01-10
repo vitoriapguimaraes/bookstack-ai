@@ -178,8 +178,8 @@ export default function GuideSettings() {
                 4
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 leading-tight">
-                Exporte sua estante virtual como uma imagem visualmente atraente
-                para compartilhar.
+                Exporte sua estante como uma imagem visualmente atraente para
+                compartilhar.
               </p>
             </div>
           </div>

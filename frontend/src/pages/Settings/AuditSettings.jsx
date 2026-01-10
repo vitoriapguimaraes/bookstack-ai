@@ -15,55 +15,21 @@ import {
   Edit3,
   Trash,
   X as CloseIcon,
+  EyeOff,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import BulkEditModal from "../../components/BulkEditModal";
 import { useConfirm } from "../../context/ConfirmationContext"; // Global Context
 import { useToast } from "../../context/ToastContext";
+import { getCoverUrl } from "../../utils/imageUtils";
+import { levenshteinDistance } from "../../utils/stringUtils";
 
-// Levenshtein distance for fuzzy matching
-const levenshteinDistance = (a, b) => {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-};
-
-const DEFAULT_AVAILABILITY_OPTIONS = [
-  "Físico",
-  "Virtual",
-  "Desejado",
-  "Emprestado",
-  "N/A",
-];
+import { DEFAULT_AVAILABILITY_OPTIONS } from "../../utils/constants";
 
 export default function AuditSettings() {
   const [books, setBooks] = useState([]);
   const [config, setConfig] = useState(null);
+  const [ignoredAuditIssues, setIgnoredAuditIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [issues, setIssues] = useState([]);
   const [filter, setFilter] = useState("all"); // all, class, category
@@ -96,9 +62,11 @@ export default function AuditSettings() {
       const classCats = configRes.data?.class_categories || {};
       const availOptions =
         configRes.data?.availability_options || DEFAULT_AVAILABILITY_OPTIONS;
+      const ignored = configRes.data?.ignored_audit_issues || [];
 
       setConfig(classCats);
-      runAudit(booksRes.data, classCats, availOptions);
+      setIgnoredAuditIssues(ignored);
+      runAudit(booksRes.data, classCats, availOptions, ignored);
     } catch (err) {
       console.error("Erro na auditoria:", err);
     } finally {
@@ -106,7 +74,7 @@ export default function AuditSettings() {
     }
   };
 
-  const runAudit = (allBooks, classCats, availOptions) => {
+  const runAudit = (allBooks, classCats, availOptions, ignoredList = []) => {
     const foundIssues = [];
 
     // 1. Check Metadata (Class, Category, Availability)
@@ -167,6 +135,11 @@ export default function AuditSettings() {
 
         if (t1.length < 3 || t2.length < 3) continue; // too short
 
+        // Check ignored list
+        const pairKey =
+          b1.id < b2.id ? `${b1.id}_${b2.id}` : `${b2.id}_${b1.id}`;
+        if (ignoredList.includes(pairKey)) continue;
+
         // Exact match
         if (t1 === t2) {
           const groupId = crypto.randomUUID();
@@ -177,6 +150,7 @@ export default function AuditSettings() {
             matchGroupId: groupId,
             reason: "Duplicidade Exata",
             extraInfo: `Idêntico ao livro "${b2.title}" (ID: ${b2.id})`,
+            relatedBookId: b2.id,
           });
           foundIssues.push({
             ...b2,
@@ -185,6 +159,7 @@ export default function AuditSettings() {
             matchGroupId: groupId,
             reason: "Duplicidade Exata",
             extraInfo: `Idêntico ao livro "${b1.title}" (ID: ${b1.id})`,
+            relatedBookId: b1.id,
           });
           continue;
         }
@@ -205,6 +180,7 @@ export default function AuditSettings() {
             extraInfo: `Similar a "${b2.title}" (ID: ${b2.id}) - ${(
               similarity * 100
             ).toFixed(0)}%`,
+            relatedBookId: b2.id,
           });
           foundIssues.push({
             ...b2,
@@ -215,6 +191,7 @@ export default function AuditSettings() {
             extraInfo: `Similar a "${b1.title}" (ID: ${b1.id}) - ${(
               similarity * 100
             ).toFixed(0)}%`,
+            relatedBookId: b1.id,
           });
         }
       }
@@ -336,6 +313,47 @@ export default function AuditSettings() {
     } finally {
       setIsBulkProcessing(false);
     }
+  };
+
+  const handleIgnoreIssue = async (issue) => {
+    if (!issue.relatedBookId) return;
+
+    confirm({
+      title: "Validar como Diferentes",
+      description: `Deseja marcar estes livros como diferentes? O alerta de duplicidade não será mais exibido para este par.`,
+      confirmText: "Validar",
+      onConfirm: async () => {
+        try {
+          const otherId = issue.relatedBookId;
+          const pairKey =
+            issue.id < otherId
+              ? `${issue.id}_${otherId}`
+              : `${otherId}_${issue.id}`;
+
+          const newIgnored = [...ignoredAuditIssues, pairKey];
+          setIgnoredAuditIssues(newIgnored);
+
+          // Update backend
+          await api.put("/preferences/", {
+            ignored_audit_issues: newIgnored,
+          });
+
+          addToast({
+            type: "success",
+            message: "Validação salva com sucesso!",
+          });
+
+          // Re-run audit immediately in local state
+          const classCats = config || {};
+          const availOptions = DEFAULT_AVAILABILITY_OPTIONS;
+          
+          runAudit(books, classCats, availOptions, newIgnored);
+        } catch (err) {
+          console.error(err);
+          addToast({ type: "error", message: "Erro ao salvar validação." });
+        }
+      },
+    });
   };
 
   if (loading)
@@ -558,10 +576,18 @@ export default function AuditSettings() {
                       onChange={toggleSelectAll}
                     />
                   </th>
-                  <th className="px-4 py-4 w-[45%] truncate">Livro</th>
-                  <th className="px-4 py-4 w-[12%] truncate">Valores</th>
-                  <th className="px-4 py-4 w-[32%] truncate">Diagnóstico</th>
-                  <th className="px-4 py-4 w-[8%] text-right truncate">Ação</th>
+                  <th className="px-4 py-4 w-auto md:w-[45%] truncate">
+                    Livro
+                  </th>
+                  <th className="px-4 py-4 w-[15%] truncate hidden md:table-cell">
+                    Valores
+                  </th>
+                  <th className="px-4 py-4 w-[29%] truncate hidden md:table-cell">
+                    Diagnóstico
+                  </th>
+                  <th className="px-4 py-4 w-[60px] md:w-[8%] text-right truncate">
+                    Ação
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
@@ -574,7 +600,7 @@ export default function AuditSettings() {
                         : ""
                     }`}
                   >
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 top-0 align-top">
                       <input
                         type="checkbox"
                         className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
@@ -582,31 +608,11 @@ export default function AuditSettings() {
                         onChange={() => toggleSelectIssue(issue.id)}
                       />
                     </td>
-                    <td className="px-4 py-4 min-w-0">
-                      <div className="flex items-center gap-3 overflow-hidden">
+                    <td className="px-4 py-4 min-w-0 align-top">
+                      <div className="flex items-start gap-3 overflow-hidden">
                         <div className="w-8 h-12 bg-slate-100 dark:bg-neutral-800 rounded flex-shrink-0 border border-slate-200 dark:border-neutral-700 flex items-center justify-center font-black text-[10px] text-slate-300 overflow-hidden shadow-sm">
                           {(() => {
-                            const API_URL =
-                              import.meta.env.VITE_API_URL ||
-                              "http://localhost:8000";
-                            let coverUrl = null;
-                            const cover = issue.cover_image;
-
-                            if (cover) {
-                              if (cover.startsWith("http")) {
-                                coverUrl = cover.replace(/^http:/, "https:");
-                              } else {
-                                // Assume relative or needs proxy if not http?
-                                // Actually BooksTable logic says: if NOT http, use proxy.
-                                // But if it's a relative path "/foo.jpg", proxy?url=/foo.jpg fails.
-                                // Let's try direct usage if it starts with /
-                                if (cover.startsWith("/")) coverUrl = cover;
-                                else
-                                  coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-                                    cover
-                                  )}`;
-                              }
-                            }
+                            const coverUrl = getCoverUrl(issue.cover_image);
 
                             return coverUrl ? (
                               <img
@@ -642,10 +648,64 @@ export default function AuditSettings() {
                           <div className="text-[9px] text-slate-400 truncate pr-2">
                             {issue.author}
                           </div>
+
+                          {/* Mobile Only: Diagnosis and Values displayed inline */}
+                          <div className="md:hidden mt-2 flex flex-col gap-1.5">
+                            <div className="flex items-start gap-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider shrink-0 w-12">
+                                Motivo:
+                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">
+                                  {issue.reason}
+                                </span>
+                                {issue.extraInfo && (
+                                  <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight">
+                                    {issue.extraInfo}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider shrink-0 w-12">
+                                Dados:
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "class"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.book_class || "Nula"}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "category"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.category || "Nula"}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold truncate ${
+                                    issue.issueType === "availability"
+                                      ? "bg-red-50 text-red-600 border border-red-100"
+                                      : "bg-slate-50 text-slate-500 border border-slate-100 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {issue.availability || "Nulo"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 min-w-0 overflow-hidden">
+                    <td className="px-4 py-4 min-w-0 overflow-hidden hidden md:table-cell align-top">
                       <div className="flex flex-col gap-1 overflow-hidden">
                         <div className="flex items-center gap-1.5 overflow-hidden">
                           <span
@@ -683,7 +743,7 @@ export default function AuditSettings() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 min-w-0">
+                    <td className="px-4 py-4 min-w-0 hidden md:table-cell align-top">
                       <div className="flex items-start gap-2 min-w-0">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
@@ -697,44 +757,55 @@ export default function AuditSettings() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => onEdit(issue)}
-                        className="inline-flex items-center justify-center w-8 h-8 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-600 hover:text-white transition-all border border-purple-100 dark:border-purple-500/20 shadow-sm"
-                        title="Corrigir"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          confirm({
-                            title: "Excluir Livro",
-                            description: `Deseja realmente excluir "${issue.title}"?`,
-                            confirmText: "Excluir",
-                            isDanger: true,
-                            onConfirm: async () => {
-                              try {
-                                await api.delete(`/books/${issue.id}`);
-                                addToast({
-                                  type: "success",
-                                  message: "Livro excluído!",
-                                });
-                                fetchData();
-                              } catch (err) {
-                                addToast({
-                                  type: "error",
-                                  message: "Erro ao excluir.",
-                                });
-                              }
-                            },
-                          });
-                        }}
-                        className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm ml-2"
-                        title="Excluir"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <td className="px-4 py-4 text-right align-top">
+                      <div className="flex flex-col md:flex-row justify-end gap-2">
+                        <button
+                          onClick={() => onEdit(issue)}
+                          className="inline-flex items-center justify-center w-8 h-8 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-600 hover:text-white transition-all border border-purple-100 dark:border-purple-500/20 shadow-sm"
+                          title="Corrigir"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        {issue.issueType === "duplicate" && (
+                          <button
+                            onClick={() => handleIgnoreIssue(issue)}
+                            className="inline-flex items-center justify-center w-8 h-8 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
+                            title="Validar como Diferente (Ignorar)"
+                          >
+                            <EyeOff size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            confirm({
+                              title: "Excluir Livro",
+                              description: `Deseja realmente excluir "${issue.title}"?`,
+                              confirmText: "Excluir",
+                              isDanger: true,
+                              onConfirm: async () => {
+                                try {
+                                  await api.delete(`/books/${issue.id}`);
+                                  addToast({
+                                    type: "success",
+                                    message: "Livro excluído!",
+                                  });
+                                  fetchData();
+                                } catch (err) {
+                                  addToast({
+                                    type: "error",
+                                    message: "Erro ao excluir.",
+                                  });
+                                }
+                              },
+                            });
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-500/20 shadow-sm"
+                          title="Excluir"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
