@@ -75,7 +75,7 @@
 
 ## Status
 
-- 🚧 Em desenvolvimento
+🚧 Em desenvolvimento
 
 > Veja as [issues abertas](https://github.com/vitoriapguimaraes/bookstack-ai/issues) para sugestões de melhorias e próximos passos.
 
