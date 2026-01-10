@@ -23,6 +23,7 @@ class UserPreference(SQLModel, table=True):
     
     # Custom Lists
     availability_options: Optional[list] = Field(default=None, sa_type=JSON)
+    ignored_audit_issues: Optional[list] = Field(default=[], sa_type=JSON)
     
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

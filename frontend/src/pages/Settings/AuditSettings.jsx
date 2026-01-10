@@ -15,6 +15,7 @@ import {
   Edit3,
   Trash,
   X as CloseIcon,
+  EyeOff,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import BulkEditModal from "../../components/BulkEditModal";
@@ -28,6 +29,7 @@ import { DEFAULT_AVAILABILITY_OPTIONS } from "../../utils/constants";
 export default function AuditSettings() {
   const [books, setBooks] = useState([]);
   const [config, setConfig] = useState(null);
+  const [ignoredAuditIssues, setIgnoredAuditIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [issues, setIssues] = useState([]);
   const [filter, setFilter] = useState("all"); // all, class, category
@@ -60,9 +62,11 @@ export default function AuditSettings() {
       const classCats = configRes.data?.class_categories || {};
       const availOptions =
         configRes.data?.availability_options || DEFAULT_AVAILABILITY_OPTIONS;
+      const ignored = configRes.data?.ignored_audit_issues || [];
 
       setConfig(classCats);
-      runAudit(booksRes.data, classCats, availOptions);
+      setIgnoredAuditIssues(ignored);
+      runAudit(booksRes.data, classCats, availOptions, ignored);
     } catch (err) {
       console.error("Erro na auditoria:", err);
     } finally {
@@ -70,7 +74,7 @@ export default function AuditSettings() {
     }
   };
 
-  const runAudit = (allBooks, classCats, availOptions) => {
+  const runAudit = (allBooks, classCats, availOptions, ignoredList = []) => {
     const foundIssues = [];
 
     // 1. Check Metadata (Class, Category, Availability)
@@ -131,6 +135,11 @@ export default function AuditSettings() {
 
         if (t1.length < 3 || t2.length < 3) continue; // too short
 
+        // Check ignored list
+        const pairKey =
+          b1.id < b2.id ? `${b1.id}_${b2.id}` : `${b2.id}_${b1.id}`;
+        if (ignoredList.includes(pairKey)) continue;
+
         // Exact match
         if (t1 === t2) {
           const groupId = crypto.randomUUID();
@@ -141,6 +150,7 @@ export default function AuditSettings() {
             matchGroupId: groupId,
             reason: "Duplicidade Exata",
             extraInfo: `Idêntico ao livro "${b2.title}" (ID: ${b2.id})`,
+            relatedBookId: b2.id,
           });
           foundIssues.push({
             ...b2,
@@ -149,6 +159,7 @@ export default function AuditSettings() {
             matchGroupId: groupId,
             reason: "Duplicidade Exata",
             extraInfo: `Idêntico ao livro "${b1.title}" (ID: ${b1.id})`,
+            relatedBookId: b1.id,
           });
           continue;
         }
@@ -169,6 +180,7 @@ export default function AuditSettings() {
             extraInfo: `Similar a "${b2.title}" (ID: ${b2.id}) - ${(
               similarity * 100
             ).toFixed(0)}%`,
+            relatedBookId: b2.id,
           });
           foundIssues.push({
             ...b2,
@@ -179,6 +191,7 @@ export default function AuditSettings() {
             extraInfo: `Similar a "${b1.title}" (ID: ${b1.id}) - ${(
               similarity * 100
             ).toFixed(0)}%`,
+            relatedBookId: b1.id,
           });
         }
       }
@@ -300,6 +313,47 @@ export default function AuditSettings() {
     } finally {
       setIsBulkProcessing(false);
     }
+  };
+
+  const handleIgnoreIssue = async (issue) => {
+    if (!issue.relatedBookId) return;
+
+    confirm({
+      title: "Validar como Diferentes",
+      description: `Deseja marcar estes livros como diferentes? O alerta de duplicidade não será mais exibido para este par.`,
+      confirmText: "Validar",
+      onConfirm: async () => {
+        try {
+          const otherId = issue.relatedBookId;
+          const pairKey =
+            issue.id < otherId
+              ? `${issue.id}_${otherId}`
+              : `${otherId}_${issue.id}`;
+
+          const newIgnored = [...ignoredAuditIssues, pairKey];
+          setIgnoredAuditIssues(newIgnored);
+
+          // Update backend
+          await api.put("/preferences/", {
+            ignored_audit_issues: newIgnored,
+          });
+
+          addToast({
+            type: "success",
+            message: "Validação salva com sucesso!",
+          });
+
+          // Re-run audit immediately in local state
+          const classCats = config || {};
+          const availOptions = DEFAULT_AVAILABILITY_OPTIONS;
+          
+          runAudit(books, classCats, availOptions, newIgnored);
+        } catch (err) {
+          console.error(err);
+          addToast({ type: "error", message: "Erro ao salvar validação." });
+        }
+      },
+    });
   };
 
   if (loading)
@@ -712,6 +766,15 @@ export default function AuditSettings() {
                         >
                           <Edit2 size={14} />
                         </button>
+                        {issue.issueType === "duplicate" && (
+                          <button
+                            onClick={() => handleIgnoreIssue(issue)}
+                            className="inline-flex items-center justify-center w-8 h-8 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
+                            title="Validar como Diferente (Ignorar)"
+                          >
+                            <EyeOff size={14} />
+                          </button>
+                        )}
                         <button
                           onClick={async (e) => {
                             e.stopPropagation();

@@ -376,7 +376,8 @@ def get_preferences(session: Session = Depends(get_session), user: dict = Depend
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
-        groq_key=decrypt_value(pref.groq_key)
+        groq_key=decrypt_value(pref.groq_key),
+        ignored_audit_issues=pref.ignored_audit_issues
     )
     
     return response_pref
@@ -473,6 +474,9 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
     if pref_data.availability_options is not None:
          pref.availability_options = pref_data.availability_options
 
+    if pref_data.ignored_audit_issues is not None:
+         pref.ignored_audit_issues = pref_data.ignored_audit_issues
+
     if current_availability:
         # Sort to compare content irrespective of order? Or order matters? Order matters for UI.
         if current_availability != DEFAULT_AVAILABILITY_OPTIONS:
@@ -509,6 +513,7 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
         has_custom_classes=pref.has_custom_classes,
         has_custom_availability=pref.has_custom_availability,
         availability_options=pref.availability_options,
+        ignored_audit_issues=pref.ignored_audit_issues,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
