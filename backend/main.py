@@ -438,6 +438,11 @@ def update_preferences(pref_data: UserPreference, session: Session = Depends(get
     if pref_data.openai_key is not None: pref.openai_key = encrypt_value(pref_data.openai_key)
     if pref_data.gemini_key is not None: pref.gemini_key = encrypt_value(pref_data.gemini_key)
     if pref_data.groq_key is not None: pref.groq_key = encrypt_value(pref_data.groq_key)
+
+    # Avatar Updates
+    if pref_data.avatar_icon is not None: pref.avatar_icon = pref_data.avatar_icon
+    if pref_data.avatar_color is not None: pref.avatar_color = pref_data.avatar_color
+    if pref_data.avatar_bg is not None: pref.avatar_bg = pref_data.avatar_bg
     
     # Update flags based on content
     # 1. API Keys: True if ANY key is present and meaningful

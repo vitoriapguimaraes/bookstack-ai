@@ -14,6 +14,11 @@ class UserPreference(SQLModel, table=True):
     formula_config: Dict[str, Any] = Field(default={}, sa_type=JSON)
     class_categories: Dict[str, Any] = Field(default={}, sa_type=JSON)
     
+    # Avatar Settings
+    avatar_icon: str = Field(default="User")
+    avatar_color: str = Field(default="slate")
+    avatar_bg: str = Field(default="slate")
+    
     # Onboarding Flags
     has_api_keys: bool = Field(default=False)
     has_custom_prompts: bool = Field(default=False)
