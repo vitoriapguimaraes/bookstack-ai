@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { supabase } from "../services/supabase";
+import { api } from "../services/api"; // Build relies on this
 import { SUPER_ADMIN_EMAIL } from "../utils/constants";
 
 const AuthContext = createContext({});
@@ -9,8 +10,13 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Preference States
+  const [userAvatar, setUserAvatarState] = useState("User");
+  const [userAvatarColor, setUserAvatarColorState] = useState("slate");
+  const [userAvatarBg, setUserAvatarBgState] = useState("slate");
+  const [yearlyGoal, setYearlyGoalState] = useState(20);
+
   useEffect(() => {
-    // Check active session
     // Check active session
     supabase.auth
       .getSession()
@@ -22,6 +28,9 @@ export function AuthProvider({ children }) {
         } else {
           setSession(session);
           setUser(session?.user ?? null);
+          if (session?.user) {
+            fetchUserPreferences();
+          }
         }
       })
       .catch((err) => {
@@ -40,10 +49,28 @@ export function AuthProvider({ children }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        fetchUserPreferences();
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserPreferences = async () => {
+    try {
+      const res = await api.get("/preferences/");
+      if (res.data) {
+        if (res.data.avatar_icon) setUserAvatarState(res.data.avatar_icon);
+        if (res.data.avatar_color)
+          setUserAvatarColorState(res.data.avatar_color);
+        if (res.data.avatar_bg) setUserAvatarBgState(res.data.avatar_bg);
+        if (res.data.yearly_goal) setYearlyGoalState(res.data.yearly_goal);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar preferências do usuário:", error);
+    }
+  };
 
   const signIn = async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -51,7 +78,6 @@ export function AuthProvider({ children }) {
       password,
     });
     if (error) throw error;
-    // Manually update state to ensure fast UI response (listener will also fire but this is immediate)
     if (data.session) {
       setSession(data.session);
       setUser(data.user);
@@ -76,33 +102,50 @@ export function AuthProvider({ children }) {
     if (error) throw error;
     setUser(null);
     setSession(null);
+    // Reset defaults
+    setUserAvatarState("User");
+    setUserAvatarColorState("slate");
+    setUserAvatarBgState("slate");
+    setYearlyGoalState(20);
   };
 
   const isAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
-  const [userAvatar, setUserAvatarState] = useState(
-    localStorage.getItem("user_avatar") || "User"
-  );
-  const [userAvatarColor, setUserAvatarColorState] = useState(
-    localStorage.getItem("user_avatar_color") || "slate"
-  );
-  const [userAvatarBg, setUserAvatarBgState] = useState(
-    localStorage.getItem("user_avatar_bg") || "slate"
-  );
-
-  const setUserAvatar = (avatarName) => {
+  // Setters that sync with Backend
+  const setUserAvatar = async (avatarName) => {
     setUserAvatarState(avatarName);
-    localStorage.setItem("user_avatar", avatarName);
+    try {
+      await api.put("/preferences/", { avatar_icon: avatarName });
+    } catch (err) {
+      console.error("Failed to sync avatar icon:", err);
+    }
   };
 
-  const setUserAvatarColor = (colorId) => {
+  const setUserAvatarColor = async (colorId) => {
     setUserAvatarColorState(colorId);
-    localStorage.setItem("user_avatar_color", colorId);
+    try {
+      await api.put("/preferences/", { avatar_color: colorId });
+    } catch (err) {
+      console.error("Failed to sync avatar color:", err);
+    }
   };
 
-  const setUserAvatarBg = (bgId) => {
+  const setUserAvatarBg = async (bgId) => {
     setUserAvatarBgState(bgId);
-    localStorage.setItem("user_avatar_bg", bgId);
+    try {
+      await api.put("/preferences/", { avatar_bg: bgId });
+    } catch (err) {
+      console.error("Failed to sync avatar bg:", err);
+    }
+  };
+
+  const setYearlyGoal = async (goal) => {
+    setYearlyGoalState(goal);
+    try {
+      await api.put("/preferences/", { yearly_goal: goal });
+    } catch (err) {
+      console.error("Failed to sync yearly goal:", err);
+    }
   };
 
   return (
@@ -121,6 +164,9 @@ export function AuthProvider({ children }) {
         setUserAvatarColor,
         userAvatarBg,
         setUserAvatarBg,
+        yearlyGoal,
+        setYearlyGoal,
+        fetchUserPreferences,
       }}
     >
       {children}

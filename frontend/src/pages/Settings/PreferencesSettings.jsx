@@ -19,12 +19,21 @@ import {
 import ProfileSelectionModal from "../../components/ProfileSelectionModal";
 
 export default function PreferencesSettings() {
-  const { user, userAvatar, userAvatarColor, userAvatarBg } = useAuth();
+  const {
+    user,
+    userAvatar,
+    userAvatarColor,
+    userAvatarBg,
+    yearlyGoal: contextYearlyGoal, // Get from context
+    setYearlyGoal: setContextYearlyGoal, // Get setter
+  } = useAuth();
+
   const { addToast } = useToast();
-  const [yearlyGoal, setYearlyGoal] = useState(20);
+
+  // Local state for the input field to avoid spamming API
+  const [localYearlyGoal, setLocalYearlyGoal] = useState(20);
   const [isSaved, setIsSaved] = useState(false);
 
-  const [loading, setLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Custom Reset Modal State
@@ -39,22 +48,12 @@ export default function PreferencesSettings() {
     AVATAR_BACKGROUNDS.find((b) => b.id === userAvatarBg) ||
     AVATAR_BACKGROUNDS[0];
 
+  // Sync local state with context when context loads
   useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
-    try {
-      const res = await api.get("/preferences/");
-      if (res.data?.yearly_goal) {
-        setYearlyGoal(res.data.yearly_goal);
-      }
-    } catch (err) {
-      console.error("Erro ao carregar preferências:", err);
-    } finally {
-      setLoading(false);
+    if (contextYearlyGoal) {
+      setLocalYearlyGoal(contextYearlyGoal);
     }
-  };
+  }, [contextYearlyGoal]);
 
   // Countdown timer logic (Reusable for both modals ideally, but keeping simple)
   useEffect(() => {
@@ -116,8 +115,8 @@ export default function PreferencesSettings() {
 
   const handleSave = async () => {
     try {
-      await api.put("/preferences/", { yearly_goal: yearlyGoal });
-      localStorage.setItem("yearlyReadingGoal", yearlyGoal.toString()); // Keep sync for now
+      // Use the context setter which calls the API
+      await setContextYearlyGoal(localYearlyGoal);
       setIsSaved(true);
       addToast({
         type: "success",
@@ -250,10 +249,10 @@ export default function PreferencesSettings() {
                   Meta Atual
                 </p>
                 <p className="text-2xl font-bold text-slate-800 dark:text-white">
-                  {yearlyGoal}
+                  {localYearlyGoal}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
-                  {yearlyGoal === 1 ? "livro" : "livros"} por ano
+                  {localYearlyGoal === 1 ? "livro" : "livros"} por ano
                 </p>
               </div>
             </div>
@@ -268,9 +267,9 @@ export default function PreferencesSettings() {
                     type="number"
                     min="1"
                     max="365"
-                    value={yearlyGoal}
+                    value={localYearlyGoal}
                     onChange={(e) =>
-                      setYearlyGoal(parseInt(e.target.value) || 1)
+                      setLocalYearlyGoal(parseInt(e.target.value) || 1)
                     }
                     className="flex-1 px-4 py-2 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
