@@ -412,11 +412,20 @@ def get_preferences(session: Session = Depends(get_session), user: dict = Depend
         custom_prompts=pref.custom_prompts,
         formula_config=pref.formula_config,
         class_categories=pref.class_categories,
+        has_api_keys=pref.has_api_keys,
+        has_custom_prompts=pref.has_custom_prompts,
+        has_custom_formula=pref.has_custom_formula,
+        has_custom_classes=pref.has_custom_classes,
+        has_custom_availability=pref.has_custom_availability,
+        availability_options=pref.availability_options,
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
         groq_key=decrypt_value(pref.groq_key),
-        ignored_audit_issues=pref.ignored_audit_issues
+        ignored_audit_issues=pref.ignored_audit_issues,
+        avatar_icon=pref.avatar_icon,
+        avatar_color=pref.avatar_color,
+        avatar_bg=pref.avatar_bg
     )
     
     return response_pref
@@ -561,7 +570,10 @@ def update_preferences(pref_data: UserPreferenceUpdate, session: Session = Depen
         updated_at=pref.updated_at,
         openai_key=decrypt_value(pref.openai_key),
         gemini_key=decrypt_value(pref.gemini_key),
-        groq_key=decrypt_value(pref.groq_key)
+        groq_key=decrypt_value(pref.groq_key),
+        avatar_icon=pref.avatar_icon,
+        avatar_color=pref.avatar_color,
+        avatar_bg=pref.avatar_bg
     )
     return response_pref
 
