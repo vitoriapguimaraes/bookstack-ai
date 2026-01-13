@@ -158,7 +158,7 @@ export default function SettingsLayout({ onEdit }) {
       </div>
 
       {/* Child Content */}
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-slate-50/50 dark:bg-neutral-950/30">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 bg-slate-50/50 dark:bg-neutral-950/30">
         <div className="w-full max-w-[1600px] mx-auto animate-slide-up">
           {/* Contextual Header for Mobile/Desktop Content Area */}
           <header className="mb-6 md:hidden">
