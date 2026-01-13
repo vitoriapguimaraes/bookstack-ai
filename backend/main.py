@@ -42,7 +42,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:3000",
-        "https://bookstack-interface.onrender.com",
+        "https://bookstack-ai-api.vercel.app",
         "https://bookstack-ai.vercel.app"
     ],
     allow_credentials=True,
@@ -50,7 +50,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount uploads directory to serve static files (images)
 # Mount uploads directory to serve static files (images)
 UPLOAD_DIR = Path("uploads")
 try:

@@ -388,7 +388,17 @@ export default function App() {
 
           {/* Button Scroll to Top */}
           {!isLoginPage && (
-            <ScrollToTopBottom currentPath={location.pathname} />
+            <ScrollToTopBottom
+              containerRef={mainRef}
+              currentPath={location.pathname}
+            />
+          )}
+
+          {/* Minimalist Footer */}
+          {!isLoginPage && (
+            <div className="fixed bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-slate-300 dark:text-neutral-700 pointer-events-none z-0 opacity-50">
+              desenvolvido por github.com/vitoriapguimaraes
+            </div>
           )}
         </div>
       </ConfirmationProvider>

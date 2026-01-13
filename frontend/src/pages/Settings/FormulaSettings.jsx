@@ -450,257 +450,266 @@ export default function FormulaSettings() {
         </div>
 
         {/* RIGHT: Simulator (Sticky) */}
-        <aside className="hidden lg:block lg:w-96 lg:sticky lg:top-8 lg:self-start z-20">
-          <div className="bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-slate-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-60px)]">
-            {/* Score Header (Fixed at top of card) */}
-            <div className="bg-slate-900 p-6 text-white relative overflow-hidden flex-shrink-0">
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 text-slate-400 mb-1">
-                  <Calculator size={14} className="animate-pulse" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">
-                    Simulador de Score
-                  </span>
+        <aside className="hidden lg:block lg:w-96 lg:sticky lg:top-8 lg:self-start z-20 perspective-1000">
+          <SimulatorCard simScore={simScore}>
+            <div className="bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-slate-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-60px)]">
+              {/* Score Header (Fixed at top of card) */}
+              <div className="bg-slate-900 p-6 text-white relative overflow-hidden flex-shrink-0">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <Calculator size={14} className="animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                      Simulador de Score
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-white">
+                      {simScore.toFixed(0)}
+                    </span>
+                    <span className="text-slate-400 text-sm font-bold">
+                      pontos
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black text-white">
-                    {simScore.toFixed(0)}
-                  </span>
-                  <span className="text-slate-400 text-sm font-bold">
-                    pontos
-                  </span>
+                <div className="absolute -right-4 -bottom-4 text-white/5 transform rotate-12">
+                  <Star size={120} weight="fill" />
                 </div>
               </div>
-              <div className="absolute -right-4 -bottom-4 text-white/5 transform rotate-12">
-                <Star size={120} weight="fill" />
-              </div>
-            </div>
 
-            {/* Scrollable Characteristics Section */}
-            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-neutral-900">
-              <div className="space-y-4">
+              {/* Scrollable Characteristics Section */}
+              <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-neutral-900">
                 <div className="space-y-4">
-                  {/* Type & Avail Header/Weights Logic */}
-                  {(() => {
-                    // Robust Weight Extraction
-                    const typeWeight =
-                      config.type?.[simBook.type] !== undefined
-                        ? config.type[simBook.type]
-                        : config.type?.default || 0;
+                  <div className="space-y-4">
+                    {/* Type & Avail Header/Weights Logic */}
+                    {(() => {
+                      // Robust Weight Extraction
+                      const typeWeight =
+                        config.type?.[simBook.type] !== undefined
+                          ? config.type[simBook.type]
+                          : config.type?.default || 0;
 
-                    const availWeight =
-                      config.availability?.[simBook.availability] !== undefined
-                        ? config.availability[simBook.availability]
-                        : config.availability?.default || 0;
+                      const availWeight =
+                        config.availability?.[simBook.availability] !==
+                        undefined
+                          ? config.availability[simBook.availability]
+                          : config.availability?.default || 0;
 
-                    const priorityWeight =
-                      config.priority?.[simBook.priority] || 0;
-                    const yearWeight = getYearScore(simBook.year);
+                      const priorityWeight =
+                        config.priority?.[simBook.priority] || 0;
+                      const yearWeight = getYearScore(simBook.year);
 
-                    // Weights
-                    const classWeight =
-                      config.book_class?.[simBook.book_class] || 0;
-                    const catWeight = config.category?.[simBook.category] || 0;
+                      // Weights
+                      const classWeight =
+                        config.book_class?.[simBook.book_class] || 0;
+                      const catWeight =
+                        config.category?.[simBook.category] || 0;
 
-                    return (
-                      <>
-                        {/* Type & Avail */}
-                        <div className="grid grid-cols-2 gap-3">
+                      return (
+                        <>
+                          {/* Type & Avail */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
+                                  Tipo
+                                </span>
+                                <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
+                                  +{typeWeight}
+                                </span>
+                              </div>
+                              <div className="h-8 flex items-center">
+                                <select
+                                  value={simBook.type}
+                                  onChange={(e) =>
+                                    setSimBook({
+                                      ...simBook,
+                                      type: e.target.value,
+                                    })
+                                  }
+                                  className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none cursor-pointer"
+                                >
+                                  <option value="Técnico">Técnico</option>
+                                  <option value="Não Técnico">
+                                    Não Técnico
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
+                                  Onde
+                                </span>
+                                <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
+                                  +{availWeight}
+                                </span>
+                              </div>
+                              <div className="h-8 flex items-center">
+                                <select
+                                  value={simBook.availability}
+                                  onChange={(e) =>
+                                    setSimBook({
+                                      ...simBook,
+                                      availability: e.target.value,
+                                    })
+                                  }
+                                >
+                                  <option value="Físico">Físico</option>
+                                  <option value="Digital">Digital</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Priority */}
                           <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
                             <div className="flex justify-between items-center mb-1.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                                Tipo
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
+                                  Prioridade
+                                </span>
+                                <span className="text-[10px] font-black text-purple-600 dark:text-purple-400">
+                                  {simBook.priority.split(" - ")[1]}
+                                </span>
+                              </div>
                               <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                                +{typeWeight}
+                                +{priorityWeight}
                               </span>
                             </div>
                             <div className="h-8 flex items-center">
-                              <select
-                                value={simBook.type}
-                                onChange={(e) =>
+                              <input
+                                type="range"
+                                min="1"
+                                max="4"
+                                step="1"
+                                value={simBook.priority.split(" - ")[0]}
+                                onChange={(e) => {
+                                  const mapping = {
+                                    1: "1 - Baixa",
+                                    2: "2 - Média",
+                                    3: "3 - Média-Alta",
+                                    4: "4 - Alta",
+                                  };
                                   setSimBook({
                                     ...simBook,
-                                    type: e.target.value,
-                                  })
-                                }
-                                className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none cursor-pointer"
-                              >
-                                <option value="Técnico">Técnico</option>
-                                <option value="Não Técnico">Não Técnico</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
-                            <div className="flex justify-between items-center mb-1.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                                Onde
-                              </span>
-                              <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                                +{availWeight}
-                              </span>
-                            </div>
-                            <div className="h-8 flex items-center">
-                              <select
-                                value={simBook.availability}
-                                onChange={(e) =>
-                                  setSimBook({
-                                    ...simBook,
-                                    availability: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="Físico">Físico</option>
-                                <option value="Digital">Digital</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Priority */}
-                        <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                                Prioridade
-                              </span>
-                              <span className="text-[10px] font-black text-purple-600 dark:text-purple-400">
-                                {simBook.priority.split(" - ")[1]}
-                              </span>
-                            </div>
-                            <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                              +{priorityWeight}
-                            </span>
-                          </div>
-                          <div className="h-8 flex items-center">
-                            <input
-                              type="range"
-                              min="1"
-                              max="4"
-                              step="1"
-                              value={simBook.priority.split(" - ")[0]}
-                              onChange={(e) => {
-                                const mapping = {
-                                  1: "1 - Baixa",
-                                  2: "2 - Média",
-                                  3: "3 - Média-Alta",
-                                  4: "4 - Alta",
-                                };
-                                setSimBook({
-                                  ...simBook,
-                                  priority: mapping[e.target.value],
-                                });
-                              }}
-                              className="w-full h-1.5 bg-slate-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Year */}
-                        <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                              Ano de Lançamento
-                            </span>
-                            <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                              +{yearWeight}
-                            </span>
-                          </div>
-                          <div className="h-8 flex items-center gap-3">
-                            <input
-                              type="number"
-                              value={simBook.year}
-                              onChange={(e) =>
-                                setSimBook({
-                                  ...simBook,
-                                  year: parseInt(e.target.value) || 2024,
-                                })
-                              }
-                              className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none"
-                            />
-                            <div className="flex flex-col gap-0.5">
-                              <button
-                                onClick={() =>
-                                  setSimBook({
-                                    ...simBook,
-                                    year: simBook.year + 1,
-                                  })
-                                }
-                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded text-slate-400 hover:text-slate-600"
-                              >
-                                <ArrowRight size={10} className="-rotate-90" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  setSimBook({
-                                    ...simBook,
-                                    year: simBook.year - 1,
-                                  })
-                                }
-                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded text-slate-400 hover:text-slate-600"
-                              >
-                                <ArrowRight size={10} className="rotate-90" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3.5 pt-1">
-                          {/* Class */}
-                          <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
-                            <div className="flex justify-between items-center mb-1.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                                Classe
-                              </span>
-                              <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                                +{classWeight}
-                              </span>
-                            </div>
-                            <div className="h-8 flex items-center">
-                              <Select
-                                value={simBook.book_class}
-                                onChange={(v) => {
-                                  const cats = classCategories[v] || [];
-                                  setSimBook({
-                                    ...simBook,
-                                    book_class: v,
-                                    category: cats[0] || "",
+                                    priority: mapping[e.target.value],
                                   });
                                 }}
-                                options={Object.keys(classCategories).sort()}
+                                className="w-full h-1.5 bg-slate-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
                               />
                             </div>
                           </div>
 
-                          {/* Category */}
+                          {/* Year */}
                           <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
                             <div className="flex justify-between items-center mb-1.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
-                                Categoria
+                                Ano de Lançamento
                               </span>
                               <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
-                                +{catWeight}
+                                +{yearWeight}
                               </span>
                             </div>
-                            <div className="h-8 flex items-center">
-                              <Select
-                                value={simBook.category}
-                                onChange={(v) =>
-                                  setSimBook({ ...simBook, category: v })
+                            <div className="h-8 flex items-center gap-3">
+                              <input
+                                type="number"
+                                value={simBook.year}
+                                onChange={(e) =>
+                                  setSimBook({
+                                    ...simBook,
+                                    year: parseInt(e.target.value) || 2024,
+                                  })
                                 }
-                                options={(
-                                  classCategories[simBook.book_class] || []
-                                ).sort()}
+                                className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none"
                               />
+                              <div className="flex flex-col gap-0.5">
+                                <button
+                                  onClick={() =>
+                                    setSimBook({
+                                      ...simBook,
+                                      year: simBook.year + 1,
+                                    })
+                                  }
+                                  className="p-0.5 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded text-slate-400 hover:text-slate-600"
+                                >
+                                  <ArrowRight
+                                    size={10}
+                                    className="-rotate-90"
+                                  />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setSimBook({
+                                      ...simBook,
+                                      year: simBook.year - 1,
+                                    })
+                                  }
+                                  className="p-0.5 hover:bg-slate-200 dark:hover:bg-neutral-700 rounded text-slate-400 hover:text-slate-600"
+                                >
+                                  <ArrowRight size={10} className="rotate-90" />
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </>
-                    );
-                  })()}
+
+                          <div className="space-y-3.5 pt-1">
+                            {/* Class */}
+                            <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
+                                  Classe
+                                </span>
+                                <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
+                                  +{classWeight}
+                                </span>
+                              </div>
+                              <div className="h-8 flex items-center">
+                                <Select
+                                  value={simBook.book_class}
+                                  onChange={(v) => {
+                                    const cats = classCategories[v] || [];
+                                    setSimBook({
+                                      ...simBook,
+                                      book_class: v,
+                                      category: cats[0] || "",
+                                    });
+                                  }}
+                                  options={Object.keys(classCategories).sort()}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Category */}
+                            <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-2.5 border border-slate-100 dark:border-neutral-800 hover:border-slate-200 transition-colors group">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-slate-500 transition-colors">
+                                  Categoria
+                                </span>
+                                <span className="bg-slate-800 dark:bg-neutral-700 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono font-bold">
+                                  +{catWeight}
+                                </span>
+                              </div>
+                              <div className="h-8 flex items-center">
+                                <Select
+                                  value={simBook.category}
+                                  onChange={(v) =>
+                                    setSimBook({ ...simBook, category: v })
+                                  }
+                                  options={(
+                                    classCategories[simBook.book_class] || []
+                                  ).sort()}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </SimulatorCard>
         </aside>
 
         {/* Mobile Score Bar (Fixed at bottom for mobile) */}
@@ -772,5 +781,56 @@ function Select({ value, onChange, options }) {
         </option>
       ))}
     </select>
+  );
+}
+
+function SimulatorCard({ children }) {
+  const [style, setStyle] = useState({});
+  const [glowStyle, setGlowStyle] = useState({});
+
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg rotation
+    const rotateY = ((x - centerX) / centerX) * 5;
+
+    setStyle({
+      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+      transition: "none",
+    });
+
+    setGlowStyle({
+      background: `radial-gradient(circle at ${x}px ${y}px, rgba(168, 85, 247, 0.15) 0%, transparent 80%)`,
+      opacity: 1,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setStyle({
+      transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
+      transition: "transform 0.5s ease-out",
+    });
+    setGlowStyle({ opacity: 0, transition: "opacity 0.5s ease-out" });
+  };
+
+  return (
+    <div
+      className="relative transition-transform duration-200 ease-out will-change-transform"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={style}
+    >
+      <div
+        className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem] transition-all duration-300"
+        style={glowStyle}
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
   );
 }

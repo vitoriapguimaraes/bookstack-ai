@@ -182,7 +182,12 @@ export default function BookshelfExporter({
               <div
                 ref={exportRef}
                 className="bg-white relative flex-shrink-0"
-                style={{ width: "1200px", minHeight: "630px", height: "auto" }}
+                style={{
+                  width: "1200px",
+                  minHeight: "800px", // Increased min-height for better aspect ratio
+                  height: "auto",
+                  padding: "40px", // Added outer padding
+                }}
               >
                 {/* Template Content - Same as before */}
                 <div className="w-full min-h-full p-8 pb-12 flex flex-col">
