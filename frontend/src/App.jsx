@@ -396,8 +396,8 @@ export default function App() {
 
           {/* Minimalist Footer */}
           {!isLoginPage && (
-            <div className="fixed bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-slate-300 dark:text-neutral-700 pointer-events-none z-0 opacity-50">
-              desenvolvido por github.com/vitoriapguimaraes
+            <div className="fixed bottom-2 left-1/2 text-[10px] text-slate-400 dark:text-slate-500 pointer-events-none z-50 opacity-80 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-100 dark:border-neutral-800 shadow-sm">
+              Desenvolvido por github.com/vitoriapguimaraes
             </div>
           )}
         </div>
