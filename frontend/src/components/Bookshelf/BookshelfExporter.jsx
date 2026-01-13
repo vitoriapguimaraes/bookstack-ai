@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Download, Share2, X, Sparkles, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { useToast } from "../../context/ToastContext";
+import { API_URL } from "../../utils/config";
 
 export default function BookshelfExporter({
   books,
@@ -217,12 +218,11 @@ export default function BookshelfExporter({
                   {/* Books Grid */}
                   <div className="flex-1" style={getGridStyle()}>
                     {displayBooks.map((book, idx) => {
-                      const API_URL =
-                        import.meta.env.VITE_API_URL || "http://localhost:8000";
-
                       let coverUrl = null;
                       if (book.cover_image) {
                         if (book.cover_image.startsWith("/")) {
+                          // If it's a relative path (unlikely for covers but possible), prepend API URL if not proxying
+                          // But here we want to proxy unless it's same domain
                           coverUrl = book.cover_image;
                         } else {
                           // External URL (http/https), use proxy to avoid CORS issues in html2canvas
