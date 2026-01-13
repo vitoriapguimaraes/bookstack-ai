@@ -17,7 +17,7 @@ import csv
 import io
 import codecs
 from pydantic import BaseModel
-from models_preferences import UserPreference, Profile
+from models_preferences import UserPreference, Profile, UserPreferenceUpdate
 from security import encrypt_value, decrypt_value
 from supabase import create_client, Client
 from security import encrypt_value, decrypt_value
@@ -422,7 +422,7 @@ def get_preferences(session: Session = Depends(get_session), user: dict = Depend
     return response_pref
 
 @app.put("/preferences/", response_model=UserPreference)
-def update_preferences(pref_data: UserPreference, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
+def update_preferences(pref_data: UserPreferenceUpdate, session: Session = Depends(get_session), user: dict = Depends(get_current_user)):
     user_id = user['id']
     pref = session.get(UserPreference, user_id)
     if not pref:

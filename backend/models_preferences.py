@@ -32,6 +32,24 @@ class UserPreference(SQLModel, table=True):
     
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+class UserPreferenceUpdate(SQLModel):
+    openai_key: Optional[str] = None
+    gemini_key: Optional[str] = None
+    groq_key: Optional[str] = None
+    yearly_goal: Optional[int] = None
+    custom_prompts: Optional[Dict[str, Any]] = None
+    formula_config: Optional[Dict[str, Any]] = None
+    class_categories: Optional[Dict[str, Any]] = None
+    
+    # Avatar Settings
+    avatar_icon: Optional[str] = None
+    avatar_color: Optional[str] = None
+    avatar_bg: Optional[str] = None
+    
+    # Custom Lists
+    availability_options: Optional[list] = None
+    ignored_audit_issues: Optional[list] = None
+
 class Profile(SQLModel, table=True):
     __tablename__ = "profiles"
 
