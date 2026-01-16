@@ -578,6 +578,7 @@ export default function BooksTable({
 
                   {/* Min slider */}
                   <input
+                    aria-label="Ano mínimo"
                     type="range"
                     min={yearBounds[0]}
                     max={yearBounds[1]}
@@ -604,6 +605,7 @@ export default function BooksTable({
 
                   {/* Max slider */}
                   <input
+                    aria-label="Ano máximo"
                     type="range"
                     min={yearBounds[0]}
                     max={yearBounds[1]}
