@@ -83,8 +83,6 @@ export default function AISettings() {
       const payload = {
         openai_key: openaiKey,
         gemini_key: geminiKey,
-        openai_key: openaiKey,
-        gemini_key: geminiKey,
         groq_key: groqKey,
         preferred_provider: preferredProvider,
         custom_prompts: {

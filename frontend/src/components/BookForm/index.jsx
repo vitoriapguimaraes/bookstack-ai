@@ -16,7 +16,16 @@ import {
   DEFAULT_AVAILABILITY_OPTIONS,
 } from "../../utils/constants";
 
-const ScoreStats = ({ stats, currentScore }) => {
+const ScoreStats = ({ stats, currentScore, loading }) => {
+  if (loading) {
+    return (
+      <div className="mt-4 p-4 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2">
+        <Sparkles className="animate-spin text-purple-400" size={20} />
+        <span className="text-[10px]">Calculando probabilidade...</span>
+      </div>
+    );
+  }
+
   if (!stats) return null;
 
   const quadrants = [
@@ -95,6 +104,7 @@ export default function BookForm({
   const [coverFile, setCoverFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [scoreStats, setScoreStats] = useState(null);
   const [previewScore, setPreviewScore] = useState(null);
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null);
@@ -188,12 +198,12 @@ export default function BookForm({
         // Remove non-digit characters
         let raw = value.replace(/\D/g, "");
 
-        // Limit to 6 digits (MMYYYY)
+        // Limit to 6 digits (YYYYMM)
         if (raw.length > 6) raw = raw.slice(0, 6);
 
-        // Apply masking MM/YYYY
-        if (raw.length > 2) {
-          newData[name] = raw.substring(0, 2) + "/" + raw.substring(2);
+        // Apply masking YYYY/MM
+        if (raw.length > 4) {
+          newData[name] = raw.substring(0, 4) + "/" + raw.substring(4);
         } else {
           newData[name] = raw;
         }
@@ -227,10 +237,16 @@ export default function BookForm({
   // Fetch Stats when Status becomes "A Ler"
   useEffect(() => {
     if (formData.status === "A Ler") {
+      setStatsLoading(true);
       api
         .get("/books/stats/toread")
         .then((res) => setScoreStats(res.data))
-        .catch((err) => console.error("Error fetching stats:", err));
+        .catch((err) => {
+          console.error("Error fetching stats:", err);
+          // Fallback to zeros if error, so UI still shows up provided we have preview
+          setScoreStats({ q1: 0, q2: 0, q3: 0, q4: 0, total: 0 });
+        })
+        .finally(() => setStatsLoading(false));
 
       // Also fetch initial preview
       fetchPreviewScore(formData);
@@ -777,7 +793,7 @@ export default function BookForm({
                     onChange={handleChange}
                     maxLength={7}
                     className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-emerald-500 text-center"
-                    placeholder="MM/AAAA"
+                    placeholder="AAAA/MM"
                   />
                 </div>
               </div>
@@ -829,7 +845,11 @@ export default function BookForm({
 
                 {/* Score Stats Component */}
                 {formData.status === "A Ler" && (
-                  <ScoreStats stats={scoreStats} currentScore={previewScore} />
+                  <ScoreStats
+                    stats={scoreStats}
+                    currentScore={previewScore}
+                    loading={statsLoading}
+                  />
                 )}
               </div>
             )}
