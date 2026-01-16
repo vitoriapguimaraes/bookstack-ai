@@ -38,11 +38,13 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
   return (
     <div className="mt-4 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-fade-in">
       <h4 className="text-[10px] uppercase font-bold text-slate-500 mb-2">
-        Análise de Índice
+        Análise de Score
       </h4>
       <div className="flex items-center justify-between mb-3">
         <div className="text-center">
-          <span className="block text-[10px] text-slate-400">Seu Índice</span>
+          <span className="block text-[10px] text-slate-400">
+            Score Previsto
+          </span>
           <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
             {currentScore ? currentScore.toFixed(1) : "-"}
           </span>
@@ -210,25 +212,7 @@ export default function BookForm({
       }
 
       // Trigger Score Preview if relevant fields change and status is "A Ler"
-      if (
-        [
-          "status",
-          "priority",
-          "year",
-          "book_class",
-          "category",
-          "availability",
-        ].includes(name)
-      ) {
-        if (
-          newData.status === "A Ler" ||
-          (name === "status" && value === "A Ler")
-        ) {
-          fetchPreviewScore(newData);
-        } else {
-          setPreviewScore(null);
-        }
-      }
+      // Side effect for score preview removed from here. Handled by useEffect.
 
       return newData;
     });
@@ -247,13 +231,31 @@ export default function BookForm({
           setScoreStats({ q1: 0, q2: 0, q3: 0, q4: 0, total: 0 });
         })
         .finally(() => setStatsLoading(false));
-
-      // Also fetch initial preview
-      fetchPreviewScore(formData);
     } else {
       setScoreStats(null);
     }
   }, [formData.status]);
+
+  // Effect to update preview score when form data changes
+  useEffect(() => {
+    if (formData.status === "A Ler") {
+      // Debounce could be added here if frequent updates cause lag
+      const timeoutId = setTimeout(() => {
+        fetchPreviewScore(formData);
+      }, 300); // 300ms debounce
+      return () => clearTimeout(timeoutId);
+    } else {
+      setPreviewScore(null);
+    }
+  }, [
+    formData.status,
+    formData.priority,
+    formData.year,
+    formData.book_class,
+    formData.category,
+    formData.availability,
+    formData.type,
+  ]);
 
   const fetchPreviewScore = async (data) => {
     // Basic debounce could be added here if needed, but for now direct call on change
