@@ -314,7 +314,10 @@ export default function FormulaSettings() {
               {["1 - Baixa", "2 - Média", "3 - Média-Alta", "4 - Alta"].map(
                 (p) => (
                   <div key={p} className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                    <label
+                      htmlFor={`priority-${p}`}
+                      className="text-xs font-semibold text-slate-500 uppercase"
+                    >
                       {p.split(" - ")[1]}
                     </label>
                     <div className="relative">
@@ -322,6 +325,7 @@ export default function FormulaSettings() {
                         +
                       </div>
                       <input
+                        id={`priority-${p}`}
                         type="number"
                         value={config.priority?.[p] || 0}
                         onChange={(e) => updatePriority(p, e.target.value)}
@@ -329,7 +333,7 @@ export default function FormulaSettings() {
                       />
                     </div>
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -344,7 +348,10 @@ export default function FormulaSettings() {
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               {(config.year?.ranges || []).map((range, idx) => (
                 <div key={idx} className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">
+                  <label
+                    htmlFor={`year-range-${idx}`}
+                    className="text-xs font-semibold text-slate-500 uppercase"
+                  >
                     {range.label}
                   </label>
                   <div className="relative">
@@ -352,6 +359,7 @@ export default function FormulaSettings() {
                       +
                     </div>
                     <input
+                      id={`year-range-${idx}`}
                       type="number"
                       value={range.weight}
                       onChange={(e) => updateYear(idx, e.target.value)}
@@ -735,9 +743,12 @@ export default function FormulaSettings() {
 }
 
 function InputGroup({ label, value, onChange, small = false }) {
+  const inputId = `input-${label.replace(/\s+/g, "-").toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="flex flex-col gap-2">
       <label
+        htmlFor={inputId}
         className={`text-slate-500 font-semibold uppercase tracking-tight ${
           small ? "text-[10px]" : "text-xs"
         }`}
@@ -749,6 +760,7 @@ function InputGroup({ label, value, onChange, small = false }) {
           +
         </div>
         <input
+          id={inputId}
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
