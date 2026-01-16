@@ -549,6 +549,7 @@ export default function FormulaSettings() {
                             </div>
                             <div className="h-8 flex items-center">
                               <select
+                                aria-label="Selecionar disponibilidade"
                                 value={simBook.availability}
                                 onChange={(e) =>
                                   setSimBook({
@@ -556,6 +557,7 @@ export default function FormulaSettings() {
                                     availability: e.target.value,
                                   })
                                 }
+                                className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-white outline-none cursor-pointer"
                               >
                                 <option value="Físico">Físico</option>
                                 <option value="Digital">Digital</option>
