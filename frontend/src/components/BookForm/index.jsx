@@ -323,7 +323,7 @@ export default function BookForm({
               type="button"
               onClick={handleAiSuggest}
               disabled={aiLoading || !formData.title}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-purple-900/50 to-purple-800/50 hover:from-purple-800 hover:to-purple-700 text-purple-200 border border-purple-500/30 px-2 py-1 rounded text-[10px] transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white border border-purple-400/30 px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
               title="Preencher restante do formulário com IA"
             >
               <Sparkles size={12} />{" "}
