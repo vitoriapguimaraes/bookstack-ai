@@ -125,6 +125,21 @@ export default function BookForm({
         }
       }
 
+      if (name === "date_read") {
+        // Remove non-digit characters
+        let raw = value.replace(/\D/g, "");
+
+        // Limit to 6 digits (MMYYYY)
+        if (raw.length > 6) raw = raw.slice(0, 6);
+
+        // Apply masking MM/YYYY
+        if (raw.length > 2) {
+          newData[name] = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+        } else {
+          newData[name] = raw;
+        }
+      }
+
       return newData;
     });
   };
@@ -654,8 +669,9 @@ export default function BookForm({
                     name="date_read"
                     value={formData.date_read || ""}
                     onChange={handleChange}
+                    maxLength={7}
                     className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-emerald-500 text-center"
-                    placeholder="YYYY/MM"
+                    placeholder="MM/AAAA"
                   />
                 </div>
               </div>
