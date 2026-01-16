@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.api.v1.api import api_router
-from app.core.database import create_db_and_tables
+from app.core.database import create_db_and_tables, sync_sequences
 
 app = FastAPI(title="Reading List API", version="1.0")
 
@@ -14,7 +14,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://bookstack-ai.vercel.app"
+        "https://bookstack-ai.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -38,6 +38,7 @@ app.include_router(api_router)
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    sync_sequences()
 
 
 @app.get("/")

@@ -39,3 +39,24 @@ def create_db_and_tables():
 def get_session():
     with Session(engine) as session:
         yield session
+
+
+def sync_sequences():
+    """Fix for Postgres 'Duplicate Key' error: syncs sequence with max ID."""
+    if "sqlite" in str(engine.url):
+        return
+
+    try:
+        from sqlalchemy import text
+
+        with engine.connect() as conn:
+            # Sync 'book' table sequence
+            conn.execute(
+                text(
+                    "SELECT setval(pg_get_serial_sequence('book', 'id'), coalesce(max(id)+1, 1), false) FROM book;"
+                )
+            )
+            conn.commit()
+            print("Sequências do Banco de Dados Sincronizadas (Postgres)")
+    except Exception as e:
+        print(f"Aviso: Falha ao sincronizar sequências: {e}")
