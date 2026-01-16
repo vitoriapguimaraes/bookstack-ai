@@ -17,5 +17,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
+
+// Dev helper: Unregister existing service workers to prevent stale cache/reloads
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      console.log("Unregistering stale SW:", registration);
+      registration.unregister();
+    }
+  });
+}
