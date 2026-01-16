@@ -22,7 +22,6 @@ class Book(SQLModel, table=True):
     score: Optional[float] = 0.0
     motivation: Optional[str] = None
     cover_image: Optional[str] = None
-    cover_url: Optional[str] = None
     user_id: Optional[str] = Field(default=None, index=True)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
