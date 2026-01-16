@@ -68,6 +68,44 @@ async def proxy_image(url: str):
     if response:
         return response
 
-    if error == "Failed to fetch image":
-        raise HTTPException(status_code=400, detail=error)
-    raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/health")
+def health_check():
+    """Verifica status da API, Banco de Dados e Variáveis de Ambiente."""
+    from app.core.database import engine
+    from sqlmodel import Session, select
+    import os
+
+    status = {"status": "ok", "database": "unknown", "env_vars": {}}
+
+    # 1. Check Database
+    try:
+        with Session(engine) as session:
+            session.exec(select(1)).first()
+            status["database"] = "connected"
+    except Exception as e:
+        status["database"] = f"error: {str(e)}"
+        status["status"] = "error"
+
+    # 2. Check Critical Env Vars (Masked)
+    critical_vars = [
+        "DATABASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "ENCRYPTION_KEY",
+    ]
+
+    for var in critical_vars:
+        val = os.getenv(var)
+        if val:
+            # Show first 4 chars + length for verification
+            masked = f"{val[:4]}...({len(val)} chars)"
+        else:
+            masked = "MISSING"
+            if (
+                var != "ENCRYPTION_KEY"
+            ):  # Optional depending on setup? No, DB is critical.
+                status["status"] = "error"
+        status["env_vars"][var] = masked
+
+    return status
