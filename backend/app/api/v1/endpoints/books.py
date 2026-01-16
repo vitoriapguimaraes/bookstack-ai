@@ -196,12 +196,16 @@ def create_book(
     book.score = calculate_book_score(book, config)
 
     # Order management
-    if book.order is None or book.order == 0:
+    if book.status == "Lido":
+        book.order = 0
+    elif book.order is None or book.order == 0:
+        # Default behavior: Append to end of list
         last_book = session.exec(
             select(Book).where(Book.user_id == user_id).order_by(Book.order.desc())
         ).first()
         book.order = (last_book.order + 1) if last_book and last_book.order else 1
     else:
+        # Specific order requested (e.g. "Lendo" insertion): shift others down
         _reorder_insert(session, user_id, book.order)
 
     # Set created/updated
