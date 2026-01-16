@@ -252,7 +252,7 @@ export default function AuditSettings() {
 
   const toggleSelectIssue = (id) => {
     setSelectedIssues((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -419,7 +419,7 @@ export default function AuditSettings() {
           <div className="text-4xl font-black text-slate-800 dark:text-white tracking-tight">
             {books.length > 0
               ? (((books.length - issues.length) / books.length) * 100).toFixed(
-                  1
+                  1,
                 )
               : 100}
             %
@@ -465,7 +465,7 @@ export default function AuditSettings() {
                   key={idx}
                   onClick={() =>
                     setSelectedReason(
-                      agg.reason === selectedReason ? null : agg.reason
+                      agg.reason === selectedReason ? null : agg.reason,
                     )
                   }
                   className={`w-full flex items-center justify-between px-6 py-4 transition-all text-left group ${
@@ -480,10 +480,10 @@ export default function AuditSettings() {
                         agg.type === "class"
                           ? "bg-red-50 text-red-500"
                           : agg.type === "category"
-                          ? "bg-orange-50 text-orange-500"
-                          : agg.type === "availability"
-                          ? "bg-cyan-50 text-cyan-500"
-                          : "bg-blue-50 text-blue-500"
+                            ? "bg-orange-50 text-orange-500"
+                            : agg.type === "availability"
+                              ? "bg-cyan-50 text-cyan-500"
+                              : "bg-blue-50 text-blue-500"
                       } dark:bg-neutral-800`}
                     >
                       <AlertTriangle size={16} />
@@ -572,6 +572,7 @@ export default function AuditSettings() {
                         selectedIssues.length === filteredIssues.length
                       }
                       onChange={toggleSelectAll}
+                      aria-label="Selecionar todos os itens da auditoria"
                     />
                   </th>
                   <th className="px-4 py-6 w-auto md:w-[45%] truncate">
@@ -604,6 +605,7 @@ export default function AuditSettings() {
                         className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         checked={selectedIssues.includes(issue.id)}
                         onChange={() => toggleSelectIssue(issue.id)}
+                        aria-label={`Selecionar erro do livro ${issue.title}`}
                       />
                     </td>
                     <td className="px-4 py-6 min-w-0 align-top">
@@ -872,7 +874,7 @@ export default function AuditSettings() {
             onClose={() => setShowBulkEdit(false)}
             onSave={handleBulkSave}
           />,
-          document.body
+          document.body,
         )}
 
       {isBulkProcessing &&
@@ -893,7 +895,7 @@ export default function AuditSettings() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

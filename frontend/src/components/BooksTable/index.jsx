@@ -238,7 +238,7 @@ export default function BooksTable({
 
   const toggleSelectBook = (id) => {
     setSelectedBooks((prev) =>
-      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id],
     );
   };
 
@@ -411,6 +411,7 @@ export default function BooksTable({
                 <input
                   type="text"
                   placeholder="🔍 Buscar por Título ou Autor..."
+                  aria-label="Buscar livros por título ou autor"
                   value={searchTerm}
                   onChange={(e) =>
                     setTableState((prev) => ({
@@ -422,6 +423,7 @@ export default function BooksTable({
                 />
                 {searchTerm && (
                   <button
+                    aria-label="Limpar busca"
                     onClick={() =>
                       setTableState((prev) => ({ ...prev, searchTerm: "" }))
                     }
@@ -666,6 +668,7 @@ export default function BooksTable({
                         }
                         onChange={toggleSelectAll}
                         title="Selecionar todos os filtrados"
+                        aria-label="Selecionar todos os livros filtrados"
                       />
                     ) : (
                       <div className="flex items-center gap-1">
@@ -696,6 +699,7 @@ export default function BooksTable({
                       className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-purple-600 focus:ring-purple-500 cursor-pointer"
                       checked={selectedBooks.includes(book.id)}
                       onChange={() => toggleSelectBook(book.id)}
+                      aria-label={`Selecionar livro ${book.title}`}
                     />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-xs font-mono text-slate-500 dark:text-neutral-400">
@@ -719,7 +723,7 @@ export default function BooksTable({
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-                                book.title
+                                book.title,
                               )}`;
                             }}
                           />
@@ -770,8 +774,8 @@ export default function BooksTable({
                           book.status === "Lendo"
                             ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30"
                             : book.status === "Lido"
-                            ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30"
-                            : "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30"
+                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30"
+                              : "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30"
                         }`}
                     >
                       {book.status}
@@ -886,7 +890,7 @@ export default function BooksTable({
             onClose={() => setShowBulkEdit(false)}
             onSave={handleBulkSave}
           />,
-          document.body
+          document.body,
         )}
       {/* Confirmation Modal - REMOVED (Global) */}
     </div>

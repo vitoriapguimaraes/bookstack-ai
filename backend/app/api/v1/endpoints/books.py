@@ -17,6 +17,53 @@ from datetime import datetime
 router = APIRouter()
 
 
+def _get_ai_params(session: Session, user_id: str):
+    """Helper: Retorna configurações de AI do usuário desserializadas."""
+    from app.core.security import decrypt_value
+
+    pref = session.get(UserPreference, user_id)
+    if not pref:
+        return {}, None, None
+
+    api_keys = {}
+    if pref.openai_key:
+        api_keys["openai_key"] = decrypt_value(pref.openai_key)
+    if pref.gemini_key:
+        api_keys["gemini_key"] = decrypt_value(pref.gemini_key)
+    if pref.groq_key:
+        api_keys["groq_key"] = decrypt_value(pref.groq_key)
+
+    if pref.preferred_provider:
+        api_keys["ai_provider"] = pref.preferred_provider
+
+    return api_keys, pref.custom_prompts, pref.class_categories
+
+
+def _apply_enrichment(book: Book, enrichment: dict):
+    """Helper: Aplica dados da IA no livro se os campos estiverem vazios."""
+    if not enrichment:
+        return
+
+    if not book.author and enrichment.get("author"):
+        book.author = enrichment.get("author")
+    if not book.year and enrichment.get("year"):
+        book.year = enrichment.get("year")
+
+    # Map cover_url (from AI) to cover_image (Book Model)
+    cover_candidate = enrichment.get("cover_url") or enrichment.get("cover_image")
+    if not book.cover_image and cover_candidate:
+        book.cover_image = cover_candidate
+
+    if not book.book_class and enrichment.get("book_class"):
+        book.book_class = enrichment.get("book_class")
+    if not book.category and enrichment.get("category"):
+        book.category = enrichment.get("category")
+    if not book.motivation and enrichment.get("motivation"):
+        book.motivation = enrichment.get("motivation")
+    if not book.original_title and enrichment.get("original_title"):
+        book.original_title = enrichment.get("original_title")
+
+
 def _reorder_delete(session: Session, user_id: str, deleted_order: int):
     """Decrementa ordem de todos os livros do USUÁRIO após o deletado."""
     if not deleted_order:
@@ -135,43 +182,13 @@ def create_book(
 
     # Populate AI fields if classification not provided
     if book.title and (not book.book_class or not book.category):
-        # Fetch preferences to get API keys
-        pref = session.get(UserPreference, user_id)
-        api_keys = {}
-        custom_prompts = None
-        class_categories = None
-
-        if pref:
-            # Import decrypt locally to avoid circular imports? No, fine.
-            from app.core.security import decrypt_value
-
-            if pref.openai_key:
-                api_keys["openai_key"] = decrypt_value(pref.openai_key)
-            if pref.gemini_key:
-                api_keys["gemini_key"] = decrypt_value(pref.gemini_key)
-            if pref.groq_key:
-                api_keys["groq_key"] = decrypt_value(pref.groq_key)
-            if pref.preferred_provider:
-                api_keys["ai_provider"] = pref.preferred_provider
-            custom_prompts = pref.custom_prompts
-            class_categories = pref.class_categories
+        api_keys, custom_prompts, class_categories = _get_ai_params(session, user_id)
 
         enrichment = get_book_details_hybrid(
             book.title, api_keys, custom_prompts, class_categories
         )
-        if enrichment:
-            if not book.author and enrichment.get("author"):
-                book.author = enrichment.get("author")
-            if not book.year and enrichment.get("year"):
-                book.year = enrichment.get("year")
-            if not book.cover_url and enrichment.get("cover_url"):
-                book.cover_url = enrichment.get("cover_url")
-            if not book.book_class and enrichment.get("book_class"):
-                book.book_class = enrichment.get("book_class")
-            if not book.category and enrichment.get("category"):
-                book.category = enrichment.get("category")
-            if not book.motivation and enrichment.get("motivation"):
-                book.motivation = enrichment.get("motivation")
+
+        _apply_enrichment(book, enrichment)
 
     # Get formula config
     pref = session.get(UserPreference, user_id)
@@ -324,25 +341,7 @@ def suggest_book(
     Retorna o objeto com dados preenchidos para o frontend usar.
     """
     user_id = user["id"]
-    pref = session.get(UserPreference, user_id)
-
-    api_keys = {}
-    custom_prompts = None
-    class_categories = None
-
-    if pref:
-        from app.core.security import decrypt_value
-
-        if pref.openai_key:
-            api_keys["openai_key"] = decrypt_value(pref.openai_key)
-        if pref.gemini_key:
-            api_keys["gemini_key"] = decrypt_value(pref.gemini_key)
-        if pref.groq_key:
-            api_keys["groq_key"] = decrypt_value(pref.groq_key)
-        if pref.preferred_provider:
-            api_keys["ai_provider"] = pref.preferred_provider
-        custom_prompts = pref.custom_prompts
-        class_categories = pref.class_categories
+    api_keys, custom_prompts, class_categories = _get_ai_params(session, user_id)
 
     enrichment = get_book_details_hybrid(
         request.title, api_keys, custom_prompts, class_categories
@@ -386,7 +385,7 @@ async def upload_book_cover(
         # Get Public URL
         public_url = supabase.storage.from_("covers").get_public_url(filename)
 
-        book.cover_url = public_url
+        book.cover_image = public_url
         session.add(book)
         session.commit()
         session.refresh(book)
