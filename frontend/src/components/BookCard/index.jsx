@@ -48,7 +48,7 @@ export default function BookCard({
 
   // Robust Image URL Handling
   let coverUrl = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-    book.title
+    book.title,
   )}`;
 
   if (book.cover_image) {
@@ -56,7 +56,7 @@ export default function BookCard({
       coverUrl = book.cover_image.replace(/^http:/, "https:");
     } else {
       coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-        book.cover_image
+        book.cover_image,
       )}`;
     }
   }
@@ -79,14 +79,14 @@ export default function BookCard({
     return (
       <div className="group relative bg-white dark:bg-neutral-900 rounded-md hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 shadow-sm">
         {/* Order badge - top left */}
-        {book.order && (
+        {Number(book.order) > 0 && (
           <div className="absolute top-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10">
             #{book.order}
           </div>
         )}
 
-        {/* Score badge - top right */}
-        {book.score > 0 && (
+        {/* Score badge - top right - Hide for Lido */}
+        {book.score > 0 && book.status !== "Lido" && (
           <div className="absolute top-1 right-1 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10">
             {book.score.toFixed(0)}
           </div>
@@ -105,7 +105,7 @@ export default function BookCard({
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-                book.title
+                book.title,
               )}`;
             }}
           />
@@ -224,13 +224,13 @@ export default function BookCard({
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-              book.title
+              book.title,
             )}`;
           }}
         />
 
         {/* Order badge - bottom left on cover */}
-        {book.order && (
+        {Number(book.order) > 0 && (
           <div className="absolute bottom-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg">
             #{book.order}
           </div>
