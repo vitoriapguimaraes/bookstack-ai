@@ -16,7 +16,16 @@ import {
   DEFAULT_AVAILABILITY_OPTIONS,
 } from "../../utils/constants";
 
-const ScoreStats = ({ stats, currentScore }) => {
+const ScoreStats = ({ stats, currentScore, loading }) => {
+  if (loading) {
+    return (
+      <div className="mt-4 p-4 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2">
+        <Sparkles className="animate-spin text-purple-400" size={20} />
+        <span className="text-[10px]">Calculando probabilidade...</span>
+      </div>
+    );
+  }
+
   if (!stats) return null;
 
   const quadrants = [
@@ -95,6 +104,7 @@ export default function BookForm({
   const [coverFile, setCoverFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [scoreStats, setScoreStats] = useState(null);
   const [previewScore, setPreviewScore] = useState(null);
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null);
@@ -227,10 +237,16 @@ export default function BookForm({
   // Fetch Stats when Status becomes "A Ler"
   useEffect(() => {
     if (formData.status === "A Ler") {
+      setStatsLoading(true);
       api
         .get("/books/stats/toread")
         .then((res) => setScoreStats(res.data))
-        .catch((err) => console.error("Error fetching stats:", err));
+        .catch((err) => {
+          console.error("Error fetching stats:", err);
+          // Fallback to zeros if error, so UI still shows up provided we have preview
+          setScoreStats({ q1: 0, q2: 0, q3: 0, q4: 0, total: 0 });
+        })
+        .finally(() => setStatsLoading(false));
 
       // Also fetch initial preview
       fetchPreviewScore(formData);
@@ -829,7 +845,11 @@ export default function BookForm({
 
                 {/* Score Stats Component */}
                 {formData.status === "A Ler" && (
-                  <ScoreStats stats={scoreStats} currentScore={previewScore} />
+                  <ScoreStats
+                    stats={scoreStats}
+                    currentScore={previewScore}
+                    loading={statsLoading}
+                  />
                 )}
               </div>
             )}
