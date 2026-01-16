@@ -62,7 +62,7 @@ export default function AISettings() {
         // Load Custom Prompts or defaults
         if (data.custom_prompts) {
           setSystemPrompt(
-            data.custom_prompts.system_prompt || DEFAULT_SYSTEM_PROMPT
+            data.custom_prompts.system_prompt || DEFAULT_SYSTEM_PROMPT,
           );
           setUserPrompt(data.custom_prompts.user_prompt || DEFAULT_USER_PROMPT);
         }
@@ -157,10 +157,14 @@ export default function AISettings() {
 
         <div className="grid gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+              htmlFor="gemini_key"
+            >
               Google Gemini API Key
             </label>
             <input
+              id="gemini_key"
               type="password"
               value={geminiKey}
               onChange={(e) => setGeminiKey(e.target.value)}
@@ -173,10 +177,14 @@ export default function AISettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+              htmlFor="groq_key"
+            >
               Groq Cloud API Key
             </label>
             <input
+              id="groq_key"
               type="password"
               value={groqKey}
               onChange={(e) => setGroqKey(e.target.value)}
@@ -189,10 +197,14 @@ export default function AISettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+              htmlFor="openai_key"
+            >
               OpenAI API Key
             </label>
             <input
+              id="openai_key"
               type="password"
               value={openaiKey}
               onChange={(e) => setOpenaiKey(e.target.value)}
@@ -244,10 +256,14 @@ export default function AISettings() {
         <div className="space-y-6">
           {/* System Prompt */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+            <label
+              className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2"
+              htmlFor="system_prompt"
+            >
               System Prompt (Persona)
             </label>
             <textarea
+              id="system_prompt"
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={3}
@@ -258,7 +274,10 @@ export default function AISettings() {
           {/* User Prompt */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
+              <label
+                className="block text-sm font-bold text-slate-700 dark:text-slate-300"
+                htmlFor="user_prompt"
+              >
                 User Prompt Template
               </label>
               <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
@@ -266,6 +285,7 @@ export default function AISettings() {
               </span>
             </div>
             <textarea
+              id="user_prompt"
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
               rows={12}

@@ -46,10 +46,10 @@ export default function BookForm({
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null);
   const [googleRating, setGoogleRating] = useState(null);
   const [classCategories, setClassCategories] = useState(
-    DEFAULT_CLASS_CATEGORIES
+    DEFAULT_CLASS_CATEGORIES,
   );
   const [availabilityOptions, setAvailabilityOptions] = useState(
-    DEFAULT_AVAILABILITY_OPTIONS
+    DEFAULT_AVAILABILITY_OPTIONS,
   );
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function BookForm({
               const readingBooks = allBooks.filter((b) => b.status === "Lendo");
               const maxOrder = readingBooks.reduce(
                 (max, b) => (b.order > max ? b.order : max),
-                0
+                0,
               );
 
               setFormData((curr) => ({
@@ -116,7 +116,7 @@ export default function BookForm({
               }));
             })
             .catch((err) =>
-              console.error("Error auto-calculating order:", err)
+              console.error("Error auto-calculating order:", err),
             );
         } else if (prev.status === "Lido") {
           if (prev.priority === "Concluído") {
@@ -335,10 +335,14 @@ export default function BookForm({
             {/* Title & Original Title */}
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                <label
+                  className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                  htmlFor="title"
+                >
                   Título Principal
                 </label>
                 <input
+                  id="title"
                   required
                   name="title"
                   value={formData.title}
@@ -349,10 +353,14 @@ export default function BookForm({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="original_title"
+                  >
                     Título Original
                   </label>
                   <input
+                    id="original_title"
                     name="original_title"
                     value={formData.original_title || ""}
                     onChange={handleChange}
@@ -361,10 +369,14 @@ export default function BookForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="author"
+                  >
                     Autor
                   </label>
                   <input
+                    id="author"
                     name="author"
                     value={formData.author}
                     onChange={handleChange}
@@ -395,7 +407,11 @@ export default function BookForm({
                   )}
                 </div>
                 <div className="relative">
+                  <label htmlFor="cover-upload" className="sr-only">
+                    Upload de capa
+                  </label>
                   <input
+                    id="cover-upload"
                     type="file"
                     onChange={handleFileChange}
                     accept="image/*"
@@ -422,10 +438,14 @@ export default function BookForm({
               {/* Classification Grid */}
               <div className="flex-1 grid grid-cols-2 gap-3 content-start">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="year"
+                  >
                     Ano
                   </label>
                   <input
+                    id="year"
                     type="number"
                     name="year"
                     value={formData.year}
@@ -434,10 +454,14 @@ export default function BookForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="type"
+                  >
                     Tipo
                   </label>
                   <select
+                    id="type"
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
@@ -448,10 +472,14 @@ export default function BookForm({
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="book_class"
+                  >
                     Classe Macro
                   </label>
                   <select
+                    id="book_class"
                     name="book_class"
                     value={formData.book_class}
                     onChange={handleClassChange}
@@ -465,10 +493,14 @@ export default function BookForm({
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="category"
+                  >
                     Categoria Específica
                   </label>
                   <select
+                    id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
@@ -488,10 +520,14 @@ export default function BookForm({
 
             {/* Motivation */}
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+              <label
+                className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                htmlFor="motivation"
+              >
                 Resumo / Motivação
               </label>
               <textarea
+                id="motivation"
                 name="motivation"
                 value={formData.motivation}
                 onChange={handleChange}
@@ -529,8 +565,8 @@ export default function BookForm({
                         ? s === "Lido"
                           ? "bg-emerald-600 border-emerald-500 text-white"
                           : s === "Lendo"
-                          ? "bg-purple-600 border-purple-500 text-white"
-                          : "bg-slate-300 dark:bg-neutral-600 border-slate-400 dark:border-neutral-500 text-slate-800 dark:text-white"
+                            ? "bg-purple-600 border-purple-500 text-white"
+                            : "bg-slate-300 dark:bg-neutral-600 border-slate-400 dark:border-neutral-500 text-slate-800 dark:text-white"
                         : "bg-white dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 text-slate-400 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700"
                     }`}
                   >
@@ -544,10 +580,14 @@ export default function BookForm({
 
             {/* Availability - Always Visible */}
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+              <label
+                className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                htmlFor="availability"
+              >
                 Disponível em
               </label>
               <select
+                id="availability"
                 name="availability"
                 value={formData.availability}
                 onChange={handleChange}
@@ -595,10 +635,14 @@ export default function BookForm({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="date_read"
+                  >
                     Data de Conclusão
                   </label>
                   <input
+                    id="date_read"
                     type="text"
                     name="date_read"
                     value={formData.date_read || ""}
@@ -611,10 +655,14 @@ export default function BookForm({
             ) : (
               <div className="space-y-3 animate-fade-in">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="priority"
+                  >
                     Prioridade de Leitura
                   </label>
                   <select
+                    id="priority"
                     name="priority"
                     value={formData.priority}
                     onChange={handleChange}
@@ -628,7 +676,10 @@ export default function BookForm({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1">
+                  <label
+                    className="block text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider mb-1"
+                    htmlFor="order"
+                  >
                     Ordem na Fila
                   </label>
                   <div className="flex items-center gap-2">
@@ -636,6 +687,7 @@ export default function BookForm({
                       #
                     </span>
                     <input
+                      id="order"
                       type="number"
                       name="order"
                       value={formData.order || ""}
