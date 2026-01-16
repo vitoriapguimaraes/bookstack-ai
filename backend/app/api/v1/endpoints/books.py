@@ -8,7 +8,6 @@ from app.models.book import Book
 from app.models.user import UserPreference
 from app.services.scoring import calculate_book_score
 from app.services.book_enrichment import get_book_details_hybrid
-from app.core.storage import supabase
 import csv
 import io
 import time
@@ -363,47 +362,23 @@ async def upload_book_cover(
     session: Session = Depends(get_session),
     user: dict = Depends(get_current_user),
 ):
+    from app.core.storage import upload_file_to_bucket
+
     book = session.get(Book, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     if book.user_id != user["id"]:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    if not supabase:
-        raise HTTPException(status_code=503, detail="Supabase Storage not configured")
-
     try:
         file_ext = file.filename.split(".")[-1]
         filename = f"{user['id']}/{book_id}_{int(time.time())}.{file_ext}"
         file_content = await file.read()
 
-        # Upload with auto-create bucket fallback
-        try:
-            supabase.storage.from_("book-covers").upload(
-                filename, file_content, {"content-type": file.content_type}
-            )
-        except Exception as e:
-            # Check for bucket not found error
-            if "Bucket not found" in str(e) or "404" in str(e):
-                try:
-                    supabase.storage.create_bucket(
-                        "book-covers", options={"public": True}
-                    )
-                    # Retry upload
-                    supabase.storage.from_("book-covers").upload(
-                        filename, file_content, {"content-type": file.content_type}
-                    )
-                except Exception as create_err:
-                    print(f"Failed to create bucket: {create_err}")
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Storage Error: Could not create 'book-covers' bucket.",
-                    )
-            else:
-                raise e
-
-        # Get Public URL
-        public_url = supabase.storage.from_("book-covers").get_public_url(filename)
+        # Upload using helper (handles bucket creation)
+        public_url = upload_file_to_bucket(
+            "book-covers", filename, file_content, file.content_type
+        )
 
         book.cover_image = public_url
         session.add(book)
