@@ -377,13 +377,33 @@ async def upload_book_cover(
         filename = f"{user['id']}/{book_id}_{int(time.time())}.{file_ext}"
         file_content = await file.read()
 
-        # Upload
-        supabase.storage.from_("covers").upload(
-            filename, file_content, {"content-type": file.content_type}
-        )
+        # Upload with auto-create bucket fallback
+        try:
+            supabase.storage.from_("book-covers").upload(
+                filename, file_content, {"content-type": file.content_type}
+            )
+        except Exception as e:
+            # Check for bucket not found error
+            if "Bucket not found" in str(e) or "404" in str(e):
+                try:
+                    supabase.storage.create_bucket(
+                        "book-covers", options={"public": True}
+                    )
+                    # Retry upload
+                    supabase.storage.from_("book-covers").upload(
+                        filename, file_content, {"content-type": file.content_type}
+                    )
+                except Exception as create_err:
+                    print(f"Failed to create bucket: {create_err}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Storage Error: Could not create 'book-covers' bucket.",
+                    )
+            else:
+                raise e
 
         # Get Public URL
-        public_url = supabase.storage.from_("covers").get_public_url(filename)
+        public_url = supabase.storage.from_("book-covers").get_public_url(filename)
 
         book.cover_image = public_url
         session.add(book)
