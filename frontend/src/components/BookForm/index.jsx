@@ -118,6 +118,11 @@ export default function BookForm({
             .catch((err) =>
               console.error("Error auto-calculating order:", err),
             );
+        } else if (value === "Lido") {
+          newData.priority = "Concluído";
+          newData.order = 0; // Force Lido to 0
+        } else if (value === "A Ler") {
+          newData.order = null; // Let backend append
         } else if (prev.status === "Lido") {
           if (prev.priority === "Concluído") {
             newData.priority = "1 - Baixa";
