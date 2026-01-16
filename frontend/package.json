@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
-    "@vercel/analytics": "^1.6.1",
     "axios": "^1.6.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.292.0",
