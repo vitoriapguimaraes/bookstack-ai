@@ -104,7 +104,10 @@ export default function App() {
       // Security Check: ensure token exists
       if (!session?.access_token) return;
 
-      setLoading(true);
+      // Only show full screen loader if we don't have data yet
+      if (books.length === 0) {
+        setLoading(true);
+      }
 
       // Explicitly pass token to avoid race conditions with interceptors/defaults
       const config = {
