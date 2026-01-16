@@ -45,4 +45,4 @@ def decrypt_value(value: str) -> str:
         return _cipher.decrypt(value.encode()).decode()
     except Exception as e:
         print(f"Decryption error: {e}")
-        return value  # Return original on error (maybe it wasn't encrypted)
+        return None  # Return None on error to avoid sending ciphertext as key

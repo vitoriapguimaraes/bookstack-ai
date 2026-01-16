@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Key, MessageSquare, AlertCircle } from "lucide-react";
+import { Save, Key, MessageSquare, AlertCircle, Trash2 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 
@@ -42,6 +42,7 @@ export default function AISettings() {
   const [openaiKey, setOpenaiKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [groqKey, setGroqKey] = useState("");
+  const [preferredProvider, setPreferredProvider] = useState("groq");
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
   const [userPrompt, setUserPrompt] = useState(DEFAULT_USER_PROMPT);
 
@@ -57,7 +58,9 @@ export default function AISettings() {
       if (data) {
         setOpenaiKey(data.openai_key || "");
         setGeminiKey(data.gemini_key || "");
+        setGeminiKey(data.gemini_key || "");
         setGroqKey(data.groq_key || "");
+        setPreferredProvider(data.preferred_provider || "groq");
 
         // Load Custom Prompts or defaults
         if (data.custom_prompts) {
@@ -80,7 +83,10 @@ export default function AISettings() {
       const payload = {
         openai_key: openaiKey,
         gemini_key: geminiKey,
+        openai_key: openaiKey,
+        gemini_key: geminiKey,
         groq_key: groqKey,
+        preferred_provider: preferredProvider,
         custom_prompts: {
           system_prompt: systemPrompt,
           user_prompt: userPrompt,
@@ -163,14 +169,25 @@ export default function AISettings() {
             >
               Google Gemini API Key
             </label>
-            <input
-              id="gemini_key"
-              type="password"
-              value={geminiKey}
-              onChange={(e) => setGeminiKey(e.target.value)}
-              placeholder="AIzaSy..."
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
-            />
+            <div className="relative">
+              <input
+                id="gemini_key"
+                type="password"
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full pl-4 pr-10 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
+              />
+              {geminiKey && (
+                <button
+                  onClick={() => setGeminiKey("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-neutral-700"
+                  title="Limpar chave"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
             <p className="text-xs text-slate-400 mt-1">
               Recomendado (Modelos Flash gratuitos)
             </p>
@@ -183,14 +200,25 @@ export default function AISettings() {
             >
               Groq Cloud API Key
             </label>
-            <input
-              id="groq_key"
-              type="password"
-              value={groqKey}
-              onChange={(e) => setGroqKey(e.target.value)}
-              placeholder="gsk_..."
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
-            />
+            <div className="relative">
+              <input
+                id="groq_key"
+                type="password"
+                value={groqKey}
+                onChange={(e) => setGroqKey(e.target.value)}
+                placeholder="gsk_..."
+                className="w-full pl-4 pr-10 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
+              />
+              {groqKey && (
+                <button
+                  onClick={() => setGroqKey("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-neutral-700"
+                  title="Limpar chave"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
             <p className="text-xs text-slate-400 mt-1">
               Ótimo para Llama 3 e Mixtral (Ultra-rápido)
             </p>
@@ -203,15 +231,88 @@ export default function AISettings() {
             >
               OpenAI API Key
             </label>
-            <input
-              id="openai_key"
-              type="password"
-              value={openaiKey}
-              onChange={(e) => setOpenaiKey(e.target.value)}
-              placeholder="sk-..."
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
+            <div className="relative">
+              <input
+                id="openai_key"
+                type="password"
+                value={openaiKey}
+                onChange={(e) => setOpenaiKey(e.target.value)}
+                placeholder="sk-..."
+                className="w-full pl-4 pr-10 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all font-mono text-sm"
+              />
+              {openaiKey && (
+                <button
+                  onClick={() => setOpenaiKey("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-neutral-700"
+                  title="Limpar chave"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preferred Provider Card */}
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-slate-200 dark:border-neutral-800 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+            <MessageSquare
+              className="text-emerald-600 dark:text-emerald-400"
+              size={20}
             />
           </div>
+          <div>
+            <h3 className="text-base md:text-lg font-semibold text-slate-800 dark:text-white leading-tight">
+              Provedor Principal
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-neutral-400">
+              Qual IA deve ser usada por padrão para metadados?
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { id: "groq", label: "Groq (Llama 3)", desc: "Mais rápido" },
+            {
+              id: "openai",
+              label: "OpenAI (GPT-4o)",
+              desc: "Mais inteligente",
+            },
+            { id: "gemini", label: "Google Gemini", desc: "Equilibrado" },
+          ].map((provider) => (
+            <div
+              key={provider.id}
+              onClick={() => setPreferredProvider(provider.id)}
+              className={`cursor-pointer border rounded-xl p-4 transition-all flex items-center justify-between ${
+                preferredProvider === provider.id
+                  ? "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-500 ring-1 ring-emerald-500"
+                  : "bg-slate-50 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 hover:border-emerald-300"
+              }`}
+            >
+              <div>
+                <div className="font-bold text-slate-800 dark:text-white text-sm">
+                  {provider.label}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {provider.desc}
+                </div>
+              </div>
+              <div
+                className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                  preferredProvider === provider.id
+                    ? "border-emerald-500 bg-emerald-500"
+                    : "border-slate-300 dark:border-neutral-600"
+                }`}
+              >
+                {preferredProvider === provider.id && (
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
