@@ -393,3 +393,73 @@ async def upload_book_cover(
     except Exception as e:
         print(f"Upload Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats/toread")
+def get_toread_stats(
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Returns average scores for Q1-Q4 quadrants of the 'A Ler' (To Read) list.
+    Q1 = Top 25% (Highest Priority/Score)
+    Q4 = Bottom 25% (Lowest Priority/Score)
+    """
+    user_id = user["id"]
+
+    # Get all "To Read" books sorted by current order
+    books = session.exec(
+        select(Book)
+        .where(Book.user_id == user_id, Book.status == "A Ler")
+        .order_by(Book.order)
+    ).all()
+
+    if not books:
+        return {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "total": 0}
+
+    total = len(books)
+    scores = [b.score for b in books]
+
+    # Divide into 4 chunks based on list position (Order)
+    # Since they are ordered, first chunk is Q1 (top of stack)
+    q_size = total / 4
+
+    def get_avg(start_idx, end_idx):
+        start = int(start_idx)
+        end = int(end_idx)
+        if start >= total:
+            return 0
+        segment = scores[start:end] if end > start else scores[start : start + 1]
+        return round(sum(segment) / len(segment), 1) if segment else 0
+
+    return {
+        "q1": get_avg(0, q_size),
+        "q2": get_avg(q_size, q_size * 2),
+        "q3": get_avg(q_size * 2, q_size * 3),
+        "q4": get_avg(q_size * 3, total),
+        "total": total,
+    }
+
+
+@router.post("/preview-score")
+def preview_score(
+    book_data: Book,
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Calculates the score for a book without saving it.
+    Useful for 'Live Preview' in frontend.
+    """
+    user_id = user["id"]
+
+    # Get user formula config
+    pref = session.get(UserPreference, user_id)
+    config = pref.formula_config if pref else None
+
+    # Calculate score
+    # Note: We create a temporary Book object from the input data to pass to the calculator
+    temp_book = Book(**book_data.dict(exclude_unset=True))
+    score = calculate_book_score(temp_book, config)
+
+    return {"score": score}

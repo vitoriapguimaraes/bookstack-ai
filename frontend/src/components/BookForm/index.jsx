@@ -8,12 +8,64 @@ import {
   BookOpen,
   Layers,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
 import {
   DEFAULT_CLASS_CATEGORIES,
   DEFAULT_AVAILABILITY_OPTIONS,
 } from "../../utils/constants";
+
+const ScoreStats = ({ stats, currentScore }) => {
+  if (!stats) return null;
+
+  const quadrants = [
+    { label: "Q1 (Topo)", key: "q1", color: "bg-emerald-500" },
+    { label: "Q2", key: "q2", color: "bg-emerald-400" },
+    { label: "Q3", key: "q3", color: "bg-emerald-300" },
+    { label: "Q4 (Fundo)", key: "q4", color: "bg-emerald-200" },
+  ];
+
+  return (
+    <div className="mt-4 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-fade-in">
+      <h4 className="text-[10px] uppercase font-bold text-slate-500 mb-2">
+        Análise de Índice
+      </h4>
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-center">
+          <span className="block text-[10px] text-slate-400">Seu Índice</span>
+          <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
+            {currentScore ? currentScore.toFixed(1) : "-"}
+          </span>
+        </div>
+        <div className="flex-1 ml-4 space-y-1">
+          {quadrants.map((q) => (
+            <div
+              key={q.key}
+              className="flex items-center justify-between text-[10px]"
+            >
+              <span className="text-slate-500 w-16">{q.label}</span>
+              <div className="flex-1 mx-2 h-1.5 bg-slate-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${q.color}`}
+                  style={{
+                    width: `${Math.min((stats[q.key] / 10) * 100, 100)}%`,
+                  }} // Scale roughly assuming max score ~10
+                />
+              </div>
+              <span className="font-mono text-slate-700 dark:text-slate-300 w-6 text-right">
+                {stats[q.key]}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-[9px] text-center text-slate-400">
+        Médias dos quadrantes da sua lista "A Ler"
+      </p>
+    </div>
+  );
+};
 
 export default function BookForm({
   bookToEdit,
@@ -43,6 +95,8 @@ export default function BookForm({
   const [coverFile, setCoverFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [scoreStats, setScoreStats] = useState(null);
+  const [previewScore, setPreviewScore] = useState(null);
   const [suggestedCoverUrl, setSuggestedCoverUrl] = useState(null);
   const [googleRating, setGoogleRating] = useState(null);
   const [classCategories, setClassCategories] = useState(
@@ -145,8 +199,55 @@ export default function BookForm({
         }
       }
 
+      // Trigger Score Preview if relevant fields change and status is "A Ler"
+      if (
+        [
+          "status",
+          "priority",
+          "year",
+          "book_class",
+          "category",
+          "availability",
+        ].includes(name)
+      ) {
+        if (
+          newData.status === "A Ler" ||
+          (name === "status" && value === "A Ler")
+        ) {
+          fetchPreviewScore(newData);
+        } else {
+          setPreviewScore(null);
+        }
+      }
+
       return newData;
     });
+  };
+
+  // Fetch Stats when Status becomes "A Ler"
+  useEffect(() => {
+    if (formData.status === "A Ler") {
+      api
+        .get("/books/stats/toread")
+        .then((res) => setScoreStats(res.data))
+        .catch((err) => console.error("Error fetching stats:", err));
+
+      // Also fetch initial preview
+      fetchPreviewScore(formData);
+    } else {
+      setScoreStats(null);
+    }
+  }, [formData.status]);
+
+  const fetchPreviewScore = async (data) => {
+    // Basic debounce could be added here if needed, but for now direct call on change
+    try {
+      const payload = { ...data, year: parseInt(data.year) || 0 };
+      const res = await api.post("/books/preview-score", payload);
+      setPreviewScore(res.data.score);
+    } catch (err) {
+      console.error("Error previewing score:", err);
+    }
   };
 
   const handleClassChange = (e) => {
@@ -725,6 +826,11 @@ export default function BookForm({
                     />
                   </div>
                 </div>
+
+                {/* Score Stats Component */}
+                {formData.status === "A Ler" && (
+                  <ScoreStats stats={scoreStats} currentScore={previewScore} />
+                )}
               </div>
             )}
 
