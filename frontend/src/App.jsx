@@ -30,7 +30,7 @@ import { useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmationProvider } from "./context/ConfirmationContext";
 import PrivateRoute from "./components/PrivateRoute";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 import { api } from "./services/api";
 import { CONTACT_EMAIL } from "./utils/constants";
@@ -401,7 +401,7 @@ export default function App() {
             </div>
           )}
 
-          <Analytics />
+          <VercelAnalytics />
         </div>
       </ConfirmationProvider>
     </ToastProvider>
