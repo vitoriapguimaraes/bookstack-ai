@@ -18,7 +18,7 @@ def get_book_details_hybrid(
         "type": "Não Técnico",
         "category": "Geral",
         "motivation": None,
-        "cover_url": None,
+        "cover_image": None,
         "google_rating": None,
         "google_ratings_count": None,
     }
@@ -29,7 +29,7 @@ def get_book_details_hybrid(
     if google_data:
         result["author"] = google_data.get("author")
         result["year"] = google_data.get("year")
-        result["cover_url"] = google_data.get("cover_url")
+        result["cover_image"] = google_data.get("cover_image")
         description = google_data.get("description", "")
 
     # 2. Rating

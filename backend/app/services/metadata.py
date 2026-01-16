@@ -27,7 +27,7 @@ def get_google_books_data(title: str):
                 "author": ", ".join(book_info.get("authors", [])) or None,
                 "year": None,
                 "description": book_info.get("description", ""),
-                "cover_url": None,
+                "cover_image": None,
                 "average_rating": book_info.get("averageRating"),
                 "ratings_count": book_info.get("ratingsCount"),
             }
@@ -40,7 +40,8 @@ def get_google_books_data(title: str):
                     pass
 
             image_links = book_info.get("imageLinks", {})
-            result["cover_url"] = (
+
+            result["cover_image"] = (
                 image_links.get("thumbnail")
                 or image_links.get("smallThumbnail")
                 or image_links.get("small")
