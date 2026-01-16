@@ -25,7 +25,8 @@ export default function FormView({ editingBook, onFormSuccess, onCancel }) {
         try {
           await api.delete(`/books/${editingBook.id}`);
           addToast({ type: "success", message: "Livro excluído com sucesso!" });
-          navigate("/");
+          if (onFormSuccess) onFormSuccess();
+          else navigate("/");
         } catch (err) {
           console.error(err);
           addToast({ type: "error", message: "Erro ao excluir livro." });
