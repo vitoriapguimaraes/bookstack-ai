@@ -30,6 +30,7 @@ import { useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmationProvider } from "./context/ConfirmationContext";
 import PrivateRoute from "./components/PrivateRoute";
+import { Analytics } from "@vercel/analytics/react";
 
 import { api } from "./services/api";
 import { CONTACT_EMAIL } from "./utils/constants";
@@ -55,9 +56,8 @@ export default function App() {
   // Configure Axios Token
   useEffect(() => {
     if (session?.access_token) {
-      api.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${session.access_token}`;
+      api.defaults.headers.common["Authorization"] =
+        `Bearer ${session.access_token}`;
     } else {
       delete api.defaults.headers.common["Authorization"];
     }
@@ -400,6 +400,8 @@ export default function App() {
               Desenvolvido por github.com/vitoriapguimaraes
             </div>
           )}
+
+          <Analytics />
         </div>
       </ConfirmationProvider>
     </ToastProvider>
