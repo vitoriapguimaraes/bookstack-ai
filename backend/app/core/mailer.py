@@ -12,28 +12,33 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER = os.getenv("SMTP_USER", "bookstackai@gmail.com")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
+
 def send_email(to_email: str, subject: str, body_html: str):
     """
     Sends an HTML email using SMTP.
     """
     if not SMTP_USER or not SMTP_PASSWORD:
-        print("⚠️  Email System Warning: SMTP credentials are not set in .env. Email NOT sent.")
-        print(f"--- Email Preview ---\nTo: {to_email}\nSubject: {subject}\nBody len: {len(body_html)}\n---------------------")
+        print(
+            "⚠️  Email System Warning: SMTP credentials are not set in .env. Email NOT sent."
+        )
+        print(
+            f"--- Email Preview ---\nTo: {to_email}\nSubject: {subject}\nBody len: {len(body_html)}\n---------------------"
+        )
         return
 
     try:
         msg = MIMEMultipart()
-        msg['From'] = SMTP_USER
-        msg['To'] = to_email
-        msg['Subject'] = subject
+        msg["From"] = SMTP_USER
+        msg["To"] = to_email
+        msg["Subject"] = subject
 
-        msg.attach(MIMEText(body_html, 'html'))
+        msg.attach(MIMEText(body_html, "html"))
 
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
-            
+
         print(f"✅ Email sent successfully to {to_email}")
 
     except Exception as e:

@@ -36,8 +36,11 @@
    python -m venv venv
    # Windows: venv\Scripts\activate | Unix: source venv/bin/activate
    pip install -r requirements.txt
-   # Crie um arquivo .env com sua GROQ_API_KEY
-   uvicorn main:app --reload
+   # Opção 1: Via Script (Recomendado)
+   python main.py
+
+   # Opção 2: Via Uvicorn Direto
+   uvicorn app.main:app --reload
    ```
 
 3. Configure e execute o Frontend:
@@ -59,7 +62,7 @@
 
 ## Estrutura de Diretórios
 
-```
+```bash
 /bookstack-ai
 ├── backend/
 │   ├── main.py              # API FastAPI
