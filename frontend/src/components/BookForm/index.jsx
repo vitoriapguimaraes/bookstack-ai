@@ -134,7 +134,7 @@ export default function BookForm({
 
         // Apply masking MM/YYYY
         if (raw.length > 2) {
-          newData[name] = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+          newData[name] = raw.substring(0, 2) + "/" + raw.substring(2);
         } else {
           newData[name] = raw;
         }
