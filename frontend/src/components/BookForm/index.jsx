@@ -19,61 +19,114 @@ import {
 const ScoreStats = ({ stats, currentScore, loading }) => {
   if (loading) {
     return (
-      <div className="mt-4 p-4 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2">
-        <Sparkles className="animate-spin text-purple-400" size={20} />
-        <span className="text-[10px]">Calculando probabilidade...</span>
+      <div className="mt-4 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2 h-24">
+        <Sparkles className="animate-spin text-purple-400" size={16} />
+        <span className="text-[10px]">Calculando...</span>
       </div>
     );
   }
 
-  if (!stats) return null;
+  if (!stats || stats.total === 0) return null;
+
+  // Replicate backend quadrant logic (`int()` truncation)
+  const qSize = stats.total / 4;
+  const getRange = (qIndex) => {
+    const startIdx = Math.floor(qSize * qIndex);
+    const endIdx = Math.floor(qSize * (qIndex + 1));
+    const start = startIdx + 1;
+    const end = endIdx;
+    if (start > end) return `${start}º`;
+    return `${start}º-${end}º`;
+  };
 
   const quadrants = [
-    { label: "Q1 (Topo)", key: "q1", color: "bg-emerald-500" },
-    { label: "Q2", key: "q2", color: "bg-emerald-400" },
-    { label: "Q3", key: "q3", color: "bg-emerald-300" },
-    { label: "Q4 (Fundo)", key: "q4", color: "bg-emerald-200" },
+    {
+      label: "Topo",
+      range: getRange(0),
+      key: "q1",
+      color: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      label: "Alta",
+      range: getRange(1),
+      key: "q2",
+      color: "bg-emerald-400",
+      text: "text-emerald-500 dark:text-emerald-400",
+    },
+    {
+      label: "Média",
+      range: getRange(2),
+      key: "q3",
+      color: "bg-emerald-300",
+      text: "text-emerald-500 dark:text-emerald-300",
+    },
+    {
+      label: "Fim",
+      range: getRange(3),
+      key: "q4",
+      color: "bg-emerald-200",
+      text: "text-emerald-400 dark:text-emerald-200",
+    },
   ];
 
   return (
-    <div className="mt-4 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 animate-fade-in">
-      <h4 className="text-[10px] uppercase font-bold text-slate-500 mb-2">
-        Análise de Score
-      </h4>
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-center">
-          <span className="block text-[10px] text-slate-400">
-            Score Previsto
+    <div className="mt-3 p-3 bg-slate-50 dark:bg-neutral-800/50 rounded-lg border border-slate-200 dark:border-neutral-700 animate-fade-in">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles size={10} className="text-purple-500" /> Análise de Score
+        </h4>
+        <span className="text-[9px] bg-slate-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded-full text-slate-600 dark:text-neutral-300 font-mono">
+          Total: {stats.total}
+        </span>
+      </div>
+
+      <div className="flex gap-3">
+        {/* Left: Main Score */}
+        <div className="flex flex-col justify-center items-center bg-white dark:bg-neutral-900 p-2 rounded border border-slate-100 dark:border-neutral-800 shadow-sm w-24 flex-shrink-0">
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 text-center">
+            Score
           </span>
-          <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
+          <div className="text-2xl font-black text-purple-600 dark:text-purple-400 leading-none mb-1">
             {currentScore ? currentScore.toFixed(1) : "-"}
-          </span>
+          </div>
+          <p className="text-[8px] text-slate-400 text-center leading-tight opacity-70">
+            Quanto maior, melhor
+          </p>
         </div>
-        <div className="flex-1 ml-4 space-y-1">
+
+        {/* Right: Quadrants Grid */}
+        <div className="flex-1 grid grid-cols-1 gap-1.5">
           {quadrants.map((q) => (
             <div
               key={q.key}
-              className="flex items-center justify-between text-[10px]"
+              className="relative flex items-center justify-between px-2 py-1 rounded bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800/50 overflow-hidden h-7"
             >
-              <span className="text-slate-500 w-16">{q.label}</span>
-              <div className="flex-1 mx-2 h-1.5 bg-slate-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+              <div
+                className={`absolute left-0 top-0 bottom-0 opacity-10 ${q.color}`}
+                style={{
+                  width: `${Math.min((stats[q.key] / 10) * 100, 100)}%`,
+                }}
+              />
+
+              <div className="flex items-center gap-2 z-10 w-full">
                 <div
-                  className={`h-full ${q.color}`}
-                  style={{
-                    width: `${Math.min((stats[q.key] / 10) * 100, 100)}%`,
-                  }} // Scale roughly assuming max score ~10
-                />
+                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
+                ></div>
+                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-200 w-8 truncate">
+                  {q.label}
+                </span>
+                <span className="text-[8px] font-mono text-slate-400 flex-1 text-center border-l dark:border-neutral-800 pl-2">
+                  Pos. {q.range}
+                </span>
+                <span className={`text-[10px] font-bold font-mono ${q.text}`}>
+                  {stats[q.key]}
+                </span>
               </div>
-              <span className="font-mono text-slate-700 dark:text-slate-300 w-6 text-right">
-                {stats[q.key]}
-              </span>
             </div>
           ))}
         </div>
       </div>
-      <p className="text-[9px] text-center text-slate-400">
-        Médias dos quadrantes da sua lista "A Ler"
-      </p>
     </div>
   );
 };
