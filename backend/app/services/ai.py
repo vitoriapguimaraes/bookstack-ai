@@ -17,7 +17,8 @@ def get_gemini_classification(prompt, system_prompt, api_keys=None):
 
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            "gemini-pro", generation_config={"response_mime_type": "application/json"}
+            "gemini-1.5-flash",
+            generation_config={"response_mime_type": "application/json"},
         )
 
         full_prompt = f"{system_prompt}\n\nUSER PROMPT:\n{prompt}"
@@ -39,7 +40,10 @@ def get_openai_classification(prompt, system_prompt, api_keys=None):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": system_prompt},
+                {
+                    "role": "system",
+                    "content": system_prompt + " Responda estritamente em JSON.",
+                },
                 {"role": "user", "content": prompt},
             ],
             response_format={"type": "json_object"},
@@ -60,7 +64,10 @@ def get_groq_classification(prompt, system_prompt, api_keys=None):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": system_prompt},
+                {
+                    "role": "system",
+                    "content": system_prompt + " Responda estritamente em JSON.",
+                },
                 {"role": "user", "content": prompt},
             ],
             response_format={"type": "json_object"},
