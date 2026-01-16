@@ -198,12 +198,12 @@ export default function BookForm({
         // Remove non-digit characters
         let raw = value.replace(/\D/g, "");
 
-        // Limit to 6 digits (MMYYYY)
+        // Limit to 6 digits (YYYYMM)
         if (raw.length > 6) raw = raw.slice(0, 6);
 
-        // Apply masking MM/YYYY
-        if (raw.length > 2) {
-          newData[name] = raw.substring(0, 2) + "/" + raw.substring(2);
+        // Apply masking YYYY/MM
+        if (raw.length > 4) {
+          newData[name] = raw.substring(0, 4) + "/" + raw.substring(4);
         } else {
           newData[name] = raw;
         }
@@ -793,7 +793,7 @@ export default function BookForm({
                     onChange={handleChange}
                     maxLength={7}
                     className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-emerald-500 text-center"
-                    placeholder="MM/AAAA"
+                    placeholder="AAAA/MM"
                   />
                 </div>
               </div>
