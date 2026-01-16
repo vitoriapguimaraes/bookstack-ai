@@ -247,9 +247,17 @@ def update_book(
     book.score = calculate_book_score(book, config)
     book.updated_at = datetime.utcnow()
 
-    # Reorder if changed
-    if new_order and new_order != old_order:
-        _reorder_move(session, user_id, old_order, new_order, book_id)
+    # Reorder management
+    if new_order != old_order:
+        if new_order == 0:
+            # Exiting the list (e.g. to Lido) -> Collapse gap
+            _reorder_delete(session, user_id, old_order)
+        elif old_order == 0 or old_order is None:
+            # Entering the list (from Lido/New) -> Insert and shift down
+            _reorder_insert(session, user_id, new_order)
+        else:
+            # Moving within the list
+            _reorder_move(session, user_id, old_order, new_order, book_id)
 
     session.add(book)
     session.commit()
