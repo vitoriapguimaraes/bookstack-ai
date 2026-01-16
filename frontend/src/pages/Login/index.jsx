@@ -224,7 +224,10 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 dark:text-neutral-300 ml-1">
+              <label
+                className="text-sm font-semibold text-slate-700 dark:text-neutral-300 ml-1"
+                htmlFor="email"
+              >
                 Email
               </label>
               <div className="relative group">
@@ -233,18 +236,23 @@ export default function Login() {
                   size={20}
                 />
                 <input
+                  id="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-slate-50/50 dark:bg-neutral-900/50 border-2 border-slate-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
                   placeholder="seu@email.com"
+                  autoComplete="email"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 dark:text-neutral-300 ml-1">
+              <label
+                className="text-sm font-semibold text-slate-700 dark:text-neutral-300 ml-1"
+                htmlFor="password"
+              >
                 Senha
               </label>
               <div className="relative group">
@@ -253,12 +261,14 @@ export default function Login() {
                   size={20}
                 />
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-12 py-3 bg-slate-50/50 dark:bg-neutral-900/50 border-2 border-slate-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"

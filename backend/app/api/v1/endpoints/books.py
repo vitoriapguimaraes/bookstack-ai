@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from typing import List
 from app.api.deps import get_current_user
@@ -306,6 +307,54 @@ async def import_books_csv(
 
     session.commit()
     return {"message": f"{count} livros importados com sucesso!"}
+
+
+class SuggestRequest(BaseModel):
+    title: str
+
+
+@router.post("/suggest")
+def suggest_book(
+    request: SuggestRequest,
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Endpoint dedicado para sugestão de metadados via IA sem salvar o livro.
+    Retorna o objeto com dados preenchidos para o frontend usar.
+    """
+    user_id = user["id"]
+    pref = session.get(UserPreference, user_id)
+
+    api_keys = {}
+    custom_prompts = None
+    class_categories = None
+
+    if pref:
+        from app.core.security import decrypt_value
+
+        if pref.openai_key:
+            api_keys["openai_key"] = decrypt_value(pref.openai_key)
+        if pref.gemini_key:
+            api_keys["gemini_key"] = decrypt_value(pref.gemini_key)
+        if pref.groq_key:
+            api_keys["groq_key"] = decrypt_value(pref.groq_key)
+        if pref.preferred_provider:
+            api_keys["ai_provider"] = pref.preferred_provider
+        custom_prompts = pref.custom_prompts
+        class_categories = pref.class_categories
+
+    enrichment = get_book_details_hybrid(
+        request.title, api_keys, custom_prompts, class_categories
+    )
+
+    if enrichment and enrichment.get("error"):
+        return {"error": enrichment.get("error")}
+
+    if not enrichment:
+        return {"error": "Não foi possível encontrar dados para este livro."}
+
+    return enrichment
 
 
 @router.post("/{book_id}/cover", response_model=Book)
