@@ -188,7 +188,7 @@ export default function BookForm({
           motivation: suggestion.motivation || prev.motivation,
           original_title: suggestion.original_title || prev.original_title,
           google_rating: suggestion.google_rating || null,
-          cover_image: suggestion.cover_url || prev.cover_image,
+          cover_image: suggestion.cover_image || prev.cover_image,
         }));
 
         if (!suggestion.motivation) {
@@ -198,7 +198,7 @@ export default function BookForm({
           });
         }
 
-        if (suggestion.cover_url) {
+        if (suggestion.cover_image) {
           setSuggestedCoverUrl(null);
         }
 
@@ -207,6 +207,13 @@ export default function BookForm({
           setGoogleRating({
             rating: suggestion.google_rating,
             count: suggestion.google_ratings_count || 0,
+          });
+        }
+
+        if (!suggestion.cover_image) {
+          addToast({
+            type: "info",
+            message: "Imagem de capa indisponível no Google Books",
           });
         }
       }

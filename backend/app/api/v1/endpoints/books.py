@@ -49,8 +49,8 @@ def _apply_enrichment(book: Book, enrichment: dict):
     if not book.year and enrichment.get("year"):
         book.year = enrichment.get("year")
 
-    # Map cover_url (from AI) to cover_image (Book Model)
-    cover_candidate = enrichment.get("cover_url") or enrichment.get("cover_image")
+    # Map cover_image (from AI) to cover_image (Book Model)
+    cover_candidate = enrichment.get("cover_image")
     if not book.cover_image and cover_candidate:
         book.cover_image = cover_candidate
 
