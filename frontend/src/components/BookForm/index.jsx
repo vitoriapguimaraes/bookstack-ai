@@ -97,34 +97,42 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
 
         {/* Right: Quadrants Grid */}
         <div className="flex-1 grid grid-cols-1 gap-1.5">
-          {quadrants.map((q) => (
-            <div
-              key={q.key}
-              className="relative flex items-center justify-between px-2 py-1 rounded bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800/50 overflow-hidden h-7"
-            >
+          <div className="flex justify-between px-2 text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+            <span>Faixa</span>
+            <span>Média | Mediana | Moda</span>
+          </div>
+          {quadrants.map((q) => {
+            const stat = stats[q.key] || { mean: 0, median: 0, mode: 0 };
+            return (
               <div
-                className={`absolute left-0 top-0 bottom-0 opacity-10 ${q.color}`}
-                style={{
-                  width: `${Math.min((stats[q.key] / 10) * 100, 100)}%`,
-                }}
-              />
-
-              <div className="flex items-center gap-2 z-10 w-full">
+                key={q.key}
+                className="relative flex items-center justify-between px-2 py-1 rounded bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800/50 overflow-hidden h-7"
+              >
                 <div
-                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
-                ></div>
-                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-200 w-8 truncate">
-                  {q.label}
-                </span>
-                <span className="text-[8px] font-mono text-slate-400 flex-1 text-center border-l dark:border-neutral-800 pl-2">
-                  Pos. {q.range}
-                </span>
-                <span className={`text-[10px] font-bold font-mono ${q.text}`}>
-                  {stats[q.key]}
-                </span>
+                  className={`absolute left-0 top-0 bottom-0 opacity-10 ${q.color}`}
+                  style={{ width: `${Math.min((stat.mean / 10) * 100, 100)}%` }}
+                />
+
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
+                  ></div>
+                  <span className="text-[9px] font-bold text-slate-700 dark:text-slate-200 w-8 truncate">
+                    {q.label}
+                  </span>
+                  <span className="text-[8px] font-mono text-slate-400 flex-1 text-center border-l dark:border-neutral-800 pl-2">
+                    Pos. {q.range}
+                  </span>
+                  <span
+                    className={`text-[9px] font-bold font-mono ${q.text} tabular-nums whitespace-nowrap`}
+                  >
+                    {stat.mean.toFixed(1)} | {stat.median.toFixed(1)} |{" "}
+                    {stat.mode.toFixed(1)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

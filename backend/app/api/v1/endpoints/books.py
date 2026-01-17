@@ -416,6 +416,8 @@ def get_toread_stats(
     user_id = user["id"]
 
     # Get all "To Read" books sorted by current order
+    import statistics
+
     books = session.exec(
         select(Book)
         .where(Book.user_id == user_id, Book.status == "A Ler")
@@ -423,28 +425,50 @@ def get_toread_stats(
     ).all()
 
     if not books:
-        return {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "total": 0}
+        empty_stat = {"mean": 0, "median": 0, "mode": 0}
+        return {
+            "q1": empty_stat,
+            "q2": empty_stat,
+            "q3": empty_stat,
+            "q4": empty_stat,
+            "total": 0,
+        }
 
     total = len(books)
     scores = [b.score for b in books]
 
     # Divide into 4 chunks based on list position (Order)
-    # Since they are ordered, first chunk is Q1 (top of stack)
     q_size = total / 4
 
-    def get_avg(start_idx, end_idx):
+    def get_stats(start_idx, end_idx):
         start = int(start_idx)
         end = int(end_idx)
         if start >= total:
-            return 0
+            return {"mean": 0, "median": 0, "mode": 0}
+
         segment = scores[start:end] if end > start else scores[start : start + 1]
-        return round(sum(segment) / len(segment), 1) if segment else 0
+
+        if not segment:
+            return {"mean": 0, "median": 0, "mode": 0}
+
+        try:
+            # Handle multimode: take the max value if multiple modes exist (optimistic approach)
+            modes = statistics.multimode(segment)
+            mode_val = max(modes) if modes else 0
+        except Exception:
+            mode_val = segment[0]
+
+        return {
+            "mean": round(statistics.mean(segment), 1),
+            "median": round(statistics.median(segment), 1),
+            "mode": round(mode_val, 1),
+        }
 
     return {
-        "q1": get_avg(0, q_size),
-        "q2": get_avg(q_size, q_size * 2),
-        "q3": get_avg(q_size * 2, q_size * 3),
-        "q4": get_avg(q_size * 3, total),
+        "q1": get_stats(0, q_size),
+        "q2": get_stats(q_size, q_size * 2),
+        "q3": get_stats(q_size * 2, q_size * 3),
+        "q4": get_stats(q_size * 3, total),
         "total": total,
     }
 
