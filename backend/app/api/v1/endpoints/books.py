@@ -199,11 +199,9 @@ def create_book(
     if book.status == "Lido":
         book.order = 0
     elif book.order is None or book.order == 0:
-        # Default behavior: Append to end of list
-        # We must ignore NULL orders to avoid picking a book with None as "highest" (if DB sorts that way)
         last_book = session.exec(
             select(Book)
-            .where(Book.user_id == user_id, Book.order != None)
+            .where(Book.user_id == user_id, Book.order.is_not(None))
             .order_by(Book.order.desc())
         ).first()
         book.order = (last_book.order + 1) if last_book and last_book.order else 1
@@ -498,3 +496,34 @@ def preview_score(
     score = calculate_book_score(temp_book, config)
 
     return {"score": score}
+
+
+@router.post("/fix_consistency")
+def fix_order_consistency(
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Renormaliza a ordem de todos os livros (Exceto Lidos/Cancelados).
+    Garante sequência única 1, 2, 3... sem duplicatas.
+    """
+    user_id = user["id"]
+
+    # Busca todos que não são Lidos (status != Lido e != 0)
+    # Ordena pelo order atual (e desempata pelo ID para ser determinístico)
+    books = session.exec(
+        select(Book)
+        .where(Book.user_id == user_id, Book.status != "Lido")
+        .order_by(Book.order, Book.id)
+    ).all()
+
+    count = 0
+    for index, book in enumerate(books):
+        expected_order = index + 1
+        if book.order != expected_order:
+            book.order = expected_order
+            session.add(book)
+            count += 1
+
+    session.commit()
+    return {"message": f"Ordem corrigida. {count} livros atualizados."}

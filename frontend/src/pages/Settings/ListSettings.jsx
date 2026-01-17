@@ -9,6 +9,7 @@ import {
   Tag,
   Save,
   RotateCcw,
+  Wrench,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -63,6 +64,27 @@ function ListSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleFixOrder = async () => {
+    confirm({
+      title: "Corrigir Ordem da Fila",
+      description:
+        "Isso irá reordenar sequencialmente todos os livros (1, 2, 3...) baseados na posição atual, eliminando duplicatas e buracos na numeração. Deseja continuar?",
+      confirmText: "Sim, Corrigir",
+      onConfirm: async () => {
+        try {
+          const res = await api.post("/books/fix_consistency");
+          addToast({
+            type: "success",
+            message: res.data.message || "Ordem corrigida com sucesso!",
+          });
+        } catch (err) {
+          console.error(err);
+          addToast({ type: "error", message: "Erro ao corrigir ordem." });
+        }
+      },
+    });
   };
 
   const handleReset = () => {
@@ -343,6 +365,14 @@ function ListSettings() {
         >
           <RotateCcw size={18} />
           Restaurar Padrões
+        </button>
+
+        <button
+          onClick={handleFixOrder}
+          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-amber-600 transition-colors mr-auto ml-6"
+        >
+          <Wrench size={18} />
+          Corrigir Ordem
         </button>
 
         <button
