@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Save, Key, MessageSquare, AlertCircle, Trash2 } from "lucide-react";
+import {
+  Save,
+  Key,
+  MessageSquare,
+  AlertCircle,
+  Trash2,
+  Lock,
+  AlertTriangle,
+} from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 
@@ -152,9 +160,10 @@ export default function AISettings() {
             <strong>classe</strong>, <strong>categoria</strong> e sugerir a{" "}
             <strong>motivação de leitura</strong> baseada no seu perfil. Este
             recurso é opcional, mas garante uma experiência muito mais fluida.
-            <p className="mt-2 text-[10px] opacity-80 italic">
-              🔒 Suas chaves são armazenadas com criptografia de ponta a ponta
-              no servidor.
+            <p className="mt-2 text-[10px] opacity-80 italic flex items-center">
+              <Lock size={12} className="mr-1" />
+              Suas chaves são armazenadas com criptografia de ponta a ponta no
+              servidor.
             </p>
           </div>
         </div>
@@ -345,9 +354,10 @@ export default function AISettings() {
             Aqui você define a "persona" da IA e as regras de classificação.
             Alterar estes prompts muda a forma como o sistema sugere dados para
             novos livros.
-            <p className="mt-2 text-[10px] opacity-80 italic">
-              🔒 Suas instruções personalizadas são protegidas e de uso
-              exclusivo da sua conta.
+            <p className="mt-2 text-[10px] opacity-80 italic flex items-center">
+              <Lock size={12} className="mr-1" />
+              Suas instruções personalizadas são protegidas e de uso exclusivo
+              da sua conta.
             </p>
           </div>
         </div>
@@ -379,8 +389,9 @@ export default function AISettings() {
               >
                 User Prompt Template
               </label>
-              <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
-                ⚠️ Cuidado ao editar a estrutura JSON/Lista
+              <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                <AlertTriangle size={12} /> Cuidado ao editar a estrutura
+                JSON/Lista
               </span>
             </div>
             <textarea

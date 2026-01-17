@@ -10,6 +10,7 @@ import {
   Trash,
   ChevronDown,
   ChevronUp,
+  ListFilter,
 } from "lucide-react";
 import { api } from "../../services/api";
 import BulkEditModal from "../BulkEditModal";
@@ -372,7 +373,11 @@ export default function BooksTable({
         >
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-              📋 Filtros
+              <ListFilter
+                size={16}
+                className="text-purple-600 dark:text-purple-400"
+              />
+              Filtros
             </h3>
             {hasActiveFilters && (
               <span className="bg-purple-100 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -410,7 +415,7 @@ export default function BooksTable({
                 <Search className="absolute left-3 top-2.5 text-slate-400 dark:text-neutral-500 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="🔍 Buscar por Título ou Autor..."
+                  placeholder="Buscar por Título ou Autor..."
                   aria-label="Buscar livros por título ou autor"
                   value={searchTerm}
                   onChange={(e) =>
