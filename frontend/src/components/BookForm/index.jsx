@@ -7,6 +7,7 @@ import {
   Download,
   BookOpen,
   Layers,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
@@ -601,11 +602,29 @@ export default function BookForm({
                 </label>
                 <div className="w-20 h-28 bg-slate-100 dark:bg-neutral-900 rounded border border-slate-200 dark:border-neutral-700 overflow-hidden relative group shadow-sm dark:shadow-lg">
                   {formData.cover_image ? (
-                    <img
-                      src={formData.cover_image}
-                      alt="Capa"
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <img
+                        src={formData.cover_image}
+                        alt="Capa"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFormData((prev) => ({
+                            ...prev,
+                            cover_image: null,
+                          }));
+                          setCoverFile(null);
+                        }}
+                        className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm z-10"
+                        title="Remover capa"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-neutral-700 gap-1">
                       <Upload size={16} />
