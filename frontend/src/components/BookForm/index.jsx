@@ -738,8 +738,8 @@ export default function BookForm({
                 name="motivation"
                 value={formData.motivation}
                 onChange={handleChange}
-                rows={2}
-                className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700 resize-none"
+                rows={6}
+                className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-neutral-700"
                 placeholder="Sobre o que é este livro?"
               />
             </div>
