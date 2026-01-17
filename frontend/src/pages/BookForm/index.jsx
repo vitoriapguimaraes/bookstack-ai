@@ -1,29 +1,39 @@
 import { useState } from "react";
 import { ArrowLeft, Save, X, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import BookForm from "../../components/BookForm";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmationContext";
 
-export default function FormView({ editingBook, onFormSuccess, onCancel }) {
+export default function FormView({
+  editingBook,
+  books,
+  onFormSuccess,
+  onCancel,
+}) {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [isSaving, setIsSaving] = useState(false);
   const { addToast } = useToast();
   const { confirm } = useConfirm();
+
+  // Resolve target book
+  const targetBook =
+    editingBook || (books && id ? books.find((b) => b.id === id) : null);
 
   const handleCancel = onCancel || (() => navigate(-1));
 
   const handleDelete = () => {
     confirm({
       title: "Confirmar Exclusão",
-      description: `Tem certeza que deseja excluir "${editingBook.title}"? Esta ação não pode ser desfeita.`,
+      description: `Tem certeza que deseja excluir "${targetBook.title}"? Esta ação não pode ser desfeita.`,
       confirmText: "Sim, Excluir",
       isDanger: true,
       onConfirm: async () => {
         setIsSaving(true);
         try {
-          await api.delete(`/books/${editingBook.id}`);
+          await api.delete(`/books/${targetBook.id}`);
           addToast({ type: "success", message: "Livro excluído com sucesso!" });
           if (onFormSuccess) onFormSuccess();
           else navigate("/");
@@ -42,8 +52,8 @@ export default function FormView({ editingBook, onFormSuccess, onCancel }) {
       <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="hidden md:block">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
-            {editingBook
-              ? `Editar: ${editingBook.title}`
+            {targetBook
+              ? `Editar: ${targetBook.title}`
               : "Adicionar Novo Livro"}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
@@ -96,7 +106,7 @@ export default function FormView({ editingBook, onFormSuccess, onCancel }) {
       </div>
 
       <BookForm
-        bookToEdit={editingBook}
+        bookToEdit={targetBook}
         onSuccess={onFormSuccess}
         onCancel={onCancel}
         onLoadingChange={setIsSaving}

@@ -41,32 +41,32 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
 
   const quadrants = [
     {
-      label: "Topo",
       range: getRange(0),
       key: "q1",
       color: "bg-emerald-500",
       text: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
     },
     {
-      label: "Alta",
       range: getRange(1),
       key: "q2",
       color: "bg-emerald-400",
       text: "text-emerald-500 dark:text-emerald-400",
+      bg: "bg-emerald-400/10",
     },
     {
-      label: "Média",
       range: getRange(2),
       key: "q3",
       color: "bg-emerald-300",
       text: "text-emerald-500 dark:text-emerald-300",
+      bg: "bg-emerald-300/10",
     },
     {
-      label: "Fim",
       range: getRange(3),
       key: "q4",
       color: "bg-emerald-200",
       text: "text-emerald-400 dark:text-emerald-200",
+      bg: "bg-emerald-200/10",
     },
   ];
 
@@ -96,11 +96,7 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
         </div>
 
         {/* Right: Quadrants Grid */}
-        <div className="flex-1 grid grid-cols-1 gap-1.5">
-          <div className="flex justify-between px-2 text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-            <span>Faixa</span>
-            <span>Média | Mediana | Moda</span>
-          </div>
+        <div className="flex-1 grid grid-cols-1 gap-1.5 content-center">
           {quadrants.map((q) => {
             const stat = stats[q.key] || { mean: 0, median: 0, mode: 0 };
             return (
@@ -109,20 +105,20 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
                 className="relative flex items-center justify-between px-2 py-1 rounded bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800/50 overflow-hidden h-7"
               >
                 <div
-                  className={`absolute left-0 top-0 bottom-0 opacity-10 ${q.color}`}
+                  className={`absolute left-0 top-0 bottom-0 opacity-20 ${q.color} transition-all duration-500`}
                   style={{ width: `${Math.min((stat.mean / 10) * 100, 100)}%` }}
                 />
 
-                <div className="flex items-center gap-2 z-10 w-full">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
-                  ></div>
-                  <span className="text-[9px] font-bold text-slate-700 dark:text-slate-200 w-8 truncate">
-                    {q.label}
-                  </span>
-                  <span className="text-[8px] font-mono text-slate-400 flex-1 text-center border-l dark:border-neutral-800 pl-2">
-                    Pos. {q.range}
-                  </span>
+                <div className="flex items-center gap-2 z-10 w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
+                    ></div>
+                    <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400">
+                      Pos. {q.range}
+                    </span>
+                  </div>
+
                   <span
                     className={`text-[9px] font-bold font-mono ${q.text} tabular-nums whitespace-nowrap`}
                   >
@@ -918,15 +914,25 @@ export default function BookForm({
             )}
 
             {googleRating && (
-              <div className="mt-2 pt-2 border-t border-neutral-700/50 text-center">
-                <p className="text-[9px] uppercase text-neutral-500 mb-0.5">
-                  Referência Externa
-                </p>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-900/20 border border-amber-900/40 rounded-full text-amber-500 text-[10px]">
-                  <span>
-                    Google Books: <b>{googleRating.rating}</b>
+              <div className="mt-auto pt-3 border-t border-slate-200 dark:border-neutral-700/50 flex items-center justify-between gap-2">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">
+                  Google Books
+                </span>
+                <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-md border border-amber-200 dark:border-amber-800">
+                  <span className="text-amber-500 text-xs">★</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-amber-100">
+                    {/* Handle both object form {rating, count} and simple float form */}
+                    {typeof googleRating === "object"
+                      ? googleRating.rating
+                      : googleRating}
                   </span>
-                  <span className="opacity-50">({googleRating.count})</span>
+                  {(typeof googleRating === "object"
+                    ? googleRating.count
+                    : null) && (
+                    <span className="text-[10px] text-slate-400 dark:text-amber-500/70">
+                      ({googleRating.count})
+                    </span>
+                  )}
                 </div>
               </div>
             )}
