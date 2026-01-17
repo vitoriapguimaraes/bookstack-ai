@@ -41,10 +41,13 @@ def get_google_books_data(title: str):
 
             image_links = book_info.get("imageLinks", {})
 
-            result["cover_image"] = (
+            cover_url = (
                 image_links.get("thumbnail")
                 or image_links.get("smallThumbnail")
                 or image_links.get("small")
+            )
+            result["cover_image"] = (
+                cover_url.replace("http://", "https://") if cover_url else None
             )
 
             return result
