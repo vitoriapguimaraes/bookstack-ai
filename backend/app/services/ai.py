@@ -102,7 +102,14 @@ def get_ai_classification(
 
     user_prompt_template = (custom_prompts or {}).get("user_prompt")
     if user_prompt_template:
-        prompt = f'{user_prompt_template}\n\nLIVRO A ANALISAR:\nTítulo: "{title}"\nDescrição: "{description[:800]}"'
+        prompt = (
+            f"{user_prompt_template}\n\n"
+            f"!!! INSTRUÇÃO DE SISTEMA OBRIGATÓRIA - LISTAS VÁLIDAS ATUAIS !!!\n"
+            f"Independente do que o prompt acima diga, você DEVE usar APENAS as seguintes classes e categorias:\n\n"
+            f'1. "book_class" (string): Escolha UMA das classes abaixo:\n{valid_classes_str}\n\n'
+            f'2. "category" (string): Escolha UMA categoria específica válida para a classe:\n{class_categories_str}\n\n'
+            f'LIVRO A ANALISAR:\nTítulo: "{title}"\nDescrição: "{description[:800]}"'
+        )
     else:
         # Simplificando prompt para economizar espaço tokens na refatoracao
         # Mantenha o original se critico, mas aqui vou usar o que estava no utils original.
