@@ -200,8 +200,11 @@ def create_book(
         book.order = 0
     elif book.order is None or book.order == 0:
         # Default behavior: Append to end of list
+        # We must ignore NULL orders to avoid picking a book with None as "highest" (if DB sorts that way)
         last_book = session.exec(
-            select(Book).where(Book.user_id == user_id).order_by(Book.order.desc())
+            select(Book)
+            .where(Book.user_id == user_id, Book.order != None)
+            .order_by(Book.order.desc())
         ).first()
         book.order = (last_book.order + 1) if last_book and last_book.order else 1
     else:
