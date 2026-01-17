@@ -137,7 +137,7 @@ export default function App() {
 
   const handleEdit = (book) => {
     setEditingBook(book);
-    navigate("/edit");
+    navigate(`/edit/${book.id}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -371,11 +371,12 @@ export default function App() {
                     }
                   />
                   <Route
-                    path="/edit"
+                    path="/edit/:id"
                     element={
                       <PrivateRoute>
                         <BookFormPage
                           editingBook={editingBook}
+                          books={books}
                           onFormSuccess={handleFormSuccess}
                           onCancel={() => {
                             setEditingBook(null);
