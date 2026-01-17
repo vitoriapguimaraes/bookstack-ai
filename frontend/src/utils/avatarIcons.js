@@ -180,6 +180,12 @@ export const AVATAR_COLORS = [
 
 export const AVATAR_BACKGROUNDS = [
   {
+    id: "transparent",
+    label: "Sem Fundo",
+    class: "bg-transparent border border-slate-200 dark:border-neutral-700",
+    hex: "transparent",
+  },
+  {
     id: "slate",
     label: "Cinza",
     class: "bg-slate-100 dark:bg-slate-800",

@@ -190,11 +190,13 @@ export default function ProfileSelectionModal({ isOpen, onClose }) {
                             <Check
                               size={14}
                               className={
-                                bg.id === "white" ||
-                                bg.hex === "#ffffff" ||
-                                bg.hex === "#f1f5f9"
-                                  ? "text-slate-800"
-                                  : "text-white drop-shadow-md"
+                                bg.id === "transparent"
+                                  ? "text-slate-800 dark:text-white"
+                                  : bg.id === "white" ||
+                                      bg.hex === "#ffffff" ||
+                                      bg.hex === "#f1f5f9"
+                                    ? "text-slate-800"
+                                    : "text-white drop-shadow-md"
                               }
                             />
                           )}
@@ -219,6 +221,6 @@ export default function ProfileSelectionModal({ isOpen, onClose }) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
