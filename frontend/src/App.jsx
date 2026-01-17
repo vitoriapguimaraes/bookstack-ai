@@ -116,12 +116,14 @@ export default function App() {
         },
       };
 
-      // Enforce a small minimum loading time to avoid "empty state" flash (reduced)
-      const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
-      const [res] = await Promise.all([
-        api.get("/books/", config),
-        minLoadTime,
-      ]);
+      // Enforce a small minimum loading time ONLY for initial load to avoid "empty state" flash
+      const promises = [api.get("/books/", config)];
+      if (books.length === 0) {
+        const minLoadTime = new Promise((resolve) => setTimeout(resolve, 1500));
+        promises.push(minLoadTime);
+      }
+
+      const [res] = await Promise.all(promises);
 
       setBooks(res.data);
       setError(null);
