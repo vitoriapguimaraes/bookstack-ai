@@ -54,7 +54,7 @@ export default function FormView({
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
             {targetBook
               ? `Editar: ${targetBook.title}`
-              : "Adicionar Novo Livro"}
+              : "Adicionar Livro"}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
             {editingBook

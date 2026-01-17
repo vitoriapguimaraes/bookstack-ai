@@ -73,7 +73,7 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
   return (
     <div className="mt-4 w-full">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+        <h4 className="text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
           Análise de Score
         </h4>
         <span className="text-[9px] bg-slate-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded-full text-slate-600 dark:text-neutral-300 font-mono">

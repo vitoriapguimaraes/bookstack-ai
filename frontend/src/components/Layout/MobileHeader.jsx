@@ -13,7 +13,7 @@ export default function MobileHeader({ onMenuClick, onAddBook }) {
     if (path.startsWith("/mural")) return "Mural de Livros";
     if (path === "/table") return "Tabela";
     if (path === "/analytics") return "Análises";
-    if (path === "/create") return "Adicionar Novo Livro";
+    if (path === "/create") return "Adicionar Livro";
     if (path === "/edit") return "Editar Livro";
     if (path.startsWith("/settings")) return "Configurações";
     return "BookStack";
