@@ -108,6 +108,27 @@ def _reorder_move(
         session.add(book)
 
 
+def _resolve_order_on_status_change(
+    session: Session, user_id: int, book: Book, book_data: Book
+):
+    """Helper: Ajusta order se mudar status (Lido=0, ou volta p/ fila)."""
+    input_status = book_data.status
+    if input_status == "Lido":
+        book_data.order = 0
+    elif (
+        book.status == "Lido" or book.status is None or book.order == 0
+    ) and input_status in ["A Ler", "Lendo"]:
+        if not book_data.order or book_data.order == 0:
+            last_book = session.exec(
+                select(Book)
+                .where(Book.user_id == user_id, Book.order.is_not(None))
+                .order_by(Book.order.desc())
+            ).first()
+            book_data.order = (
+                (last_book.order + 1) if last_book and last_book.order else 1
+            )
+
+
 # --- CSV Import Helpers ---
 def _parse_csv_content(content: bytes) -> csv.DictReader:
     decoded = content.decode("utf-8")
@@ -233,11 +254,18 @@ def update_book(
     if book.user_id != user_id:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
+    # Auto-Adjust Order based on Status Change
+    _resolve_order_on_status_change(session, user_id, book, book_data)
+
     old_order = book.order
     new_order = book_data.order
 
     # Update fields
     book_data_dict = book_data.dict(exclude_unset=True)
+    # Ensure our logic overrides any potential mismatch in dict
+    if book_data.order is not None:
+        book_data_dict["order"] = book_data.order
+
     for key, value in book_data_dict.items():
         if key not in ["id", "user_id", "created_at"]:  # Protect ID and ownership
             setattr(book, key, value)
