@@ -12,51 +12,13 @@ import {
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmationContext";
 import { hslToString, getClassBaseHSL } from "../../utils/analyticsUtils.js";
-
-const DEFAULT_CATEGORIES = {
-  "Tecnologia & IA": [
-    "Análise de Dados",
-    "Ciência de Dados",
-    "IA",
-    "Visão Computacional",
-    "Machine Learning",
-    "Programação",
-    "Sistemas de IA & LLMs",
-  ],
-  "Engenharia & Arquitetura": [
-    "Arquitetura de Software",
-    "Engenharia de Dados",
-    "MLOps",
-  ],
-  "Conhecimento & Ciências": [
-    "Conhecimento Geral",
-    "Estatística",
-    "Cosmologia",
-  ],
-  "Negócios & Finanças": [
-    "Finanças Pessoais",
-    "Negócios",
-    "Liberdade Econômica",
-  ],
-  "Literatura & Cultura": [
-    "Diversidade e Inclusão",
-    "História/Ficção",
-    "Literatura Brasileira",
-  ],
-  "Desenvolvimento Pessoal": [
-    "Bem-estar",
-    "Comunicação",
-    "Criatividade",
-    "Inteligência Emocional",
-    "Liderança",
-    "Produtividade",
-    "Biohacking & Existência",
-  ],
-};
+import { DEFAULT_CLASS_CATEGORIES } from "../../utils/constants";
 
 function ListSettings() {
   const { addToast } = useToast();
+  const { confirm } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [classCategories, setClassCategories] = useState({});
@@ -77,11 +39,11 @@ function ListSettings() {
       ) {
         setClassCategories(res.data.class_categories);
       } else {
-        setClassCategories(DEFAULT_CATEGORIES);
+        setClassCategories(DEFAULT_CLASS_CATEGORIES);
       }
     } catch (err) {
       console.error("Erro ao carregar listas:", err);
-      setClassCategories(DEFAULT_CATEGORIES);
+      setClassCategories(DEFAULT_CLASS_CATEGORIES);
     } finally {
       setLoading(false);
     }
@@ -104,11 +66,20 @@ function ListSettings() {
   };
 
   const handleReset = () => {
-    if (
-      window.confirm("Isso restaurará os padrões de fábrica. Deseja continuar?")
-    ) {
-      setClassCategories(DEFAULT_CATEGORIES);
-    }
+    confirm({
+      title: "Restaurar Padrões",
+      description:
+        "Isso irá reverter todas as classes e categorias para a configuração original de fábrica. Suas personalizações serão perdidas. Deseja continuar?",
+      confirmText: "Sim, Restaurar",
+      isDanger: true,
+      onConfirm: () => {
+        setClassCategories(DEFAULT_CLASS_CATEGORIES);
+        addToast({
+          type: "info",
+          message: "Padrões restaurados. Clique em Salvar para persistir.",
+        });
+      },
+    });
   };
 
   // Class Actions
@@ -123,13 +94,17 @@ function ListSettings() {
   };
 
   const removeClass = (cls) => {
-    if (
-      window.confirm(`Excluir a classe "${cls}" e todas as suas categorias?`)
-    ) {
-      const updated = { ...classCategories };
-      delete updated[cls];
-      setClassCategories(updated);
-    }
+    confirm({
+      title: "Excluir Classe",
+      description: `Deseja excluir a classe "${cls}" e todas as suas categorias?`,
+      confirmText: "Sim, Excluir",
+      isDanger: true,
+      onConfirm: () => {
+        const updated = { ...classCategories };
+        delete updated[cls];
+        setClassCategories(updated);
+      },
+    });
   };
 
   const updateClassName = (oldName, newName) => {
