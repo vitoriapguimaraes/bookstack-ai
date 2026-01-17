@@ -7,7 +7,7 @@ export function useAnalyticsData(books) {
 
     const lidos = books.filter((b) => b.status === "Lido");
     const naoLidos = books.filter(
-      (b) => b.status === "A Ler" || b.status === "Lendo"
+      (b) => b.status === "A Ler" || b.status === "Lendo",
     );
 
     // 1. KPIs
@@ -145,7 +145,7 @@ export function useAnalyticsData(books) {
       });
 
       const sortedData = Object.values(map).sort((a, b) =>
-        a.date.localeCompare(b.date)
+        a.date.localeCompare(b.date),
       );
 
       return sortedData.map((item) => {
@@ -167,10 +167,10 @@ export function useAnalyticsData(books) {
     // 3. Historical Insights
     // A. Start & End of Journey
     const validDates = lidos.filter(
-      (b) => b.date_read && !isNaN(new Date(b.date_read).getTime())
+      (b) => b.date_read && !isNaN(new Date(b.date_read).getTime()),
     );
     const sortedDates = validDates.sort(
-      (a, b) => new Date(a.date_read) - new Date(b.date_read)
+      (a, b) => new Date(a.date_read) - new Date(b.date_read),
     );
 
     const oldestRead = sortedDates[0];
@@ -198,11 +198,11 @@ export function useAnalyticsData(books) {
       }
     });
 
-    // Sort and get Top 10
+    // Sort and get Top 5
     const topAuthorsList = Object.entries(authorMap)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+      .slice(0, 5);
 
     const topAuthor = topAuthorsList.length > 0 ? topAuthorsList[0] : null;
 
