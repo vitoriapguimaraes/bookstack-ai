@@ -82,12 +82,18 @@ def _refresh_flags(pref: UserPreference):
     pref.has_custom_formula = _check_nonzero(config_to_check)
 
     # 4. Custom Classes
+    def _is_custom(current, default):
+        if not current:
+            return False
+        if current.keys() != default.keys():
+            return True
+        for k in current:
+            if sorted(current[k]) != sorted(default[k]):
+                return True
+        return False
+
     current_classes = pref.class_categories or {}
-    if (
-        current_classes
-        and len(current_classes) > 0
-        and current_classes != CLASS_CATEGORIES
-    ):
+    if _is_custom(current_classes, CLASS_CATEGORIES):
         pref.has_custom_classes = True
     else:
         pref.has_custom_classes = False
