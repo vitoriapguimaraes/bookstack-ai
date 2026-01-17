@@ -172,15 +172,24 @@ export default function BookForm({
   useEffect(() => {
     fetchPreferences();
     if (bookToEdit) {
-      setFormData({
+      setFormData((prev) => ({
         ...bookToEdit,
-        cover_image: bookToEdit.cover_image,
+        cover_image: coverFile ? prev.cover_image : bookToEdit.cover_image, // Preserve local preview if file selected
         date_read: bookToEdit.date_read || "",
         order: bookToEdit.order || null,
         rating: bookToEdit.rating || 0,
-      });
+      }));
     }
   }, [bookToEdit]);
+
+  // Cleanup object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (formData.cover_image && formData.cover_image.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.cover_image);
+      }
+    };
+  }, []);
 
   const fetchPreferences = async () => {
     try {
@@ -604,22 +613,19 @@ export default function BookForm({
                   )}
                 </div>
                 <div className="relative">
-                  <label htmlFor="cover-upload" className="sr-only">
-                    Upload de capa
-                  </label>
                   <input
                     id="cover-upload"
                     type="file"
                     onChange={handleFileChange}
                     accept="image/*"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="hidden"
                   />
-                  <button
-                    type="button"
-                    className="w-full bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 text-[9px] py-1 rounded text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-300 dark:border-neutral-700"
+                  <label
+                    htmlFor="cover-upload"
+                    className="block w-full text-center bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 text-[9px] py-1 rounded text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-300 dark:border-neutral-700 cursor-pointer"
                   >
                     Upload
-                  </button>
+                  </label>
                 </div>
                 {suggestedCoverUrl && (
                   <button
