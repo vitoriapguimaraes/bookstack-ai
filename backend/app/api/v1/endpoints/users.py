@@ -86,6 +86,39 @@ def _notify_user_deletion(
     )
 
 
+@router.get("/admin/users")
+def read_users(
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    _check_admin_permissions(session, user)
+
+    # Fetch all profiles
+    profiles = session.exec(select(Profile)).all()
+
+    result = []
+    for p in profiles:
+        # Fetch status flags from UserPreference
+        pref = session.get(UserPreference, p.id)
+
+        user_data = {
+            "id": p.id,
+            "email": p.email,
+            "role": p.role,
+            "is_active": p.is_active,
+            "created_at": p.created_at,
+            # Flags from Preferences
+            "has_api_keys": pref.has_api_keys if pref else False,
+            "has_custom_prompts": pref.has_custom_prompts if pref else False,
+            "has_custom_formula": pref.has_custom_formula if pref else False,
+            "has_custom_classes": pref.has_custom_classes if pref else False,
+            "has_custom_availability": pref.has_custom_availability if pref else False,
+        }
+        result.append(user_data)
+
+    return result
+
+
 @router.delete("/admin/users/{target_user_id}")
 def delete_user(
     target_user_id: str,
