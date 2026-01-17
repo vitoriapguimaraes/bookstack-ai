@@ -71,10 +71,10 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
   ];
 
   return (
-    <div className="mt-3 p-3 bg-slate-50 dark:bg-neutral-800/50 rounded-lg border border-slate-200 dark:border-neutral-700 animate-fade-in">
+    <div className="mt-4 w-full">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles size={10} className="text-purple-500" /> Análise de Score
+        <h4 className="text-[10px] font-bold text-slate-500 dark:text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+          Análise de Score
         </h4>
         <span className="text-[9px] bg-slate-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded-full text-slate-600 dark:text-neutral-300 font-mono">
           Total: {stats.total}
@@ -83,16 +83,13 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
 
       <div className="flex gap-3">
         {/* Left: Main Score */}
-        <div className="flex flex-col justify-center items-center bg-white dark:bg-neutral-900 p-2 rounded border border-slate-100 dark:border-neutral-800 shadow-sm w-24 flex-shrink-0">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 text-center">
+        <div className="flex flex-col justify-center items-center bg-white dark:bg-neutral-900 p-2 rounded border border-slate-100 dark:border-neutral-800 shadow-sm w-16 flex-shrink-0">
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 text-center">
             Score
           </span>
-          <div className="text-2xl font-black text-purple-600 dark:text-purple-400 leading-none mb-1">
+          <div className="text-xl font-black text-purple-600 dark:text-purple-400 leading-none mb-1">
             {currentScore ? currentScore.toFixed(1) : "-"}
           </div>
-          <p className="text-[8px] text-slate-400 text-center leading-tight opacity-70">
-            Quanto maior, melhor
-          </p>
         </div>
 
         {/* Right: Quadrants Grid */}
@@ -111,9 +108,6 @@ const ScoreStats = ({ stats, currentScore, loading }) => {
 
                 <div className="flex items-center gap-2 z-10 w-full justify-between">
                   <div className="flex items-center gap-2">
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${q.color}`}
-                    ></div>
                     <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400">
                       Pos. {q.range}
                     </span>
