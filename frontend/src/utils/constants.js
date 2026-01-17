@@ -27,6 +27,7 @@ export const DEFAULT_CLASS_CATEGORIES = {
     "Diversidade e Inclusão",
     "História/Ficção",
     "Literatura Brasileira",
+    "Poesia",
   ],
   "Desenvolvimento Pessoal": [
     "Bem-estar",

@@ -71,6 +71,7 @@ CLASS_CATEGORIES = {
         "Literatura Brasileira",
         "Épicos & Ficção Reflexiva",
         "Justiça Social & Interseccionalidade",
+        "Poesia",
     ],
     "Desenvolvimento Pessoal": [
         "Bem-estar",
