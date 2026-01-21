@@ -76,22 +76,32 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
         email = user_info.get("email")
         print(f"DEBUG: User Created in Auth. ID: {user_id}, Email: {email}")
 
-        # DIAGNOSTIC STEP
+        # DIAGNOSTIC STEP with RETRY for Latency
         try:
+            import time
             from sqlalchemy import text
 
-            # Fix: Using bindparams for robust scalar execution in various SQLAlchemy/SQLModel versions
+            user_found = False
+            # Fix: Using bindparams for robust scalar execution
             stmt = text("SELECT id FROM auth.users WHERE id = :uid").bindparams(
                 uid=user_id
             )
-            result = session.exec(stmt).first()
-            if result:
+
+            for attempt in range(3):
+                result = session.exec(stmt).first()
+                if result:
+                    print(
+                        f"DEBUG: SUCCESS - User {user_id} found in auth.users table (Attempt {attempt+1})."
+                    )
+                    user_found = True
+                    break
+                else:
+                    print(f"DEBUG: Attempt {attempt+1} - User NOT found. Waiting 2s...")
+                    time.sleep(2)
+
+            if not user_found:
                 print(
-                    f"DEBUG: SUCCESS - User {user_id} found in auth.users table via DB connection."
-                )
-            else:
-                print(
-                    f"DEBUG: CRITICAL - User {user_id} NOT found in auth.users via DB connection!"
+                    f"DEBUG: CRITICAL - User {user_id} NEVER found in auth.users after retries. CONFIRMED DB MISMATCH."
                 )
                 stmt_chk = text(
                     "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'"
