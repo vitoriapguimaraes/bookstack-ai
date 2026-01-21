@@ -1,9 +1,10 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import books, users, preferences, system
+from app.api.v1.endpoints import books, users, preferences, system, auth
 
 api_router = APIRouter()
 
 # Mount routers with compatible paths
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(books.router, prefix="/books", tags=["books"])
 api_router.include_router(
     users.router, tags=["users"]
