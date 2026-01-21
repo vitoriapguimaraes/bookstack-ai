@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
+            syncUserProfile();
             fetchUserPreferences();
           }
         }
@@ -50,6 +51,7 @@ export function AuthProvider({ children }) {
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
+        syncUserProfile();
         fetchUserPreferences();
       }
     });
@@ -69,6 +71,14 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Erro ao carregar preferências do usuário:", error);
+    }
+  };
+
+  const syncUserProfile = async () => {
+    try {
+      await api.post("/users/sync");
+    } catch (error) {
+      console.error("Erro ao sincronizar perfil:", error);
     }
   };
 
