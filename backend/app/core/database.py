@@ -33,7 +33,14 @@ engine = create_engine(database_url, echo=False)
 
 
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+    try:
+        SQLModel.metadata.create_all(engine)
+    except Exception as e:
+        print(f"CRITICAL: Failed to create tables on startup. DB Context: {engine.url}")
+        print(f"Error details: {e}")
+        # We don't raise here to allow the app to try starting, or we could raise.
+        # But printing allows us to see the log in Vercel.
+        pass
 
 
 def get_session():
