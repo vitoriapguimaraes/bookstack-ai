@@ -11,8 +11,13 @@ app = FastAPI(title="Reading List API", version="1.0")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://bookstack-ai.vercel.app",
+        "https://bookstack-ai-api.vercel.app",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
