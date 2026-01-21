@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
 from app.core.config import settings
 from app.core.database import get_session
-from app.models.user import Profile
+from app.models.user import Profile, UserPreference
 
 router = APIRouter()
 
@@ -52,11 +52,20 @@ def _create_local_profile_if_missing(session: Session, user_id: str, email: str)
     """Auxiliar para criar perfil local se não existir."""
     existing_profile = session.get(Profile, user_id)
     if not existing_profile:
-        print(f"DEBUG: Creating local profile for {user_id}")
+        print(f"DEBUG: Creating local profile and preferences for {user_id}")
+
+        # 1. Create Profile
         new_profile = Profile(id=user_id, email=email, role="user", is_active=True)
         session.add(new_profile)
+
+        # 2. Create User Preferences
+        # (Check performed inside session.get usually, but here we can be direct
+        # since we are inside a 'new user' flow context or relying on unique constraints)
+        new_pref = UserPreference(user_id=user_id)
+        session.add(new_pref)
+
         session.commit()
-        print("DEBUG: Local profile committed.")
+        print("DEBUG: Local profile and preferences committed.")
     else:
         print("DEBUG: Profile already exists.")
 
@@ -76,52 +85,15 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
         email = user_info.get("email")
         print(f"DEBUG: User Created in Auth. ID: {user_id}, Email: {email}")
 
-        # DIAGNOSTIC STEP with RETRY for Latency
-        try:
-            import time
-            from sqlalchemy import text
-
-            user_found = False
-            # Fix: Using bindparams for robust scalar execution
-            stmt = text("SELECT id FROM auth.users WHERE id = :uid").bindparams(
-                uid=user_id
-            )
-
-            for attempt in range(3):
-                result = session.exec(stmt).first()
-                if result:
-                    print(
-                        f"DEBUG: SUCCESS - User {user_id} found in auth.users table (Attempt {attempt+1})."
-                    )
-                    user_found = True
-                    break
-                else:
-                    print(f"DEBUG: Attempt {attempt+1} - User NOT found. Waiting 2s...")
-                    time.sleep(2)
-
-            if not user_found:
-                print(
-                    f"DEBUG: CRITICAL - User {user_id} NEVER found in auth.users after retries. CONFIRMED DB MISMATCH."
-                )
-                stmt_chk = text(
-                    "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'"
-                )
-                chk = session.exec(stmt_chk).first()
-                if chk:
-                    print(
-                        "DEBUG: WARNING - 'public.users' table EXISTS. This might be confusing the constraint."
-                    )
-        except Exception as dd:
-            print(f"DEBUG: Database Check Failed: {dd}")
-
-        # 2. Local Profile
+        # 2. Local Profile (and Preferences)
+        # We removed the diagnostic DB check because we know the Transaction Pooler
+        # doesn't show auth.users immediately. We are relying on dropped FKs.
         _create_local_profile_if_missing(session, user_id, email)
 
         return {
             "message": "Cadastro realizado com sucesso! Verifique seu email.",
             "user_id": user_id,
         }
-
     except HTTPException:
         raise
     except Exception as e:
