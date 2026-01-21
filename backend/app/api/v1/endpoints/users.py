@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.api.deps import get_current_user
 from app.core.database import get_session
 from app.models.user import UserPreference, Profile
 from app.models.book import Book
-from app.core.mailer import send_email
+
 
 router = APIRouter()
 
@@ -67,37 +67,6 @@ def _perform_user_deletion(session: Session, target_user_id: str) -> str:
     return target_email
 
 
-def _notify_user_deletion(
-    background_tasks: BackgroundTasks, target_email: str, target_user_id: str
-):
-    """Envia emails de notificação sobre a exclusão."""
-    if not target_email:
-        return
-
-    # Notify User
-    background_tasks.add_task(
-        send_email,
-        to_email=target_email,
-        subject="Aviso: Sua conta foi excluída",
-        body_html="""
-        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #d9534f;">Conta Excluída</h2>
-            <p>Olá,</p>
-            <p>Informamos que sua conta no BookStack foi <b>excluída permanentemente</b> por um administrador.</p>
-            <p>Se você acredita que isso foi um erro, entre em contato com o suporte.</p>
-        </div>
-        """,
-    )
-
-    # Notify Admin
-    background_tasks.add_task(
-        send_email,
-        to_email="bookstackai@gmail.com",
-        subject=f"ALERTA: Conta Excluída por Admin ({target_email})",
-        body_html=f"<p>O usuário <b>{target_email}</b> foi excluído por um administrador.</p>",
-    )
-
-
 @router.get("/admin/users")
 def read_users(
     session: Session = Depends(get_session),
@@ -134,16 +103,15 @@ def read_users(
 @router.delete("/admin/users/{target_user_id}")
 def delete_user(
     target_user_id: str,
-    background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     user: dict = Depends(get_current_user),
 ):
     _check_admin_permissions(session, user)
 
     try:
-        target_email = _perform_user_deletion(session, target_user_id)
+        _perform_user_deletion(session, target_user_id)
         session.commit()
-        _notify_user_deletion(background_tasks, target_email, target_user_id)
+        # _notify_user_deletion call removed
         return {"message": f"Usuário {target_user_id} excluído com sucesso."}
     except HTTPException:
         raise

@@ -96,15 +96,19 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) throw error;
-    return data;
+    // New flow: Call Backend to register + sync immediately
+    try {
+      const { data } = await api.post("/auth/register", {
+        email,
+        password,
+      });
+      return { data, error: null };
+    } catch (err) {
+      console.error("SignUp Error:", err);
+      // Format error to match what Login component expects (object with message)
+      const errorMsg = err.response?.data?.detail || "Falha no cadastro";
+      return { data: null, error: { message: errorMsg } };
+    }
   };
 
   const signOut = async () => {
