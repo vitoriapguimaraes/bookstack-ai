@@ -114,7 +114,7 @@ def read_users(
         pref = session.get(UserPreference, p.id)
 
         user_data = {
-            "id": p.id,
+            "id": str(p.id),
             "email": p.email,
             "role": p.role,
             "is_active": p.is_active,

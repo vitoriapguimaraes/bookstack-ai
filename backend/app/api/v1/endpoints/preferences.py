@@ -121,7 +121,7 @@ def get_preferences(
 
     # Need to verify decrypt_value logic here if it handles None gracefully. It should.
     return UserPreference(
-        user_id=pref.user_id,
+        user_id=str(pref.user_id),
         yearly_goal=pref.yearly_goal,
         custom_prompts=pref.custom_prompts,
         formula_config=pref.formula_config,
