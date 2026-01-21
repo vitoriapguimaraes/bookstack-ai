@@ -14,9 +14,21 @@ def read_users_me(user: dict = Depends(get_current_user)):
     return user
 
 
+@router.post("/users/sync")
+def sync_user_profile(
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    """Sincroniza o usuário do Auth (Supabase) com a tabela de Profile."""
+    profile = session.get(Profile, user["id"])
+    if not profile:
+        profile = Profile(id=user["id"], email=user["email"])
+        session.add(profile)
+        session.commit()
+    return {"status": "synced"}
+
+
 # --- Admin User Management Helpers ---
-
-
 def _check_admin_permissions(session: Session, user: dict):
     """Verifica se o usuário atual tem permissão de admin."""
     if user.get("email") == "vipistori@gmail.com":
