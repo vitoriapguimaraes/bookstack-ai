@@ -80,23 +80,23 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
         try:
             from sqlalchemy import text
 
-            result = session.exec(
-                text("SELECT id FROM auth.users WHERE id = :uid"), {"uid": user_id}
-            ).first()
+            # Fix: Using bindparams for robust scalar execution in various SQLAlchemy/SQLModel versions
+            stmt = text("SELECT id FROM auth.users WHERE id = :uid").bindparams(
+                uid=user_id
+            )
+            result = session.exec(stmt).first()
             if result:
                 print(
                     f"DEBUG: SUCCESS - User {user_id} found in auth.users table via DB connection."
                 )
             else:
                 print(
-                    f"DEBUG: CRITICAL - User {user_id} NOT found in auth.users via DB connection! Possible DB mismatch."
+                    f"DEBUG: CRITICAL - User {user_id} NOT found in auth.users via DB connection!"
                 )
-                # Check if public.users exists
-                chk = session.exec(
-                    text(
-                        "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'"
-                    )
-                ).first()
+                stmt_chk = text(
+                    "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'"
+                )
+                chk = session.exec(stmt_chk).first()
                 if chk:
                     print(
                         "DEBUG: WARNING - 'public.users' table EXISTS. This might be confusing the constraint."
