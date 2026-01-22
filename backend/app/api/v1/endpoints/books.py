@@ -413,12 +413,16 @@ def export_books_csv(
         )
 
     output.seek(0)
+    csv_content = output.getvalue()
+
+    # Add BOM for Excel compatibility
+    final_content = "\ufeff" + csv_content
 
     from fastapi.responses import StreamingResponse
 
     return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
+        iter([final_content]),
+        media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=biblioteca_backup.csv"},
     )
 
