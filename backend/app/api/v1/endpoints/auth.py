@@ -1,7 +1,7 @@
 import requests
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.core.config import settings
 from app.core.database import get_session
 from app.models.user import Profile, UserPreference
@@ -79,6 +79,13 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
     print(f"DEBUG: Starting registration for {user_data.email}")
 
     try:
+        # 0. Check only locally first
+        existing_user = session.exec(
+            select(Profile).where(Profile.email == user_data.email)
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="E-mail já cadastrado")
+
         # 1. Supabase Auth
         user_info = _signup_on_supabase(user_data.email, user_data.password)
         user_id = user_info.get("id")

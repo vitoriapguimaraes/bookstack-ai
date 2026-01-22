@@ -366,6 +366,63 @@ async def import_books_csv(
     return {"message": f"{count} livros importados com sucesso!"}
 
 
+@router.get("/export")
+def export_books_csv(
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    user_id = user["id"]
+    books = session.exec(
+        select(Book).where(Book.user_id == user_id).order_by(Book.order)
+    ).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Headers
+    headers = [
+        "Title",
+        "Author",
+        "Status",
+        "Class",
+        "Category",
+        "Score",
+        "Order",
+        "Year",
+        "Motivation",
+        "Date Read",
+        "Original Title",
+    ]
+    writer.writerow(headers)
+
+    for b in books:
+        writer.writerow(
+            [
+                b.title,
+                b.author,
+                b.status,
+                b.book_class,
+                b.category,
+                b.score,
+                b.order,
+                b.year,
+                b.motivation,
+                b.date_read,  # Ensure model has this or handle None
+                b.original_title,
+            ]
+        )
+
+    output.seek(0)
+
+    from fastapi.responses import StreamingResponse
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=biblioteca_backup.csv"},
+    )
+
+
 class SuggestRequest(BaseModel):
     title: str
 
