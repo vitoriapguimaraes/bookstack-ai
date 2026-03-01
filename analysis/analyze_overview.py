@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import log
+from utils import log, get_df
 
 
 def analyze_overview(df: pd.DataFrame, lidos: pd.DataFrame) -> None:
@@ -58,8 +58,6 @@ def analyze_score_per_class(df: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    from utils import get_df
-
     df_base = get_df()
     if not df_base.empty:
         lidos_base = (

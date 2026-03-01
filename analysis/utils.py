@@ -2,9 +2,11 @@
 Módulo de utilidades e configurações para as análises exploratórias.
 """
 
+import os
 import logging
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +14,6 @@ import pandas as pd
 import requests
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
-
 
 # ── Configurações visuais ───────────────────────────────────────────────────
 sns.set_theme(style="darkgrid", palette="muted")
@@ -177,3 +178,25 @@ def encode_features(df: pd.DataFrame, cat_cols: list, num_cols: list) -> np.ndar
             if vals.std() > 0:
                 parts.append((vals - vals.mean()) / vals.std())
     return np.column_stack(parts) if len(parts) > 1 else np.array([])
+
+
+def get_df() -> pd.DataFrame:
+    """Carrega as credenciais via .env e retorna o DataFrame limpo.
+    Ideal para rodar scripts individualmente (sem depender do main.py)."""
+
+    env_path = BASE_DIR.parent / "backend" / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        supa_url = os.getenv("SUPABASE_URL")
+        supa_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv(
+            "SUPABASE_ANON_KEY"
+        )
+        if supa_url and supa_key:
+            df_raw = load_from_supabase(supa_url, supa_key)
+            if not df_raw.empty:
+                df = clean(df_raw)
+                validate_columns(df)
+                return df
+
+    log.error("Falha ao inicializar o banco pelo get_df(). Verifique o backend/.env.")
+    return pd.DataFrame()

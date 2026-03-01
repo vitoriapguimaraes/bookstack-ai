@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from utils import encode_features, log, save_plot
+from utils import encode_features, log, save_plot, get_df
 
 
 def _build_pca_labels(df: pd.DataFrame, col: str) -> tuple[np.ndarray, list[str]]:
@@ -152,8 +152,6 @@ def plot_pca_clusters(df: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    from utils import get_df
-
     df_base = get_df()
     if not df_base.empty:
         plot_pca_clusters(df_base)

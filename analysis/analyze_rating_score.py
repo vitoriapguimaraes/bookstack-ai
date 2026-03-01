@@ -2,7 +2,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from utils import log, save_plot
+from utils import log, save_plot, get_df
 
 
 def plot_rating_vs_score(lidos: pd.DataFrame) -> None:
@@ -66,8 +66,6 @@ def plot_rating_vs_score(lidos: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    from utils import get_df
-
     df_base = get_df()
     if not df_base.empty:
         lidos_base = (
