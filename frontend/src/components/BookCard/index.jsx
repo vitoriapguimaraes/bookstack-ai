@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, Pencil, Trash2, Info, X } from "lucide-react";
+import { Star, Pencil, Trash2, Info, X, ImageOff } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -13,6 +13,7 @@ export default function BookCard({
   const { theme } = useTheme();
   const [showMotivation, setShowMotivation] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [coverLoadFailed, setCoverLoadFailed] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
   // Handle animation states
@@ -78,8 +79,8 @@ export default function BookCard({
   if (compact) {
     return (
       <div className="group relative bg-white dark:bg-neutral-900 rounded-md hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 shadow-sm">
-        {/* Order badge - top left */}
-        {Number(book.order) > 0 && (
+        {/* Order badge - top left — hide for Lido */}
+        {Number(book.order) > 0 && book.status !== "Lido" && (
           <div className="absolute top-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10">
             #{book.order}
           </div>
@@ -93,22 +94,33 @@ export default function BookCard({
         )}
 
         <div className="flex gap-2 p-2">
-          <img
-            src={coverUrl}
-            alt={book.title}
-            className={`${
-              compact ? "w-16 h-24" : "w-20 h-28"
-            } object-cover rounded flex-shrink-0`}
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-                book.title,
-              )}`;
-            }}
-          />
+          <div
+            className={`${compact ? "w-16 h-24" : "w-20 h-28"} relative flex-shrink-0`}
+          >
+            <img
+              src={coverUrl}
+              alt={book.title}
+              className="w-full h-full object-cover rounded"
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
+                  book.title,
+                )}`;
+                setCoverLoadFailed(true);
+              }}
+            />
+            {coverLoadFailed && book.cover_image && (
+              <div
+                className="absolute bottom-0.5 right-0.5 bg-amber-500 rounded-full p-0.5"
+                title="Capa não disponível"
+              >
+                <ImageOff size={8} className="text-white" />
+              </div>
+            )}
+          </div>
 
           <div className="flex-1 min-w-0 flex flex-col gap-1.5">
             {/* Section 1: Title + Author */}
@@ -126,6 +138,27 @@ export default function BookCard({
               >
                 {book.author}
               </p>
+              {/* Bug 1 Fix: Classification info in compact (mobile) card */}
+              {compact && (book.book_class || book.category) && (
+                <div className="flex flex-col gap-0 mt-0.5">
+                  {book.book_class && (
+                    <span
+                      className="text-[8px] text-slate-400 dark:text-neutral-500 truncate"
+                      title={book.book_class}
+                    >
+                      {book.book_class}
+                    </span>
+                  )}
+                  {book.category && book.category !== book.book_class && (
+                    <span
+                      className="text-[8px] text-slate-300 dark:text-neutral-600 truncate"
+                      title={book.category}
+                    >
+                      {book.category}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Section 2: Rating */}
@@ -226,11 +259,22 @@ export default function BookCard({
             e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
               book.title,
             )}`;
+            setCoverLoadFailed(true);
           }}
         />
 
-        {/* Order badge - bottom left on cover */}
-        {Number(book.order) > 0 && (
+        {/* Bug 2 Fix: Cover load failure indicator */}
+        {coverLoadFailed && book.cover_image && (
+          <div
+            className="absolute top-1 right-1 bg-amber-500/90 rounded px-1 py-0.5 flex items-center gap-0.5"
+            title="Capa não disponível — imagem pode ter expirado"
+          >
+            <ImageOff size={9} className="text-white" />
+          </div>
+        )}
+
+        {/* Order badge - bottom left on cover — hide for Lido */}
+        {Number(book.order) > 0 && book.status !== "Lido" && (
           <div className="absolute bottom-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg">
             #{book.order}
           </div>

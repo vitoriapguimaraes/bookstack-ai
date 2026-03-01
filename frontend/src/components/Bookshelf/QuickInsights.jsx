@@ -1,45 +1,50 @@
-import { Target, TrendingUp, Award, Calendar, Gem, Star } from 'lucide-react'
+import { Target, TrendingUp, Award, Calendar, Gem, Star } from "lucide-react";
 
 export default function QuickInsights({ stats, books }) {
-  const currentYear = new Date().getFullYear()
-  const booksThisYear = books.filter(b => b.status === 'Lido' && b.year === currentYear).length
-  const yearGoal = 20 // Pode ser configurável depois
-  const progress = Math.min((booksThisYear / yearGoal) * 100, 100)
+  const currentYear = new Date().getFullYear();
+  const booksThisYear = books.filter(
+    (b) =>
+      b.status === "Lido" &&
+      b.date_read &&
+      new Date(b.date_read).getFullYear() === currentYear,
+  ).length;
+  const yearGoal = 20; // Pode ser configurável depois
+  const progress = Math.min((booksThisYear / yearGoal) * 100, 100);
 
   const insights = [
     {
       icon: Target,
-      label: 'Meta 2024',
+      label: `Meta ${currentYear}`,
       value: `${booksThisYear}/${yearGoal}`,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      progress: progress
+      color: "text-purple-600",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      progress: progress,
     },
     {
       icon: Award,
-      label: 'Nota Média',
+      label: "Nota Média",
       value: stats.kpi.avgRating.toFixed(1),
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-      subtitle: 'de 5.0'
+      color: "text-amber-600",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
+      subtitle: "de 5.0",
     },
     {
       icon: TrendingUp,
-      label: 'Índice Médio',
+      label: "Índice Médio",
       value: stats.kpi.avgScore.toFixed(0),
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
-      subtitle: 'pontos'
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      subtitle: "pontos",
     },
     {
       icon: Calendar,
-      label: stats.insights.oldestRead ? 'Desde' : 'Início',
+      label: stats.insights.oldestRead ? "Desde" : "Início",
       value: stats.insights.oldestRead?.year || currentYear,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      subtitle: 'anos de leitura'
-    }
-  ]
+      color: "text-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      subtitle: "anos de leitura",
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-3">
@@ -89,5 +94,5 @@ export default function QuickInsights({ stats, books }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
