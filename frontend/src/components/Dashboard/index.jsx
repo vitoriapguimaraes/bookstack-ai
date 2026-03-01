@@ -68,7 +68,7 @@ export default function Analytics({ books }) {
           buttons.forEach((btn) => (btn.style.display = "none"));
 
           const scrollControls = clonedDoc.querySelector(
-            ".fixed.bottom-8.right-8"
+            ".fixed.bottom-8.right-8",
           );
           if (scrollControls) scrollControls.style.display = "none";
 
@@ -276,10 +276,10 @@ export default function Analytics({ books }) {
                 {t === "total"
                   ? "Total"
                   : t === "type"
-                  ? "Tipo"
-                  : t === "class"
-                  ? "Classe"
-                  : "Categoria"}
+                    ? "Tipo"
+                    : t === "class"
+                      ? "Classe"
+                      : "Categoria"}
               </button>
             ))}
           </div>
@@ -329,6 +329,68 @@ export default function Analytics({ books }) {
             </div>
           </div>
         )}
+
+      {/* Score por Classe */}
+      {(() => {
+        const scored = books.filter((b) => b.score > 0 && b.book_class);
+        const grouped = scored.reduce((acc, b) => {
+          if (!acc[b.book_class]) acc[b.book_class] = [];
+          acc[b.book_class].push(b.score);
+          return acc;
+        }, {});
+        const rows = Object.entries(grouped)
+          .filter(([, scores]) => scores.length >= 2)
+          .map(([cls, scores]) => ({
+            cls,
+            mean: scores.reduce((s, v) => s + v, 0) / scores.length,
+            min: Math.min(...scores),
+            max: Math.max(...scores),
+            count: scores.length,
+          }))
+          .sort((a, b) => b.mean - a.mean);
+        if (rows.length === 0) return null;
+        const maxMean = rows[0].mean;
+        return (
+          <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl shadow-sm">
+            <h3 className="text-lg font-light text-slate-800 dark:text-neutral-200 mb-6 flex items-center gap-2">
+              <span className="w-1 h-4 bg-amber-500 rounded-full"></span>
+              Score Médio por Classe
+            </h3>
+            <div className="flex flex-col gap-3">
+              {rows.map(({ cls, mean, min, max, count }, i) => (
+                <div key={cls} className="flex items-center gap-4">
+                  {/* Rank */}
+                  <span className="flex-shrink-0 w-6 text-xs text-slate-400 dark:text-neutral-500 font-mono text-right">
+                    {i + 1}
+                  </span>
+                  {/* Label */}
+                  <span
+                    className="w-48 text-sm font-medium text-slate-700 dark:text-slate-200 truncate flex-shrink-0"
+                    title={cls}
+                  >
+                    {cls}
+                  </span>
+                  {/* Bar */}
+                  <div className="flex-1 bg-slate-100 dark:bg-neutral-800 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full bg-amber-400 dark:bg-amber-500 transition-all duration-500"
+                      style={{ width: `${(mean / maxMean) * 100}%` }}
+                    />
+                  </div>
+                  {/* Mean value */}
+                  <span className="flex-shrink-0 w-10 text-sm font-bold text-slate-800 dark:text-white text-right">
+                    {mean.toFixed(1)}
+                  </span>
+                  {/* Min/max/count */}
+                  <span className="flex-shrink-0 text-xs text-slate-400 dark:text-neutral-500 hidden lg:block">
+                    {min}–{max} · {count} livros
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Distributions (Charts) */}
       <div id="chart-types" className="relative group">

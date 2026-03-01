@@ -9,6 +9,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import BookCard from "../../components/BookCard";
 import ScrollToTopBottom from "../../components/ScrollToTopBottom";
@@ -68,6 +69,8 @@ export default function MuralView({
         return books.filter((b) => b.status === "A Ler");
       case "read":
         return books.filter((b) => b.status === "Lido");
+      case "recommend":
+        return []; // handled separately
       default:
         return [];
     }
@@ -105,9 +108,41 @@ export default function MuralView({
         return "Próximos da Fila";
       case "read":
         return "Já Lidos";
+      case "recommend":
+        return "Recomendados";
       default:
         return "";
     }
+  };
+
+  // ── Recomendações ────────────────────────────────────────────────────────
+  const getRecommendations = () => {
+    const lidos = books.filter((b) => b.status === "Lido" && b.rating >= 4);
+    const fila = books.filter((b) => b.status === "A Ler");
+    if (lidos.length < 2 || fila.length === 0) return [];
+
+    // Perfil: frequência de book_class e category nos lidos favoritos
+    const classFreq = {};
+    const catFreq = {};
+    lidos.forEach((b) => {
+      if (b.book_class)
+        classFreq[b.book_class] = (classFreq[b.book_class] || 0) + 1;
+      if (b.category) catFreq[b.category] = (catFreq[b.category] || 0) + 1;
+    });
+    const maxCls = Math.max(...Object.values(classFreq), 1);
+    const maxCat = Math.max(...Object.values(catFreq), 1);
+
+    // Pontua cada livro da fila
+    return fila
+      .map((b) => ({
+        ...b,
+        matchScore:
+          ((classFreq[b.book_class] || 0) / maxCls) * 60 +
+          ((catFreq[b.category] || 0) / maxCat) * 40,
+      }))
+      .filter((b) => b.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 20);
   };
 
   // Calculate current year progress
@@ -201,6 +236,16 @@ export default function MuralView({
           >
             <CheckCircle2 size={14} /> Concluídos
           </button>
+          <button
+            onClick={() => handleStatusChange("recommend")}
+            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeStatus === "recommend"
+                ? "bg-white dark:bg-neutral-800 text-fuchsia-600 dark:text-fuchsia-400 shadow-sm border border-slate-200 dark:border-neutral-700"
+                : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Sparkles size={14} /> Recomendados
+          </button>
         </div>
       </div>
 
@@ -278,50 +323,118 @@ export default function MuralView({
         </div>
       )}
 
-      {/* Content Grid */}
-      <section className="flex-1 min-h-0">
-        {paginatedBooks.length > 0 ? (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-            {paginatedBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                compact={false}
-                onEdit={onEdit}
-                // Pass onRequestDelete instead of expecting BookCard to handle it
-                onRequestDelete={() => {
-                  confirm({
-                    title: "Excluir Livro",
-                    description: `Deseja realmente excluir "${book.title}"?`,
-                    confirmText: "Excluir",
-                    isDanger: true,
-                    onConfirm: async () => {
-                      try {
-                        await api.delete(`/books/${book.id}`);
-                        onDelete(book.id); // Notify parent to update list
-                        addToast({
-                          type: "success",
-                          message: "Livro excluído com sucesso!",
-                        });
-                      } catch (err) {
-                        console.error(err);
-                        addToast({
-                          type: "error",
-                          message: "Erro ao excluir livro.",
-                        });
-                      }
-                    },
-                  });
-                }}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center items-center text-slate-400 dark:text-neutral-600 py-20">
-            <p className="text-lg">Nenhum livro encontrado nesta categoria.</p>
-          </div>
-        )}
-      </section>
+      {/* Recomendações — aba especial, sem paginação */}
+      {activeStatus === "recommend" &&
+        (() => {
+          const recs = getRecommendations();
+          return (
+            <section className="flex-1 min-h-0">
+              {recs.length > 0 ? (
+                <>
+                  <p className="text-xs text-slate-400 dark:text-neutral-500 mb-4">
+                    Baseado nos livros que você leu com nota ≥ 4 — ordenado por
+                    similaridade de classe e categoria.
+                  </p>
+                  <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+                    {recs.map((book) => (
+                      <div
+                        key={book.id}
+                        className="flex flex-col gap-1 p-4 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl hover:border-fuchsia-300 dark:hover:border-fuchsia-800 transition-all shadow-sm cursor-pointer"
+                        onClick={() => onEdit(book)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p
+                            className="text-sm font-semibold text-slate-800 dark:text-white leading-snug line-clamp-2"
+                            title={book.title}
+                          >
+                            {book.title}
+                          </p>
+                          <span className="flex-shrink-0 text-xs font-bold text-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-900/20 px-2 py-0.5 rounded-full">
+                            {Math.round(book.matchScore)}%
+                          </span>
+                        </div>
+                        {book.author && (
+                          <p className="text-xs text-slate-500 dark:text-neutral-400 truncate">
+                            {book.author}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {book.book_class && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
+                              {book.book_class}
+                            </span>
+                          )}
+                          {book.category && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
+                              {book.category}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-neutral-600">
+                  <Sparkles size={40} className="mb-3 opacity-40" />
+                  <p className="text-sm">
+                    Leia e avalie pelo menos 2 livros com nota ≥ 4 para ver
+                    recomendações.
+                  </p>
+                </div>
+              )}
+            </section>
+          );
+        })()}
+
+      {/* Content Grid — para as abas normais */}
+      {activeStatus !== "recommend" && (
+        <section className="flex-1 min-h-0">
+          {paginatedBooks.length > 0 ? (
+            <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+              {paginatedBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  compact={false}
+                  onEdit={onEdit}
+                  // Pass onRequestDelete instead of expecting BookCard to handle it
+                  onRequestDelete={() => {
+                    confirm({
+                      title: "Excluir Livro",
+                      description: `Deseja realmente excluir "${book.title}"?`,
+                      confirmText: "Excluir",
+                      isDanger: true,
+                      onConfirm: async () => {
+                        try {
+                          await api.delete(`/books/${book.id}`);
+                          onDelete(book.id); // Notify parent to update list
+                          addToast({
+                            type: "success",
+                            message: "Livro excluído com sucesso!",
+                          });
+                        } catch (err) {
+                          console.error(err);
+                          addToast({
+                            type: "error",
+                            message: "Erro ao excluir livro.",
+                          });
+                        }
+                      },
+                    });
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col justify-center items-center text-slate-400 dark:text-neutral-600 py-20">
+              <p className="text-lg">
+                Nenhum livro encontrado nesta categoria.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Footer scroll handled by main window now */}
       <ScrollToTopBottom />
