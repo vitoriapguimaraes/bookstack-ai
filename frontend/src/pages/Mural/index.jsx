@@ -37,8 +37,33 @@ export default function MuralView({
   const { addToast } = useToast();
   const { confirm } = useConfirm();
 
+  // KNN via backend
+  const [knnRecs, setKnnRecs] = useState(null); // null = ainda não buscou
+  const [knnLoading, setKnnLoading] = useState(false);
+  const [knnError, setKnnError] = useState(false);
+
   // Default to 'reading' if no status in URL
   const activeStatus = status || "reading";
+
+  // Busca recomendações KNN do backend ao entrar na aba
+  useEffect(() => {
+    if (activeStatus !== "recommend") return;
+    if (knnRecs !== null || knnLoading) return; // já buscou ou está buscando
+    setKnnLoading(true);
+    setKnnError(false);
+    api
+      .get("/books/recommendations?top_n=10")
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : [];
+        // normaliza match_score → matchScore para o front
+        setKnnRecs(data.map((b) => ({ ...b, matchScore: b.match_score ?? 0 })));
+      })
+      .catch(() => {
+        setKnnError(true);
+        setKnnRecs([]); // assegura fallback JS
+      })
+      .finally(() => setKnnLoading(false));
+  }, [activeStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get current page from lifted state, default to 1
   const currentPage = muralState ? muralState[activeStatus] : 1;
@@ -144,48 +169,129 @@ export default function MuralView({
   };
 
   // ── Recomendações ────────────────────────────────────────────────────────
+  // Constrói o perfil de leitura a partir dos lidos ≥ 4 estrelas.
+  // Peso composto = nota (5★=2, 4★=1) × decaimento temporal exponencial.
+  // λ=0.4 → meia-vida ~1.7 anos: leituras de 2025 valem ~5× mais que de 2020.
+  const buildRecommendProfile = () => {
+    const lidos = books.filter((b) => b.status === "Lido" && b.rating > 0);
+    const lidosPos = lidos.filter((b) => b.rating >= 4);
+    const lidosNeg = lidos.filter((b) => b.rating < 4);
+    if (lidosPos.length < 2) return null;
+
+    const now = Date.now();
+    const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
+    const LAMBDA = 0.4; // decaimento: aumentar = mais peso nos recentes
+
+    const buildProfileFor = (sourceBooks, isPositive) => {
+      const clsF = {},
+        catF = {},
+        typF = {},
+        authF = {};
+      let scoreSum = 0,
+        scoreCount = 0;
+
+      sourceBooks.forEach((b) => {
+        let ratingW = 1.0;
+        if (isPositive) {
+          ratingW = b.rating >= 5 ? 2 : 1;
+        } else {
+          ratingW = b.rating === 1 ? 2 : b.rating === 2 ? 1.5 : 0.5;
+        }
+
+        const yearsAgo = b.date_read
+          ? (now - new Date(b.date_read).getTime()) / MS_PER_YEAR
+          : 10;
+        const decay = Math.exp(-LAMBDA * yearsAgo);
+        const w = ratingW * decay;
+
+        if (b.book_class) clsF[b.book_class] = (clsF[b.book_class] || 0) + w;
+        if (b.category) catF[b.category] = (catF[b.category] || 0) + w;
+        if (b.type) typF[b.type] = (typF[b.type] || 0) + w;
+        if (b.author) authF[b.author] = (authF[b.author] || 0) + w;
+        if (b.score > 0) {
+          scoreSum += b.score * w;
+          scoreCount += w;
+        }
+      });
+
+      return {
+        clsF,
+        catF,
+        typF,
+        authF,
+        maxCls: Math.max(...Object.values(clsF), 1),
+        maxCat: Math.max(...Object.values(catF), 1),
+        maxTyp: Math.max(...Object.values(typF), 1),
+        maxAuth: Math.max(...Object.values(authF), 1),
+      };
+    };
+
+    const maxQueueScore = Math.max(
+      ...books
+        .filter((b) => b.status === "A Ler" && b.score > 0)
+        .map((b) => b.score),
+      1,
+    );
+
+    return {
+      pos: buildProfileFor(lidosPos, true),
+      neg: lidosNeg.length > 0 ? buildProfileFor(lidosNeg, false) : null,
+      maxQueueScore,
+    };
+  };
+
+  const scoreOneBook = (b, profileObj) => {
+    const { pos, neg, maxQueueScore } = profileObj;
+
+    const calcSim = (p) => {
+      if (!p) return 0;
+      const cls = (p.clsF[b.book_class] || 0) / p.maxCls;
+      const cat = (p.catF[b.category] || 0) / p.maxCat;
+      const typ = (p.typF[b.type] || 0) / p.maxTyp;
+      const auth = (p.authF[b.author] || 0) / p.maxAuth; // sems bônus de descoberta!
+      const scr = b.score > 0 ? b.score / maxQueueScore : 0.5;
+      return cls * 0.35 + cat * 0.25 + typ * 0.13 + auth * 0.12 + scr * 0.15;
+    };
+
+    const simPos = calcSim(pos);
+    const simNeg = neg ? calcSim(neg) : 0;
+
+    const adjusted = simPos - 0.35 * simNeg;
+    return Math.max(1, Math.min(100, Math.round(adjusted * 100)));
+  };
+
+  // Retorna knnRecs do backend se já chegou; caso contrário usa algoritmo JS
   const getRecommendations = () => {
-    const lidos = books.filter((b) => b.status === "Lido" && b.rating >= 4);
-    const fila = books.filter((b) => b.status === "A Ler");
-    if (lidos.length < 2 || fila.length === 0) return [];
-
-    // Perfil ponderado pela nota real (5★ vale 2×, 4★ vale 1×)
-    const classFreq = {};
-    const catFreq = {};
-    const typeFreq = {};
-    lidos.forEach((b) => {
-      const w = b.rating >= 5 ? 2 : 1;
-      if (b.book_class)
-        classFreq[b.book_class] = (classFreq[b.book_class] || 0) + w;
-      if (b.category) catFreq[b.category] = (catFreq[b.category] || 0) + w;
-      if (b.type) typeFreq[b.type] = (typeFreq[b.type] || 0) + w;
-    });
-    const maxCls = Math.max(...Object.values(classFreq), 1);
-    const maxCat = Math.max(...Object.values(catFreq), 1);
-    const maxType = Math.max(...Object.values(typeFreq), 1);
-
-    // Média geométrica das 3 dimensões → todas precisam coincidir para 100%
-    // class 50% · category 30% · type 20% → via potência ponderada
-    return fila
-      .map((b) => {
-        const cls = (classFreq[b.book_class] || 0) / maxCls;
-        const cat = (catFreq[b.category] || 0) / maxCat;
-        const typ = (typeFreq[b.type] || 0) / maxType;
-        // Média geométrica ponderada: cls^0.5 · cat^0.3 · typ^0.2
-        const score =
-          cls > 0 && cat > 0
-            ? Math.pow(cls, 0.5) *
-              Math.pow(cat, 0.3) *
-              Math.pow(typ > 0 ? typ : 0.1, 0.2)
-            : 0;
-        return { ...b, matchScore: Math.round(score * 100) };
-      })
+    if (knnRecs !== null && knnRecs.length > 0) return knnRecs;
+    // fallback JS (usado enquanto backend carrega ou se falhou)
+    const profile = buildRecommendProfile();
+    if (!profile) return [];
+    return books
+      .filter((b) => b.status === "A Ler")
+      .map((b) => ({ ...b, matchScore: scoreOneBook(b, profile) }))
       .filter((b) => b.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 10);
   };
 
-  // Calculate current year progress
+  // Histograma: pontua TODOS os livros 'A Ler' e distribui em bins de 10%
+  const getScoreDistribution = () => {
+    const profile = buildRecommendProfile();
+    if (!profile) return [];
+    const bins = Array.from({ length: 10 }, (_, i) => ({
+      label: `${i * 10 + 1}–${(i + 1) * 10}%`,
+      count: 0,
+    }));
+    books
+      .filter((b) => b.status === "A Ler")
+      .forEach((b) => {
+        const s = scoreOneBook(b, profile);
+        if (s <= 0) return;
+        bins[Math.min(9, Math.floor((s - 1) / 10))].count++;
+      });
+    return bins.filter((bin) => bin.count > 0);
+  };
+
   const currentYear = new Date().getFullYear();
   const currentYearBooks = books.filter(
     (b) =>
@@ -367,40 +473,82 @@ export default function MuralView({
       {activeStatus === "recommend" &&
         (() => {
           const recs = getRecommendations();
+          const bins = getScoreDistribution();
+          const maxBinCount = Math.max(...bins.map((b) => b.count), 1);
+
           return (
-            <section className="flex-1 min-h-0">
-              {/* Painel explicativo do algoritmo */}
-              <div className="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 mb-5 text-sm text-blue-800 dark:text-blue-200">
-                <Info size={16} className="shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold mb-1">
-                    Como funciona a recomendação?
-                  </p>
-                  <p className="opacity-90 leading-relaxed">
-                    Analisamos os livros lidos com <strong>nota ≥ 4</strong> e
-                    identificamos quais <em>classes</em> e <em>categorias</em>{" "}
-                    aparecem mais no seu histórico. Cada livro da fila recebe
-                    uma pontuação:
-                  </p>
-                  <p className="mt-1.5 font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded inline-block">
-                    match = classe^0.5 × categoria^0.3 × tipo^0.2
-                  </p>
-                  <p className="mt-1.5 opacity-80">
-                    Usamos <strong>média geométrica</strong> — as três dimensões
-                    precisam coincidir para um score alto. 5★ nos lidos valem o
-                    dobro de 4★. 100% significa match perfeito em classe,
-                    categoria e tipo.
-                  </p>
+            <section className="flex-1 min-h-0 flex flex-col gap-5">
+              {/* ── Linha 1: Explicação + Histograma ── */}
+              <div className="flex gap-4 items-stretch">
+                {/* Painel explicativo */}
+                <div className="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-sm text-blue-800 dark:text-blue-200 basis-1/3 shrink-0">
+                  <Info size={15} className="shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold mb-1">Como funciona?</p>
+                    <p className="opacity-90 leading-relaxed text-xs flex flex-col gap-1">
+                      <span>
+                        Lidos com <strong>4-5★</strong> criam seu Perfil
+                        Positivo; <strong>1-3★</strong> o Perfil Negativo.
+                      </span>
+                      <span>
+                        <strong>Leituras recentes pesam mais</strong> (meia-vida
+                        de ~1.7 anos).
+                      </span>
+                    </p>
+                    <div className="mt-2">
+                      <p className="font-mono text-[10px] bg-blue-100 dark:bg-blue-900/40 px-2 py-1.5 rounded inline-block">
+                        Match = Simil.(Positiva) - 35% × Simil.(Negativa)
+                      </p>
+                    </div>
+                    <p className="mt-2 text-xs opacity-85 leading-tight">
+                      <strong>Motor de IA (KNN):</strong> Analisa classe,
+                      categoria, tipo, autor e score para encontrar vizinhos
+                      próximos na sua fila.
+                    </p>
+                  </div>
                 </div>
+
+                {/* Histograma */}
+                {bins.length > 0 && (
+                  <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-4 basis-2/3 flex flex-col">
+                    <p className="text-xs font-semibold text-slate-600 dark:text-neutral-300 mb-3 flex items-center gap-1.5">
+                      <Sparkles size={12} className="text-fuchsia-500" />
+                      Distribuição — Fila (A Ler)
+                    </p>
+                    <div className="flex flex-col justify-evenly flex-1 gap-1.5">
+                      {[...bins].reverse().map((bin) => (
+                        <div
+                          key={bin.label}
+                          className="flex items-center gap-2"
+                        >
+                          <span className="w-16 text-[10px] text-slate-400 dark:text-neutral-500 text-right flex-shrink-0">
+                            {bin.label}
+                          </span>
+                          <div className="flex-1 bg-slate-100 dark:bg-neutral-800 rounded-full h-3 overflow-hidden">
+                            <div
+                              className="h-3 rounded-full bg-fuchsia-400 dark:bg-fuchsia-500 transition-all duration-500"
+                              style={{
+                                width: `${(bin.count / maxBinCount) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          <span className="w-6 text-[10px] font-bold text-slate-600 dark:text-neutral-300 text-right flex-shrink-0">
+                            {bin.count}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
+              {/* ── Linha 2: Top 10 Cards — full width ── */}
               {recs.length > 0 ? (
                 <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
                   {recs.map((book) => (
                     <div key={book.id} className="relative">
-                      {/* Badge de match sobre o card */}
                       <span className="absolute top-2 right-2 z-10 text-[10px] font-bold text-fuchsia-600 dark:text-fuchsia-400 bg-white dark:bg-neutral-900 border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 rounded-full shadow-sm">
-                        ✨ {Math.round(book.matchScore)}%
+                        ✨ {book.matchScore}%
                       </span>
                       <BookCard
                         book={book}
@@ -418,7 +566,7 @@ export default function MuralView({
                                 onDelete(book.id);
                                 addToast({
                                   type: "success",
-                                  message: "Livro excuído com sucesso!",
+                                  message: "Livro excluído com sucesso!",
                                 });
                               } catch (err) {
                                 console.error(err);

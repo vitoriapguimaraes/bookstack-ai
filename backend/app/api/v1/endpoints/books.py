@@ -616,3 +616,35 @@ def fix_order_consistency(
 
     session.commit()
     return {"message": f"Ordem corrigida. {count} livros atualizados."}
+
+
+# ── Endpoint: Recomendações KNN ───────────────────────────────────────────────
+@router.get("/recommendations")
+def get_recommendations(
+    top_n: int = 10,
+    min_rating: int = 4,
+    session: Session = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
+    """
+    Retorna até `top_n` livros da fila 'A Ler' ordenados por similaridade
+    com o perfil do usuário (KNN com decaimento temporal).
+
+    Parâmetros de query:
+    - top_n      (int, padrão 10): número de recomendações
+    - min_rating (int, padrão 4) : nota mínima dos lidos usados no perfil
+    """
+    from app.services.recommendation import get_recommendations as _knn_recommend
+
+    user_id = current_user.id if hasattr(current_user, "id") else str(current_user)
+
+    all_books = session.exec(select(Book).where(Book.user_id == user_id)).all()
+
+    books_dicts = [b.model_dump() for b in all_books]
+
+    try:
+        results = _knn_recommend(books_dicts, top_n=top_n, min_rating=min_rating)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return results
