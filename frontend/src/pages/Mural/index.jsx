@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -10,6 +10,7 @@ import {
   ChevronsRight,
   Layers,
   Sparkles,
+  Info,
 } from "lucide-react";
 import BookCard from "../../components/BookCard";
 import ScrollToTopBottom from "../../components/ScrollToTopBottom";
@@ -17,7 +18,9 @@ import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmationContext";
 import { api } from "../../services/api";
 
-const ITEMS_PER_PAGE = 12;
+const CARD_MIN_WIDTH = 280; // minmax do grid
+const CARD_MIN_HEIGHT = 210; // altura estimada de cada card
+const HEADER_OFFSET = 310; // cabeçalho + tabs + paginação + padding
 
 export default function MuralView({
   books,
@@ -29,6 +32,7 @@ export default function MuralView({
   const navigate = useNavigate();
   const { status } = useParams();
   const [yearlyGoal, setYearlyGoal] = useState(20);
+  const containerRef = useRef(null); // mede a largura real do container
 
   const { addToast } = useToast();
   const { confirm } = useConfirm();
@@ -51,6 +55,32 @@ export default function MuralView({
       [activeStatus]: newPage,
     }));
   };
+
+  // Calcula items por página a partir da largura e altura reais da viewport
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const calc = () => {
+      const cols = Math.max(
+        1,
+        Math.floor(containerRef.current.clientWidth / CARD_MIN_WIDTH),
+      );
+      const rows = Math.max(
+        1,
+        Math.floor((window.innerHeight - HEADER_OFFSET) / CARD_MIN_HEIGHT),
+      );
+      setItemsPerPage(cols * rows);
+    };
+    const observer = new ResizeObserver(calc);
+    observer.observe(containerRef.current);
+    window.addEventListener("resize", calc);
+    calc();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", calc);
+    };
+  }, []);
 
   // Load yearly goal from localStorage
   useEffect(() => {
@@ -87,8 +117,6 @@ export default function MuralView({
     return (a.order || 999) - (b.order || 999);
   });
 
-  const itemsPerPage = ITEMS_PER_PAGE;
-
   // Pagination Logic
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
   const paginatedBooks = filteredBooks.slice(
@@ -121,28 +149,40 @@ export default function MuralView({
     const fila = books.filter((b) => b.status === "A Ler");
     if (lidos.length < 2 || fila.length === 0) return [];
 
-    // Perfil: frequência de book_class e category nos lidos favoritos
+    // Perfil ponderado pela nota real (5★ vale 2×, 4★ vale 1×)
     const classFreq = {};
     const catFreq = {};
+    const typeFreq = {};
     lidos.forEach((b) => {
+      const w = b.rating >= 5 ? 2 : 1;
       if (b.book_class)
-        classFreq[b.book_class] = (classFreq[b.book_class] || 0) + 1;
-      if (b.category) catFreq[b.category] = (catFreq[b.category] || 0) + 1;
+        classFreq[b.book_class] = (classFreq[b.book_class] || 0) + w;
+      if (b.category) catFreq[b.category] = (catFreq[b.category] || 0) + w;
+      if (b.type) typeFreq[b.type] = (typeFreq[b.type] || 0) + w;
     });
     const maxCls = Math.max(...Object.values(classFreq), 1);
     const maxCat = Math.max(...Object.values(catFreq), 1);
+    const maxType = Math.max(...Object.values(typeFreq), 1);
 
-    // Pontua cada livro da fila
+    // Média geométrica das 3 dimensões → todas precisam coincidir para 100%
+    // class 50% · category 30% · type 20% → via potência ponderada
     return fila
-      .map((b) => ({
-        ...b,
-        matchScore:
-          ((classFreq[b.book_class] || 0) / maxCls) * 60 +
-          ((catFreq[b.category] || 0) / maxCat) * 40,
-      }))
+      .map((b) => {
+        const cls = (classFreq[b.book_class] || 0) / maxCls;
+        const cat = (catFreq[b.category] || 0) / maxCat;
+        const typ = (typeFreq[b.type] || 0) / maxType;
+        // Média geométrica ponderada: cls^0.5 · cat^0.3 · typ^0.2
+        const score =
+          cls > 0 && cat > 0
+            ? Math.pow(cls, 0.5) *
+              Math.pow(cat, 0.3) *
+              Math.pow(typ > 0 ? typ : 0.1, 0.2)
+            : 0;
+        return { ...b, matchScore: Math.round(score * 100) };
+      })
       .filter((b) => b.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 20);
+      .slice(0, 10);
   };
 
   // Calculate current year progress
@@ -159,7 +199,7 @@ export default function MuralView({
   );
 
   return (
-    <div className="flex flex-col animate-fade-in w-full">
+    <div ref={containerRef} className="flex flex-col animate-fade-in w-full">
       {/* Header with Integrated Status Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 flex-shrink-0">
         <div>
@@ -329,51 +369,71 @@ export default function MuralView({
           const recs = getRecommendations();
           return (
             <section className="flex-1 min-h-0">
-              {recs.length > 0 ? (
-                <>
-                  <p className="text-xs text-slate-400 dark:text-neutral-500 mb-4">
-                    Baseado nos livros que você leu com nota ≥ 4 — ordenado por
-                    similaridade de classe e categoria.
+              {/* Painel explicativo do algoritmo */}
+              <div className="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 mb-5 text-sm text-blue-800 dark:text-blue-200">
+                <Info size={16} className="shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-1">
+                    Como funciona a recomendação?
                   </p>
-                  <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
-                    {recs.map((book) => (
-                      <div
-                        key={book.id}
-                        className="flex flex-col gap-1 p-4 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl hover:border-fuchsia-300 dark:hover:border-fuchsia-800 transition-all shadow-sm cursor-pointer"
-                        onClick={() => onEdit(book)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p
-                            className="text-sm font-semibold text-slate-800 dark:text-white leading-snug line-clamp-2"
-                            title={book.title}
-                          >
-                            {book.title}
-                          </p>
-                          <span className="flex-shrink-0 text-xs font-bold text-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-900/20 px-2 py-0.5 rounded-full">
-                            {Math.round(book.matchScore)}%
-                          </span>
-                        </div>
-                        {book.author && (
-                          <p className="text-xs text-slate-500 dark:text-neutral-400 truncate">
-                            {book.author}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {book.book_class && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
-                              {book.book_class}
-                            </span>
-                          )}
-                          {book.category && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
-                              {book.category}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                  <p className="opacity-90 leading-relaxed">
+                    Analisamos os livros lidos com <strong>nota ≥ 4</strong> e
+                    identificamos quais <em>classes</em> e <em>categorias</em>{" "}
+                    aparecem mais no seu histórico. Cada livro da fila recebe
+                    uma pontuação:
+                  </p>
+                  <p className="mt-1.5 font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded inline-block">
+                    match = classe^0.5 × categoria^0.3 × tipo^0.2
+                  </p>
+                  <p className="mt-1.5 opacity-80">
+                    Usamos <strong>média geométrica</strong> — as três dimensões
+                    precisam coincidir para um score alto. 5★ nos lidos valem o
+                    dobro de 4★. 100% significa match perfeito em classe,
+                    categoria e tipo.
+                  </p>
+                </div>
+              </div>
+
+              {recs.length > 0 ? (
+                <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+                  {recs.map((book) => (
+                    <div key={book.id} className="relative">
+                      {/* Badge de match sobre o card */}
+                      <span className="absolute top-2 right-2 z-10 text-[10px] font-bold text-fuchsia-600 dark:text-fuchsia-400 bg-white dark:bg-neutral-900 border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 rounded-full shadow-sm">
+                        ✨ {Math.round(book.matchScore)}%
+                      </span>
+                      <BookCard
+                        book={book}
+                        compact={false}
+                        onEdit={onEdit}
+                        onRequestDelete={() => {
+                          confirm({
+                            title: "Excluir Livro",
+                            description: `Deseja realmente excluir "${book.title}"?`,
+                            confirmText: "Excluir",
+                            isDanger: true,
+                            onConfirm: async () => {
+                              try {
+                                await api.delete(`/books/${book.id}`);
+                                onDelete(book.id);
+                                addToast({
+                                  type: "success",
+                                  message: "Livro excuído com sucesso!",
+                                });
+                              } catch (err) {
+                                console.error(err);
+                                addToast({
+                                  type: "error",
+                                  message: "Erro ao excluir livro.",
+                                });
+                              }
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-neutral-600">
                   <Sparkles size={40} className="mb-3 opacity-40" />
