@@ -281,7 +281,7 @@ export default function MuralView({
       {/* Content Grid */}
       <section className="flex-1 min-h-0">
         {paginatedBooks.length > 0 ? (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
             {paginatedBooks.map((book) => (
               <BookCard
                 key={book.id}
