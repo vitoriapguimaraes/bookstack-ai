@@ -52,9 +52,7 @@ export default function FormView({
       <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="hidden md:block">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
-            {targetBook
-              ? `Editar: ${targetBook.title}`
-              : "Adicionar Livro"}
+            {targetBook ? `Editar: ${targetBook.title}` : "Adicionar Livro"}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
             {editingBook
@@ -111,6 +109,26 @@ export default function FormView({
         onCancel={onCancel}
         onLoadingChange={setIsSaving}
       />
+
+      {/* Mobile sticky bottom action bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-t border-slate-200 dark:border-neutral-800 px-4 py-3 flex gap-3 shadow-2xl">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 rounded-lg text-sm font-bold transition-colors active:scale-95"
+        >
+          <X size={16} /> Cancelar
+        </button>
+        <button
+          type="submit"
+          form="book-form-main"
+          disabled={isSaving}
+          className="flex-[2] flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50 active:scale-95"
+        >
+          <Save size={16} />
+          {isSaving ? "Salvando..." : "Salvar"}
+        </button>
+      </div>
     </div>
   );
 }

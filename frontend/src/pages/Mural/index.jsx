@@ -16,8 +16,7 @@ import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmationContext";
 import { api } from "../../services/api";
 
-const ITEMS_PER_PAGE_ACTIVE = 12;
-const ITEMS_PER_PAGE_COMPLETED = 24;
+const ITEMS_PER_PAGE = 12;
 
 export default function MuralView({
   books,
@@ -85,15 +84,13 @@ export default function MuralView({
     return (a.order || 999) - (b.order || 999);
   });
 
-  // Dynamic Items Per Page
-  const itemsPerPage =
-    activeStatus === "read" ? ITEMS_PER_PAGE_COMPLETED : ITEMS_PER_PAGE_ACTIVE;
+  const itemsPerPage = ITEMS_PER_PAGE;
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
   const paginatedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const handleStatusChange = (newStatus) => {
@@ -114,12 +111,16 @@ export default function MuralView({
   };
 
   // Calculate current year progress
+  const currentYear = new Date().getFullYear();
   const currentYearBooks = books.filter(
-    (b) => b.status === "Lido" && b.year === new Date().getFullYear()
+    (b) =>
+      b.status === "Lido" &&
+      b.date_read &&
+      new Date(b.date_read).getFullYear() === currentYear,
   ).length;
   const progressPercentage = Math.min(
     (currentYearBooks / yearlyGoal) * 100,
-    100
+    100,
   );
 
   return (
@@ -140,8 +141,8 @@ export default function MuralView({
                 activeStatus === "reading"
                   ? "text-purple-600 dark:text-purple-400"
                   : activeStatus === "to-read"
-                  ? "text-amber-600 dark:text-amber-500"
-                  : "text-emerald-600 dark:text-emerald-500"
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-emerald-600 dark:text-emerald-500"
               }`}
             >
               {getStatusLabel(activeStatus)}
@@ -159,8 +160,8 @@ export default function MuralView({
                 activeStatus === "reading"
                   ? "text-purple-600 dark:text-purple-400"
                   : activeStatus === "to-read"
-                  ? "text-amber-600 dark:text-amber-500"
-                  : "text-emerald-600 dark:text-emerald-500"
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-emerald-600 dark:text-emerald-500"
               }`}
             >
               {getStatusLabel(activeStatus)}
@@ -280,24 +281,18 @@ export default function MuralView({
       {/* Content Grid */}
       <section className="flex-1 min-h-0">
         {paginatedBooks.length > 0 ? (
-          <div
-            className={`grid gap-4 ${
-              activeStatus === "read"
-                ? "grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            }`}
-          >
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedBooks.map((book) => (
               <BookCard
                 key={book.id}
                 book={book}
-                compact={activeStatus === "read"}
+                compact={false}
                 onEdit={onEdit}
                 // Pass onRequestDelete instead of expecting BookCard to handle it
                 onRequestDelete={() => {
                   confirm({
                     title: "Excluir Livro",
-                    description: `Desesja realmente excluir "${book.title}"?`,
+                    description: `Deseja realmente excluir "${book.title}"?`,
                     confirmText: "Excluir",
                     isDanger: true,
                     onConfirm: async () => {

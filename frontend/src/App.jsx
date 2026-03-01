@@ -255,7 +255,7 @@ export default function App() {
                     path="/"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1600px] mx-auto">
+                        <div className="max-w-[1920px] mx-auto">
                           <Home books={books} />
                         </div>
                       </PrivateRoute>
@@ -267,7 +267,7 @@ export default function App() {
                     path="/mural/:status"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
                           <Mural
                             books={books}
                             onEdit={handleEdit}
@@ -289,7 +289,7 @@ export default function App() {
                     path="/table"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
                           <BooksList
                             books={books}
                             onUpdate={fetchBooks}
@@ -308,7 +308,7 @@ export default function App() {
                     path="/analytics"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
                           <Analytics books={books} />
                         </div>
                       </PrivateRoute>
@@ -320,7 +320,7 @@ export default function App() {
                     path="/guide"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
                           <GuideSettings />
                         </div>
                       </PrivateRoute>
@@ -401,7 +401,7 @@ export default function App() {
 
           {/* Minimalist Footer */}
           {!isLoginPage && (
-            <div className="fixed bottom-2 left-1/2 text-[10px] text-slate-400 dark:text-slate-500 pointer-events-none z-50 opacity-80 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-100 dark:border-neutral-800 shadow-sm">
+            <div className="hidden md:block fixed bottom-2 left-1/2 text-[10px] text-slate-400 dark:text-slate-500 pointer-events-none z-50 opacity-80 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-100 dark:border-neutral-800 shadow-sm">
               Desenvolvido por github.com/vitoriapguimaraes
             </div>
           )}
