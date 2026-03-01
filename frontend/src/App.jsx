@@ -255,7 +255,7 @@ export default function App() {
                     path="/"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1920px] mx-auto">
+                        <div className="w-full">
                           <Home books={books} />
                         </div>
                       </PrivateRoute>
@@ -267,7 +267,7 @@ export default function App() {
                     path="/mural/:status"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="w-full p-4 md:p-8 space-y-6">
                           <Mural
                             books={books}
                             onEdit={handleEdit}
@@ -289,7 +289,7 @@ export default function App() {
                     path="/table"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="w-full p-4 md:p-8 space-y-6">
                           <BooksList
                             books={books}
                             onUpdate={fetchBooks}
@@ -308,7 +308,7 @@ export default function App() {
                     path="/analytics"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="w-full p-4 md:p-8 space-y-6">
                           <Analytics books={books} />
                         </div>
                       </PrivateRoute>
@@ -320,7 +320,7 @@ export default function App() {
                     path="/guide"
                     element={
                       <PrivateRoute>
-                        <div className="max-w-[1920px] mx-auto p-4 md:p-8 space-y-6">
+                        <div className="w-full p-4 md:p-8 space-y-6">
                           <GuideSettings />
                         </div>
                       </PrivateRoute>

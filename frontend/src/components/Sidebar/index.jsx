@@ -12,6 +12,7 @@ import {
   X,
   Shield,
   Info,
+  Sparkles,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -63,6 +64,13 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
       icon: CheckCircle2,
       path: "/mural/read",
       color: "bg-pastel-green",
+    },
+    {
+      id: "recommend",
+      label: "Para Você",
+      icon: Sparkles,
+      path: "/mural/recommend",
+      color: "bg-fuchsia-400",
     },
     {
       id: "table",

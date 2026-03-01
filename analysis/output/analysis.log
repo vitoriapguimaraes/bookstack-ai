@@ -1,0 +1,41 @@
+2026-03-01 09:40:18  INFO     Conectando ao Supabase: https://aotioqzvvululeglpbkh.supabase.co
+2026-03-01 09:40:19  INFO     267 livros recebidos do Supabase
+2026-03-01 09:40:20  INFO     ==================================================
+2026-03-01 09:40:20  INFO     VISÃO GERAL — 267 livros totais
+2026-03-01 09:40:20  INFO     ==================================================
+2026-03-01 09:40:20  INFO       A Ler                 : 210
+2026-03-01 09:40:20  INFO       Lido                  : 56
+2026-03-01 09:40:20  INFO       Lendo                 : 1
+2026-03-01 09:40:20  INFO       Score médio       : 18.3
+2026-03-01 09:40:20  INFO       Score máximo      : 35.0
+2026-03-01 09:40:20  INFO       Nota média (lidos): 4.36/5
+2026-03-01 09:40:20  INFO     --------------------------------------------------
+2026-03-01 09:40:20  INFO     SCORE POR CLASSE (mín. 2 livros)
+2026-03-01 09:40:20  INFO     --------------------------------------------------
+2026-03-01 09:40:20  INFO       Tecnologia & IA                 média=25.2  min=15.0  max=35.0  n=60
+2026-03-01 09:40:20  INFO       Literatura & Cultura            média=24.9  min=19.0  max=34.0  n=59
+2026-03-01 09:40:20  INFO       Conhecimento & Ciências         média=21.7  min=18.0  max=34.0  n=21
+2026-03-01 09:40:20  INFO       Negócios & Finanças             média=21.2  min=15.0  max=25.0  n=8
+2026-03-01 09:40:20  INFO       Desenvolvimento Pessoal         média=21.1  min=14.0  max=29.0  n=51
+2026-03-01 09:40:20  INFO       Engenharia & Arquitetura        média=16.2  min=11.0  max=26.0  n=12
+2026-03-01 09:40:20  DEBUG    [NxS] Livros com nota e score preenchidos: 0 / 56
+2026-03-01 09:40:20  WARNING  [NxS] Apenas 0 livros com nota E score. Mínimo: 3.
+2026-03-01 09:40:20  INFO     Gerando: PCA 2D com clustering K-Means
+2026-03-01 09:40:28  INFO     Gráfico salvo: 02_pca_clusters.png
+2026-03-01 09:40:28  INFO     Perfil dos grupos K-Means:
+2026-03-01 09:40:28  INFO       Grupo 1: 24 livros | Classe dominante: Tecnologia & IA
+2026-03-01 09:40:28  INFO       Grupo 2: 63 livros | Classe dominante: Tecnologia & IA
+2026-03-01 09:40:28  INFO       Grupo 3: 56 livros | Classe dominante: Desenvolvimento Pessoal
+2026-03-01 09:40:28  INFO       Grupo 4: 124 livros | Classe dominante: Literatura & Cultura
+2026-03-01 09:40:28  DEBUG    [Rec] Lidos com nota ≥4: 47 | Fila: 210
+2026-03-01 09:40:28  INFO     --------------------------------------------------
+2026-03-01 09:40:28  INFO     RECOMENDAÇÕES (baseado nos lidos com nota ≥4)
+2026-03-01 09:40:28  INFO     --------------------------------------------------
+2026-03-01 09:40:28  INFO       → Harry Potter e o Prisioneiro de Azkaban [Literatura & Cultura]
+2026-03-01 09:40:28  INFO       → A Divina Comédia: Inferno [Literatura & Cultura]
+2026-03-01 09:40:28  INFO       → Armada [Literatura & Cultura]
+2026-03-01 09:40:28  INFO       → Harry Potter e a Câmara Secreta [Literatura & Cultura]
+2026-03-01 09:40:28  INFO       → Harry Potter e o Cálice de Fogo [Literatura & Cultura]
+2026-03-01 09:40:28  INFO     ==================================================
+2026-03-01 09:40:28  INFO     Saída em: C:\Users\Vitoria\Documents\GitHub\REPO_ON_WORKING\bookstack-ai\analysis\output
+2026-03-01 09:40:28  INFO     ==================================================
