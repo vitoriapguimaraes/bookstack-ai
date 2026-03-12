@@ -6,7 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, WifiOff } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import MobileHeader from "./components/Layout/MobileHeader";
 import Mural from "./pages/Mural";
@@ -37,7 +37,7 @@ import { CONTACT_EMAIL } from "./utils/constants";
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, connectionError } = useAuth();
   const mainRef = useRef(null);
 
   // Scroll to top on route change
@@ -160,6 +160,44 @@ export default function App() {
     !location.pathname.startsWith("/guide") &&
     !location.pathname.startsWith("/settings");
   const showLoader = (authLoading || (loading && isDataRoute)) && !isLoginPage;
+
+  // --- Supabase Connection Error Screen ---
+  if (connectionError) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-200 dark:border-neutral-800 p-8 text-center">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WifiOff size={32} className="text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+            Serviço Indisponível
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+            Não foi possível conectar ao banco de dados. Isso pode acontecer quando
+            o serviço fica inativo por um período. Aguarde alguns minutos e tente novamente.
+          </p>
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300 mb-6 text-left">
+            <strong>Dica:</strong> Se o problema persistir, acesse{" "}
+            <a
+              href="https://app.supabase.com"
+              target="_blank"
+              rel="noreferrer"
+              className="underline font-semibold"
+            >
+              app.supabase.com
+            </a>{" "}
+            e verifique se o projeto está ativo (planos gratuitos pausam após inatividade).
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
