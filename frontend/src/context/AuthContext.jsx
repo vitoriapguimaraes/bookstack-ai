@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(null);
 
   // Preference States
   const [userAvatar, setUserAvatarState] = useState("User");
@@ -36,6 +37,18 @@ export function AuthProvider({ children }) {
       })
       .catch((err) => {
         console.error("Erro inesperado na sessão:", err);
+        // Detect network errors (Supabase paused/unreachable)
+        const isNetworkError =
+          err instanceof TypeError ||
+          err?.message?.includes("Failed to fetch") ||
+          err?.message?.includes("ERR_NAME_NOT_RESOLVED") ||
+          err?.message?.includes("NetworkError");
+        if (isNetworkError) {
+          setConnectionError(
+            "Não foi possível conectar ao serviço de autenticação. " +
+            "O banco de dados pode estar temporariamente indisponível."
+          );
+        }
         setSession(null);
         setUser(null);
       })
@@ -181,6 +194,7 @@ export function AuthProvider({ children }) {
         yearlyGoal,
         setYearlyGoal,
         fetchUserPreferences,
+        connectionError,
       }}
     >
       {children}

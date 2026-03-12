@@ -13,6 +13,7 @@ import { KpiCard } from "./KpiCard.jsx";
 import { DistributionChart } from "./DistributionChart.jsx";
 import { TimelineChart } from "./TimelineChart.jsx";
 import { InsightsGrid } from "./InsightsGrid.jsx";
+import { PCAChart } from "./PCAChart.jsx";
 import { useAnalyticsData } from "./useAnalyticsData.js";
 import { getClassBaseHSL, hslToString } from "../../utils/analyticsUtils.js";
 import html2canvas from "html2canvas";
@@ -391,6 +392,9 @@ export default function Analytics({ books }) {
           </div>
         );
       })()}
+
+      {/* PCA — Mapa de Similaridade */}
+      <PCAChart books={books} />
 
       {/* Distributions (Charts) */}
       <div id="chart-types" className="relative group">
