@@ -359,8 +359,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-purple-600 dark:text-purple-400 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Lendo Agora"
           >
-            <BookOpen size={14} /> Lendo
+            <BookOpen size={14} />
+            <span className="hidden sm:inline">Lendo</span>
           </button>
           <button
             onClick={() => handleStatusChange("to-read")}
@@ -369,8 +371,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-amber-600 dark:text-amber-500 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Próximos da Fila"
           >
-            <Library size={14} /> Fila
+            <Library size={14} />
+            <span className="hidden sm:inline">Fila</span>
           </button>
           <button
             onClick={() => handleStatusChange("read")}
@@ -379,8 +383,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-emerald-600 dark:text-emerald-500 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Já Lidos"
           >
-            <CheckCircle2 size={14} /> Concluídos
+            <CheckCircle2 size={14} />
+            <span className="hidden sm:inline">Concluídos</span>
           </button>
           <button
             onClick={() => handleStatusChange("recommend")}
@@ -389,8 +395,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-fuchsia-600 dark:text-fuchsia-400 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Recomendados"
           >
-            <Sparkles size={14} /> Recomendados
+            <Sparkles size={14} />
+            <span className="hidden sm:inline">Recomendados</span>
           </button>
         </div>
       </div>
@@ -479,7 +487,7 @@ export default function MuralView({
           return (
             <section className="flex-1 min-h-0 flex flex-col gap-5">
               {/* ── Linha 1: Explicação + Histograma ── */}
-              <div className="flex gap-4 items-stretch">
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch">
                 {/* Painel explicativo */}
                 <div className="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-sm text-blue-800 dark:text-blue-200 basis-1/3 shrink-0">
                   <Info size={15} className="shrink-0 mt-0.5" />
