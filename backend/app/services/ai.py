@@ -135,7 +135,7 @@ PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
 {class_categories_str}
 
 3. "type" (string): "Técnico" ou "Não Técnico"
-4. "motivation" (string): Frase reflexiva (2-3 linhas).
+4. "motivation" (string): 2-3 frases diretas que respondem "por que ler este livro agora, e não outro?". Escreva como um leitor experiente argumentando com outro leitor — sem introduções genéricas como "Este livro faz sentido porque..." ou "Esta obra é...". Comece direto no argumento. Foque no que torna este livro único, o que o leitor ganha concretamente, e quando faz sentido priorizá-lo.
 5. "original_title" (string): O título original.
 
 Responda APENAS com um JSON válido:
