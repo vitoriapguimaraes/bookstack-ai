@@ -19,8 +19,8 @@ import { useConfirm } from "../../context/ConfirmationContext";
 import { api } from "../../services/api";
 
 const CARD_MIN_WIDTH = 280; // minmax do grid
-const CARD_MIN_HEIGHT = 210; // altura estimada de cada card
-const HEADER_OFFSET = 310; // cabeçalho + tabs + paginação + padding
+const CARD_MIN_HEIGHT = 155; // h-36 (144px) + gap-3 (12px)
+const HEADER_OFFSET = 195; // header + subtitle + tabs + pagination + padding real
 
 export default function MuralView({
   books,
@@ -180,7 +180,7 @@ export default function MuralView({
 
     const now = Date.now();
     const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
-    const LAMBDA = 0.4; // decaimento: aumentar = mais peso nos recentes
+    const LAMBDA = 0.4;
 
     const buildProfileFor = (sourceBooks, isPositive) => {
       const clsF = {},
@@ -359,8 +359,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-purple-600 dark:text-purple-400 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Lendo Agora"
           >
-            <BookOpen size={14} /> Lendo
+            <BookOpen size={14} />
+            <span className="hidden sm:inline">Lendo</span>
           </button>
           <button
             onClick={() => handleStatusChange("to-read")}
@@ -369,8 +371,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-amber-600 dark:text-amber-500 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Próximos da Fila"
           >
-            <Library size={14} /> Fila
+            <Library size={14} />
+            <span className="hidden sm:inline">Fila</span>
           </button>
           <button
             onClick={() => handleStatusChange("read")}
@@ -379,8 +383,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-emerald-600 dark:text-emerald-500 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Já Lidos"
           >
-            <CheckCircle2 size={14} /> Concluídos
+            <CheckCircle2 size={14} />
+            <span className="hidden sm:inline">Concluídos</span>
           </button>
           <button
             onClick={() => handleStatusChange("recommend")}
@@ -389,8 +395,10 @@ export default function MuralView({
                 ? "bg-white dark:bg-neutral-800 text-fuchsia-600 dark:text-fuchsia-400 shadow-sm border border-slate-200 dark:border-neutral-700"
                 : "text-slate-500 dark:text-neutral-500 hover:text-slate-900 dark:hover:text-white"
             }`}
+            title="Recomendados"
           >
-            <Sparkles size={14} /> Recomendados
+            <Sparkles size={14} />
+            <span className="hidden sm:inline">Recomendados</span>
           </button>
         </div>
       </div>
@@ -479,7 +487,7 @@ export default function MuralView({
           return (
             <section className="flex-1 min-h-0 flex flex-col gap-5">
               {/* ── Linha 1: Explicação + Histograma ── */}
-              <div className="flex gap-4 items-stretch">
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch">
                 {/* Painel explicativo */}
                 <div className="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-sm text-blue-800 dark:text-blue-200 basis-1/3 shrink-0">
                   <Info size={15} className="shrink-0 mt-0.5" />
@@ -544,41 +552,13 @@ export default function MuralView({
 
               {/* ── Linha 2: Top 10 Cards — full width ── */}
               {recs.length > 0 ? (
-                <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+                <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
                   {recs.map((book) => (
                     <div key={book.id} className="relative">
                       <span className="absolute top-2 right-2 z-10 text-[10px] font-bold text-fuchsia-600 dark:text-fuchsia-400 bg-white dark:bg-neutral-900 border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 rounded-full shadow-sm">
                         ✨ {book.matchScore}%
                       </span>
-                      <BookCard
-                        book={book}
-                        compact={false}
-                        onEdit={onEdit}
-                        onRequestDelete={() => {
-                          confirm({
-                            title: "Excluir Livro",
-                            description: `Deseja realmente excluir "${book.title}"?`,
-                            confirmText: "Excluir",
-                            isDanger: true,
-                            onConfirm: async () => {
-                              try {
-                                await api.delete(`/books/${book.id}`);
-                                onDelete(book.id);
-                                addToast({
-                                  type: "success",
-                                  message: "Livro excluído com sucesso!",
-                                });
-                              } catch (err) {
-                                console.error(err);
-                                addToast({
-                                  type: "error",
-                                  message: "Erro ao excluir livro.",
-                                });
-                              }
-                            },
-                          });
-                        }}
-                      />
+                      <BookCard book={book} compact={false} onEdit={onEdit} />
                     </div>
                   ))}
                 </div>
@@ -599,38 +579,13 @@ export default function MuralView({
       {activeStatus !== "recommend" && (
         <section className="flex-1 min-h-0">
           {paginatedBooks.length > 0 ? (
-            <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+            <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
               {paginatedBooks.map((book) => (
                 <BookCard
                   key={book.id}
                   book={book}
                   compact={false}
                   onEdit={onEdit}
-                  // Pass onRequestDelete instead of expecting BookCard to handle it
-                  onRequestDelete={() => {
-                    confirm({
-                      title: "Excluir Livro",
-                      description: `Deseja realmente excluir "${book.title}"?`,
-                      confirmText: "Excluir",
-                      isDanger: true,
-                      onConfirm: async () => {
-                        try {
-                          await api.delete(`/books/${book.id}`);
-                          onDelete(book.id); // Notify parent to update list
-                          addToast({
-                            type: "success",
-                            message: "Livro excluído com sucesso!",
-                          });
-                        } catch (err) {
-                          console.error(err);
-                          addToast({
-                            type: "error",
-                            message: "Erro ao excluir livro.",
-                          });
-                        }
-                      },
-                    });
-                  }}
                 />
               ))}
             </div>

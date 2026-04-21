@@ -110,7 +110,7 @@ export default function MobileBookItem({
                   <span className="text-xs font-bold">{book.rating}</span>
                 </div>
               )}
-              {book.score && (
+              {book.score > 0 && (
                 <span className="text-[10px] px-1.5 py-0 rounded bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 font-mono">
                   Score: {book.score.toFixed(0)}
                 </span>
