@@ -26,13 +26,26 @@ export default function BookshelfExporter({
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
+      // The exportRef template is already fixed at 1200px width.
+      // We pass windowWidth: 1200 so html2canvas treats the page as desktop,
+      // ensuring the export is identical on mobile and PC.
       const canvas = await html2canvas(exportRef.current, {
         scale: 2,
-        backgroundColor: "#ffffff", // Ensure solid background
+        backgroundColor: "#ffffff",
         useCORS: true,
         allowTaint: true,
         logging: false,
         scrollY: 0,
+        windowWidth: 1200,
+        onclone: (clonedDoc) => {
+          // Make sure the template container is fully visible without scroll
+          const el = clonedDoc.querySelector("[data-export-template]");
+          if (el) {
+            el.style.overflow = "visible";
+            el.style.height = "auto";
+          }
+          clonedDoc.body.style.overflow = "visible";
+        },
       });
 
       const dataUrl = canvas.toDataURL("image/png");
@@ -182,6 +195,7 @@ export default function BookshelfExporter({
             <div className="bg-slate-100 dark:bg-neutral-800 rounded-lg p-4 flex justify-center overflow-auto max-h-[65vh]">
               <div
                 ref={exportRef}
+                data-export-template
                 className="bg-white relative flex-shrink-0"
                 style={{
                   width: "1200px",
@@ -227,7 +241,7 @@ export default function BookshelfExporter({
                         } else {
                           // External URL (http/https), use proxy to avoid CORS issues in html2canvas
                           coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-                            book.cover_image
+                            book.cover_image,
                           )}`;
                         }
                       }
@@ -248,7 +262,7 @@ export default function BookshelfExporter({
                                 const bgColor = "f3e8ff"; // purple-100
                                 const textColor = "581c87"; // purple-900
                                 e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-                                  book.title
+                                  book.title,
                                 )}`;
                               }}
                             />

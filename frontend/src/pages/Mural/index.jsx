@@ -180,7 +180,7 @@ export default function MuralView({
 
     const now = Date.now();
     const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
-    const LAMBDA = 0.4; // decaimento: aumentar = mais peso nos recentes
+    const LAMBDA = 0.4;
 
     const buildProfileFor = (sourceBooks, isPositive) => {
       const clsF = {},

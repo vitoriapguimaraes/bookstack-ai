@@ -1,56 +1,68 @@
 import requests
 
 
+def _score_google_item(item: dict) -> int:
+    """Score a Google Books item by data completeness (higher = better)."""
+    info = item.get("volumeInfo", {})
+    score = 0
+    if info.get("imageLinks"):
+        score += 10
+    if info.get("authors"):
+        score += 5
+    if info.get("publishedDate"):
+        score += 3
+    if info.get("description"):
+        score += 2
+    return score
+
+
+def _extract_book_result(book_info: dict) -> dict:
+    """Build a normalized result dict from a Google Books volumeInfo."""
+    result = {
+        "author": ", ".join(book_info.get("authors", [])) or None,
+        "year": None,
+        "description": book_info.get("description", ""),
+        "subtitle": book_info.get("subtitle", ""),
+        "cover_image": None,
+        "average_rating": book_info.get("averageRating"),
+        "ratings_count": book_info.get("ratingsCount"),
+    }
+
+    published_date = book_info.get("publishedDate", "")
+    if published_date:
+        try:
+            result["year"] = int(published_date.split("-")[0])
+        except ValueError:
+            pass
+
+    image_links = book_info.get("imageLinks", {})
+    cover_url = (
+        image_links.get("thumbnail")
+        or image_links.get("smallThumbnail")
+        or image_links.get("small")
+    )
+    result["cover_image"] = (
+        cover_url.replace("http://", "https://") if cover_url else None
+    )
+    return result
+
+
 def get_google_books_data(title: str):
     """Busca dados do livro na Google Books API."""
     try:
         url = "https://www.googleapis.com/books/v1/volumes"
-        params = {
-            "q": f"intitle:{title}",
-            "maxResults": 1,
-            "langRestrict": "pt",
-        }
+        params = {"q": f"intitle:{title}", "maxResults": 3}
 
         response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
-        data = response.json()
+        items = response.json().get("items", [])
 
-        if data.get("totalItems", 0) == 0:
-            params.pop("langRestrict")
-            response = requests.get(url, params=params, timeout=5)
-            data = response.json()
+        if not items:
+            return None
 
-        if data.get("totalItems", 0) > 0:
-            book_info = data["items"][0]["volumeInfo"]
+        best = max(items, key=_score_google_item)
+        return _extract_book_result(best["volumeInfo"])
 
-            result = {
-                "author": ", ".join(book_info.get("authors", [])) or None,
-                "year": None,
-                "description": book_info.get("description", ""),
-                "cover_image": None,
-                "average_rating": book_info.get("averageRating"),
-                "ratings_count": book_info.get("ratingsCount"),
-            }
-
-            published_date = book_info.get("publishedDate", "")
-            if published_date:
-                try:
-                    result["year"] = int(published_date.split("-")[0])
-                except Exception:
-                    pass
-
-            image_links = book_info.get("imageLinks", {})
-
-            cover_url = (
-                image_links.get("thumbnail")
-                or image_links.get("smallThumbnail")
-                or image_links.get("small")
-            )
-            result["cover_image"] = (
-                cover_url.replace("http://", "https://") if cover_url else None
-            )
-
-            return result
     except Exception as e:
         print(f"Erro ao buscar no Google Books: {e}")
 

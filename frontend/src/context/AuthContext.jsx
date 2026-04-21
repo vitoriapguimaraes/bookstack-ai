@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
         if (isNetworkError) {
           setConnectionError(
             "Não foi possível conectar ao serviço de autenticação. " +
-            "O banco de dados pode estar temporariamente indisponível."
+              "O banco de dados pode estar temporariamente indisponível.",
           );
         }
         setSession(null);

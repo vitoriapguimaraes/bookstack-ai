@@ -173,8 +173,9 @@ export default function App() {
             Serviço Indisponível
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-            Não foi possível conectar ao banco de dados. Isso pode acontecer quando
-            o serviço fica inativo por um período. Aguarde alguns minutos e tente novamente.
+            Não foi possível conectar ao banco de dados. Isso pode acontecer
+            quando o serviço fica inativo por um período. Aguarde alguns minutos
+            e tente novamente.
           </p>
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300 mb-6 text-left">
             <strong>Dica:</strong> Se o problema persistir, acesse{" "}
@@ -186,7 +187,8 @@ export default function App() {
             >
               app.supabase.com
             </a>{" "}
-            e verifique se o projeto está ativo (planos gratuitos pausam após inatividade).
+            e verifique se o projeto está ativo (planos gratuitos pausam após
+            inatividade).
           </div>
           <button
             onClick={() => window.location.reload()}

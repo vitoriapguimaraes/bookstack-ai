@@ -55,15 +55,17 @@ export default function Analytics({ books }) {
 
     try {
       const element = reportRef.current;
+      // Fixed desktop width (1200px) so the export is always consistent
+      // regardless of the user's device viewport (mobile vs desktop).
+      const EXPORT_WIDTH = 1200;
+
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: bgColor,
         useCORS: true,
         scrollX: 0,
-        scrollY: -window.scrollY,
-        width: element.scrollWidth + 20,
-        height: element.scrollHeight + 50,
-        windowWidth: element.scrollWidth + 50,
+        scrollY: 0,
+        windowWidth: EXPORT_WIDTH,
         onclone: (clonedDoc) => {
           const buttons = clonedDoc.querySelectorAll("button");
           buttons.forEach((btn) => (btn.style.display = "none"));
@@ -73,12 +75,19 @@ export default function Analytics({ books }) {
           );
           if (scrollControls) scrollControls.style.display = "none";
 
-          // Ensure container fits
+          // Force the root report container to render at desktop width
           const clonedElement = clonedDoc.body.querySelector(".space-y-6");
           if (clonedElement) {
+            clonedElement.style.width = `${EXPORT_WIDTH}px`;
+            clonedElement.style.minWidth = `${EXPORT_WIDTH}px`;
             clonedElement.style.height = "auto";
             clonedElement.style.overflow = "visible";
           }
+
+          // Force body/html to desktop width so Tailwind breakpoints apply
+          clonedDoc.documentElement.style.width = `${EXPORT_WIDTH}px`;
+          clonedDoc.body.style.width = `${EXPORT_WIDTH}px`;
+          clonedDoc.body.style.overflow = "visible";
 
           // Expand scrollable charts
           const scrollables = clonedDoc.querySelectorAll(".overflow-x-auto");

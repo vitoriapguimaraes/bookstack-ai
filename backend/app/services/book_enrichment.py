@@ -53,4 +53,11 @@ def get_book_details_hybrid(
         result["motivation"] = ai_data.get("motivation")
         result["original_title"] = ai_data.get("original_title")
 
+    # 4. Fallback: if AI didn't return original_title, try Google Books subtitle.
+    # A subtitle often IS the original title for translated books.
+    if not result.get("original_title") and google_data:
+        subtitle = google_data.get("subtitle", "")
+        if subtitle and subtitle.lower() != title.lower():
+            result["original_title"] = subtitle
+
     return result

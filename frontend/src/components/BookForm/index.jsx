@@ -386,7 +386,7 @@ export default function BookForm({
           type: suggestion.type || prev.type,
           category: suggestion.category || prev.category,
           motivation: suggestion.motivation || prev.motivation,
-          original_title: suggestion.original_title || prev.original_title,
+          original_title: suggestion.original_title ?? prev.original_title,
           google_rating: suggestion.google_rating || null,
           cover_image: suggestion.cover_image || prev.cover_image,
         }));
