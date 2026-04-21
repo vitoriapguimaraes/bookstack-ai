@@ -1,51 +1,16 @@
-import { useState, useEffect } from "react";
-import { Star, Pencil, Trash2, Info, X, ImageOff } from "lucide-react";
+import { useState } from "react";
+import { Star, ImageOff } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export default function BookCard({
-  book,
-  compact = false,
-  onEdit,
-  onRequestDelete,
-}) {
+export default function BookCard({ book, compact = false, onEdit }) {
   const { theme } = useTheme();
-  const [showMotivation, setShowMotivation] = useState(false);
-  const [shouldRender, setShouldRender] = useState(false);
   const [coverLoadFailed, setCoverLoadFailed] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-
-  // Handle animation states
-  useEffect(() => {
-    if (showMotivation) {
-      setShouldRender(true);
-      setIsClosing(false);
-    } else if (shouldRender) {
-      setIsClosing(true);
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-        setIsClosing(false);
-      }, 500); // Match fade-out duration
-      return () => clearTimeout(timer);
-    }
-  }, [showMotivation, shouldRender]);
-
-  // Auto-close popover after 5 seconds
-  useEffect(() => {
-    if (showMotivation) {
-      const timer = setTimeout(() => {
-        setShowMotivation(false);
-      }, 5000); // 5 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [showMotivation]);
-  // All covers are now external URLs from Google Books API, served via proxy
 
   // Dynamic placeholder colors based on theme
-  const bgColor = theme === "dark" ? "171717" : "f1f5f9"; // neutral-900 : slate-100
-  const textColor = theme === "dark" ? "a855f7" : "475569"; // purple-500 : slate-600
+  const bgColor = theme === "dark" ? "171717" : "f1f5f9";
+  const textColor = theme === "dark" ? "a855f7" : "475569";
 
   // Robust Image URL Handling
   let coverUrl = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
@@ -62,31 +27,25 @@ export default function BookCard({
     }
   }
 
-  const handleDelete = async (e) => {
-    e.stopPropagation();
-    if (onRequestDelete) {
-      onRequestDelete(book);
-    } else {
-      console.error("Delete handler not provided for BookCard");
-    }
+  const handleClick = () => {
+    if (onEdit) onEdit(book);
   };
 
-  const handleEditClick = (e) => {
-    e.stopPropagation();
-    onEdit(book);
-  };
-
+  // ── Compact card (used in Mural grid) ──────────────────────────────────────
   if (compact) {
     return (
-      <div className="group relative bg-white dark:bg-neutral-900 rounded-md hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 shadow-sm">
-        {/* Order badge - top left — hide for Lido */}
+      <div
+        onClick={handleClick}
+        className="group relative bg-white dark:bg-neutral-900 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 shadow-sm"
+      >
+        {/* Order badge — hide for Lido */}
         {Number(book.order) > 0 && book.status !== "Lido" && (
           <div className="absolute top-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10">
             #{book.order}
           </div>
         )}
 
-        {/* Score badge - top right - Hide for Lido */}
+        {/* Score badge — hide for Lido */}
         {book.score > 0 && book.status !== "Lido" && (
           <div className="absolute top-1 right-1 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10">
             {book.score.toFixed(0)}
@@ -94,9 +53,8 @@ export default function BookCard({
         )}
 
         <div className="flex gap-2 p-2">
-          <div
-            className={`${compact ? "w-16 h-24" : "w-20 h-28"} relative flex-shrink-0`}
-          >
+          {/* Cover */}
+          <div className="w-16 h-22 relative flex-shrink-0">
             <img
               src={coverUrl}
               alt={book.title}
@@ -122,24 +80,20 @@ export default function BookCard({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-            {/* Section 1: Title + Author */}
+          {/* Text area — motivation overlay sits here */}
+          <div className="flex-1 min-w-0 flex flex-col gap-1.5 relative overflow-hidden">
+            {/* Title + Author */}
             <div className="flex-1">
               <h4
-                className={`font-medium ${
-                  compact ? "text-xs line-clamp-1" : "text-sm line-clamp-2"
-                } text-slate-800 dark:text-white leading-tight mb-0.5`}
+                className="font-medium text-xs line-clamp-1 text-slate-800 dark:text-white leading-tight mb-0.5"
                 title={book.title}
               >
                 {book.title}
               </h4>
-              <p
-                className={`text-[10px] text-slate-500 dark:text-neutral-400 truncate`}
-              >
+              <p className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
                 {book.author}
               </p>
-              {/* Bug 1 Fix: Classification info in compact (mobile) card */}
-              {compact && (book.book_class || book.category) && (
+              {(book.book_class || book.category) && (
                 <div className="flex flex-col gap-0 mt-0.5">
                   {book.book_class && (
                     <span
@@ -161,7 +115,7 @@ export default function BookCard({
               )}
             </div>
 
-            {/* Section 2: Rating */}
+            {/* Rating */}
             {book.rating > 0 && (
               <div className="flex items-center gap-1 w-max bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                 <Star
@@ -172,81 +126,31 @@ export default function BookCard({
                 <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
                   {book.rating}
                 </span>
-                <span className="text-[9px] text-slate-500 dark:text-neutral-500">
-                  Minha
-                </span>
               </div>
             )}
 
-            {/* Section 3: Action Buttons */}
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-              {book.motivation && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMotivation(!showMotivation);
-                  }}
-                  className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-slate-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors"
-                  title="Ver motivação"
-                >
-                  <Info size={14} />
-                </button>
-              )}
-              <button
-                onClick={handleEditClick}
-                className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-slate-400 dark:text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 rounded transition-colors"
-                title="Editar"
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 text-slate-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors"
-                title="Excluir"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
+            {/* Motivation overlay — fades in on hover over text area */}
+            {book.motivation && (
+              <div className="absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center p-1.5 pointer-events-none">
+                <p className="text-[9px] text-slate-600 dark:text-neutral-300 leading-relaxed line-clamp-6">
+                  {book.motivation}
+                </p>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Motivation Popover - Compact Card */}
-        {shouldRender && book.motivation && (
-          <div
-            className={`absolute right-0 top-full mt-2 w-64 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 ring-1 ring-black/5 ${
-              isClosing ? "animate-fade-out" : "animate-fade-in"
-            }`}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                <Info size={12} /> Motivação
-              </h4>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMotivation(false);
-                }}
-                className="text-slate-400 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-600 dark:text-neutral-300 leading-relaxed max-h-40 overflow-y-auto">
-              {book.motivation}
-            </p>
-            {/* Arrow pointing up to button */}
-            <div className="absolute bottom-full right-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white dark:border-b-blue-500/50"></div>
-          </div>
-        )}
       </div>
     );
   }
 
-  // Main Card - Informative Design
+  // ── Main card (used in Mural full view) ────────────────────────────────────
   return (
-    <div className="group relative bg-white dark:bg-neutral-900 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 flex h-40 shadow-sm">
+    <div
+      onClick={handleClick}
+      className="group relative bg-white dark:bg-neutral-900 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all duration-200 border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/30 flex h-36 shadow-sm"
+    >
       {/* Cover Image */}
-      <div className="w-28 flex-shrink-0 bg-slate-100 dark:bg-neutral-950 relative overflow-hidden rounded-l-lg">
+      <div className="w-24 flex-shrink-0 bg-slate-100 dark:bg-neutral-950 relative overflow-hidden rounded-l-lg">
         <img
           src={coverUrl}
           alt={book.title}
@@ -263,7 +167,6 @@ export default function BookCard({
           }}
         />
 
-        {/* Bug 2 Fix: Cover load failure indicator */}
         {coverLoadFailed && book.cover_image && (
           <div
             className="absolute top-1 right-1 bg-amber-500/90 rounded px-1 py-0.5 flex items-center gap-0.5"
@@ -273,7 +176,7 @@ export default function BookCard({
           </div>
         )}
 
-        {/* Order badge - bottom left on cover — hide for Lido */}
+        {/* Order badge — hide for Lido */}
         {Number(book.order) > 0 && book.status !== "Lido" && (
           <div className="absolute bottom-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg">
             #{book.order}
@@ -281,10 +184,10 @@ export default function BookCard({
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-2 flex flex-col gap-1 min-w-0">
-        {/* Section 1: Title + Author */}
-        <div className="h-14">
+      {/* Content area */}
+      <div className="flex-1 p-2 flex flex-col gap-1 min-w-0 relative overflow-hidden">
+        {/* Title + Author */}
+        <div className="h-12">
           <h3
             className="font-semibold text-slate-800 dark:text-white text-xs leading-snug mb-0.5 line-clamp-2"
             title={book.title}
@@ -296,8 +199,8 @@ export default function BookCard({
           </p>
         </div>
 
-        {/* Section 2: Classification (Class + Category) */}
-        <div className="h-8 flex flex-col gap-0 text-[9px]">
+        {/* Classification */}
+        <div className="h-7 flex flex-col gap-0 text-[9px]">
           <span
             className="text-slate-500 dark:text-neutral-400 font-medium truncate"
             title={book.book_class}
@@ -312,9 +215,8 @@ export default function BookCard({
           </span>
         </div>
 
-        {/* Section 3: Metrics (Score + Ratings) */}
+        {/* Metrics */}
         <div className="h-6 flex items-center gap-1 flex-wrap">
-          {/* Score */}
           {book.score > 0 && (
             <div className="flex items-center gap-0.5 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
               <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">
@@ -326,7 +228,6 @@ export default function BookCard({
             </div>
           )}
 
-          {/* Google Rating */}
           {book.google_rating && (
             <div className="flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
               <Star
@@ -343,7 +244,6 @@ export default function BookCard({
             </div>
           )}
 
-          {/* Personal Rating */}
           {book.rating > 0 && (
             <div className="flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
               <Star
@@ -358,68 +258,15 @@ export default function BookCard({
           )}
         </div>
 
-        {/* Section 4: Action Buttons - Fixed at Bottom */}
-        <div className="flex items-center justify-end mt-auto">
-          {/* Action Buttons */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {book.motivation && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMotivation(!showMotivation);
-                }}
-                className="p-1 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-slate-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors"
-                title="Ver motivação"
-              >
-                <Info size={14} />
-              </button>
-            )}
-            <button
-              onClick={handleEditClick}
-              className="p-1 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-slate-400 dark:text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 rounded transition-colors"
-              title="Editar"
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1 hover:bg-red-100 dark:hover:bg-red-500/20 text-slate-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors"
-              title="Excluir"
-            >
-              <Trash2 size={14} />
-            </button>
+        {/* Motivation overlay — fades in on hover, covers text area only */}
+        {book.motivation && (
+          <div className="absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center p-3 pointer-events-none">
+            <p className="text-[10px] text-slate-700 dark:text-neutral-200 leading-relaxed line-clamp-6 italic">
+              "{book.motivation}"
+            </p>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* Motivation Popover - Regular Card */}
-      {shouldRender && book.motivation && (
-        <div
-          className={`absolute right-0 top-full mt-2 w-72 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-blue-500/50 rounded-lg shadow-2xl p-3 z-30 ring-1 ring-black/5 ${
-            isClosing ? "animate-fade-out" : "animate-fade-in"
-          }`}
-        >
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-              <Info size={14} /> Motivação
-            </h4>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMotivation(false);
-              }}
-              className="text-slate-400 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <p className="text-[10px] text-slate-600 dark:text-neutral-300 leading-relaxed max-h-40 overflow-y-auto">
-            {book.motivation}
-          </p>
-          {/* Arrow pointing up to button */}
-          <div className="absolute bottom-full right-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white dark:border-b-blue-500/50"></div>
-        </div>
-      )}
     </div>
   );
 }

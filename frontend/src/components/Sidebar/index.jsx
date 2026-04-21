@@ -113,7 +113,7 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
       )}
 
       <aside
-        className={`w-64 md:w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-6 z-[60] transition-all duration-300 shadow-2xl md:shadow-none
+        className={`w-64 md:w-20 bg-white dark:bg-neutral-950 border-r border-slate-200 dark:border-neutral-900 h-screen fixed left-0 top-0 flex flex-col items-center py-4 z-[60] transition-all duration-300 shadow-2xl md:shadow-none
             ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
@@ -221,7 +221,7 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
         </div>
 
         {/* User Avatar - Settings Link */}
-        <div className="w-full px-3 flex flex-col gap-2">
+        <div className="w-full px-3 flex flex-col gap-2 pb-4">
           <div
             onClick={() => {
               navigate("/settings");

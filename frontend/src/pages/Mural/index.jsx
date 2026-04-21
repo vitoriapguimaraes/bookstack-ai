@@ -19,8 +19,8 @@ import { useConfirm } from "../../context/ConfirmationContext";
 import { api } from "../../services/api";
 
 const CARD_MIN_WIDTH = 280; // minmax do grid
-const CARD_MIN_HEIGHT = 210; // altura estimada de cada card
-const HEADER_OFFSET = 310; // cabeçalho + tabs + paginação + padding
+const CARD_MIN_HEIGHT = 155; // h-36 (144px) + gap-3 (12px)
+const HEADER_OFFSET = 195; // header + subtitle + tabs + pagination + padding real
 
 export default function MuralView({
   books,
@@ -552,41 +552,13 @@ export default function MuralView({
 
               {/* ── Linha 2: Top 10 Cards — full width ── */}
               {recs.length > 0 ? (
-                <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+                <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
                   {recs.map((book) => (
                     <div key={book.id} className="relative">
                       <span className="absolute top-2 right-2 z-10 text-[10px] font-bold text-fuchsia-600 dark:text-fuchsia-400 bg-white dark:bg-neutral-900 border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 rounded-full shadow-sm">
                         ✨ {book.matchScore}%
                       </span>
-                      <BookCard
-                        book={book}
-                        compact={false}
-                        onEdit={onEdit}
-                        onRequestDelete={() => {
-                          confirm({
-                            title: "Excluir Livro",
-                            description: `Deseja realmente excluir "${book.title}"?`,
-                            confirmText: "Excluir",
-                            isDanger: true,
-                            onConfirm: async () => {
-                              try {
-                                await api.delete(`/books/${book.id}`);
-                                onDelete(book.id);
-                                addToast({
-                                  type: "success",
-                                  message: "Livro excluído com sucesso!",
-                                });
-                              } catch (err) {
-                                console.error(err);
-                                addToast({
-                                  type: "error",
-                                  message: "Erro ao excluir livro.",
-                                });
-                              }
-                            },
-                          });
-                        }}
-                      />
+                      <BookCard book={book} compact={false} onEdit={onEdit} />
                     </div>
                   ))}
                 </div>
@@ -607,38 +579,13 @@ export default function MuralView({
       {activeStatus !== "recommend" && (
         <section className="flex-1 min-h-0">
           {paginatedBooks.length > 0 ? (
-            <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+            <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
               {paginatedBooks.map((book) => (
                 <BookCard
                   key={book.id}
                   book={book}
                   compact={false}
                   onEdit={onEdit}
-                  // Pass onRequestDelete instead of expecting BookCard to handle it
-                  onRequestDelete={() => {
-                    confirm({
-                      title: "Excluir Livro",
-                      description: `Deseja realmente excluir "${book.title}"?`,
-                      confirmText: "Excluir",
-                      isDanger: true,
-                      onConfirm: async () => {
-                        try {
-                          await api.delete(`/books/${book.id}`);
-                          onDelete(book.id); // Notify parent to update list
-                          addToast({
-                            type: "success",
-                            message: "Livro excluído com sucesso!",
-                          });
-                        } catch (err) {
-                          console.error(err);
-                          addToast({
-                            type: "error",
-                            message: "Erro ao excluir livro.",
-                          });
-                        }
-                      },
-                    });
-                  }}
                 />
               ))}
             </div>
