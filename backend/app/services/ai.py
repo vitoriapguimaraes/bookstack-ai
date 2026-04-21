@@ -2,10 +2,6 @@ import json
 import os
 from .scoring import CLASS_CATEGORIES
 
-# AI Keys should be passed in, not reading env here necessarily unless fallback.
-# Providers import
-from groq import Groq
-
 
 def get_gemini_classification(prompt, system_prompt, api_keys=None):
     try:
@@ -60,6 +56,8 @@ def get_groq_classification(prompt, system_prompt, api_keys=None):
         return {"error": "GROQ_API_KEY não configurada"}
 
     try:
+        from groq import Groq
+
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
