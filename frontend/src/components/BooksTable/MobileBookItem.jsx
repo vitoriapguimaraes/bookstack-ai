@@ -1,5 +1,6 @@
 import { Star, MoreVertical, Edit2, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
+import { getCoverUrl } from "../../utils/imageUtils";
 
 export default function MobileBookItem({
   book,
@@ -10,20 +11,7 @@ export default function MobileBookItem({
 }) {
   const [showActions, setShowActions] = useState(false);
 
-  // Robust Image URL Handling (centralized logic)
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-  let coverUrl = null;
-  if (book.cover_image) {
-    if (book.cover_image.startsWith("http")) {
-      coverUrl = book.cover_image; // Use external URL directly (Supabase)
-    } else {
-      // Proxy for external images (Google Books)
-      coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-        book.cover_image
-      )}`;
-    }
-  }
+  const coverUrl = getCoverUrl(book.cover_image);
 
   return (
     <div
@@ -40,22 +28,14 @@ export default function MobileBookItem({
       <div className="shrink-0 w-16 h-24 bg-slate-100 dark:bg-neutral-800 rounded overflow-hidden relative">
         {coverUrl ? (
           <img
-            src={
-              coverUrl.startsWith("http")
-                ? coverUrl.replace(/^http:/, "https:")
-                : coverUrl
-            }
+            src={coverUrl}
             alt={book.title}
             className="w-full h-full object-cover"
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={(e) => {
               e.target.onerror = null;
-              const bgColor = "f1f5f9";
-              const textColor = "475569";
-              e.target.src = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-                book.title
-              )}`;
+              e.target.src = `https://placehold.co/300x450/f1f5f9/475569?text=${encodeURIComponent(book.title)}`;
             }}
           />
         ) : (
