@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Star, ImageOff } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { getCoverUrl } from "../../utils/imageUtils";
 
 export default function BookCard({ book, compact = false, onEdit }) {
   const { theme } = useTheme();
@@ -12,20 +11,8 @@ export default function BookCard({ book, compact = false, onEdit }) {
   const bgColor = theme === "dark" ? "171717" : "f1f5f9";
   const textColor = theme === "dark" ? "a855f7" : "475569";
 
-  // Robust Image URL Handling
-  let coverUrl = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(
-    book.title,
-  )}`;
-
-  if (book.cover_image) {
-    if (book.cover_image.startsWith("http")) {
-      coverUrl = book.cover_image.replace(/^http:/, "https:");
-    } else {
-      coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
-        book.cover_image,
-      )}`;
-    }
-  }
+  const placeholderUrl = `https://placehold.co/300x450/${bgColor}/${textColor}?text=${encodeURIComponent(book.title)}`;
+  const coverUrl = getCoverUrl(book.cover_image) ?? placeholderUrl;
 
   const handleClick = () => {
     if (onEdit) onEdit(book);
