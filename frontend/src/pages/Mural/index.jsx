@@ -81,12 +81,21 @@ export default function MuralView({
     }));
   };
 
-  // Calcula items por página a partir da largura e altura reais da viewport
+  // Calcula items por página a partir da largura e altura reais da viewport.
+  // No mobile (< 768px) não limitamos por altura — todos os cards aparecem
+  // e o scroll acontece naturalmente no <main>.
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const calc = () => {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // Mobile: sem limite por altura → scroll natural
+        setItemsPerPage(12);
+        return;
+      }
+      // Desktop: encaixa exatamente na viewport sem scroll
       const cols = Math.max(
         1,
         Math.floor(containerRef.current.clientWidth / CARD_MIN_WIDTH),
