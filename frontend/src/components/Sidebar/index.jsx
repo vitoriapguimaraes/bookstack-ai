@@ -4,8 +4,6 @@ import {
   LayoutGrid,
   BarChart2,
   PlusCircle,
-  Sun,
-  Moon,
   Library,
   CheckCircle2,
   Home,
@@ -14,6 +12,8 @@ import {
   Info,
   Sparkles,
   LogOut,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -202,20 +202,7 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
 
         {/* Theme Toggle & Add */}
         <div className="w-full px-3 flex flex-col gap-4 mb-6 mt-auto">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
-          >
-            {theme === "dark" ? (
-              <Sun size={24} className="md:w-[20px] md:h-[20px]" />
-            ) : (
-              <Moon size={24} className="md:w-[20px] md:h-[20px]" />
-            )}
-            <span className="md:hidden font-medium">Alternar Tema</span>
-          </button>
-
-          {/* Add Button */}
+        {/* Add Button */}
           <button
             onClick={() => {
               onAddBook();
@@ -231,23 +218,34 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
           </button>
         </div>
 
-        {/* User Avatar - Settings Link + Logout */}
+        {/* User Avatar - Settings Link + Logout + Theme Toggle */}
         <div className="w-full px-3 flex flex-col gap-2 pb-4">
-          <div
-            onClick={() => {
-              navigate("/settings");
-              if (window.innerWidth < 768 && onClose) onClose();
-            }}
-            className={`w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-2 rounded-full md:rounded-full ${currentBgObj.class} text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all border border-slate-300 dark:border-neutral-700 relative group`}
-          >
-            <AvatarIcon
-              size={24}
-              className={`md:w-[24px] md:h-[24px] shrink-0 ${currentColorObj.class}`}
-            />
-            <span className="md:hidden font-medium">Configurações</span>
-            <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-              Configurações
-            </span>
+          {/* Avatar + micro theme toggle */}
+          <div className="relative">
+            <div
+              onClick={() => {
+                navigate("/settings");
+                if (window.innerWidth < 768 && onClose) onClose();
+              }}
+              className={`w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-2 rounded-full md:rounded-full ${currentBgObj.class} text-slate-700 dark:text-neutral-400 text-sm font-bold cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all border border-slate-300 dark:border-neutral-700 relative group`}
+            >
+              <AvatarIcon
+                size={24}
+                className={`md:w-[24px] md:h-[24px] shrink-0 ${currentColorObj.class}`}
+              />
+              <span className="md:hidden font-medium">Configurações</span>
+              <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                Configurações
+              </span>
+            </div>
+            {/* Micro theme toggle — desktop only, badge sobre o avatar */}
+            <button
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+              className="hidden md:flex absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 shadow items-center justify-center text-slate-500 dark:text-neutral-400 hover:text-purple-600 dark:hover:text-purple-400 hover:scale-110 transition-all z-10"
+            >
+              {theme === "dark" ? <Sun size={10} /> : <Moon size={10} />}
+            </button>
           </div>
 
           {/* Logout Button */}
