@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Download, Share2, X, Sparkles, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { useToast } from "../../context/ToastContext";
@@ -22,8 +23,8 @@ export default function BookshelfExporter({
 
     setIsExporting(true);
 
-    // Wait for layout to settle
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait for layout to settle and images to load
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
       // The exportRef template is already fixed at 1200px width.
@@ -33,7 +34,6 @@ export default function BookshelfExporter({
         scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
-        allowTaint: true,
         logging: false,
         scrollY: 0,
         windowWidth: 1200,
@@ -129,8 +129,8 @@ export default function BookshelfExporter({
     return parts.length > 0 ? parts.join(" • ") : "Todos os livros lidos";
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
       <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-neutral-800 flex-shrink-0">
@@ -257,6 +257,7 @@ export default function BookshelfExporter({
                               alt={book.title}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
                               onError={(e) => {
                                 e.target.onerror = null;
                                 const bgColor = "f3e8ff"; // purple-100
@@ -305,4 +306,6 @@ export default function BookshelfExporter({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
