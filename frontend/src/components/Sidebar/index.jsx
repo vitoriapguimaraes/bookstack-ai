@@ -13,6 +13,7 @@ import {
   Shield,
   Info,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -27,7 +28,17 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { isAdmin, userAvatar, userAvatarColor, userAvatarBg } = useAuth();
+  const { isAdmin, userAvatar, userAvatarColor, userAvatarBg, signOut } =
+    useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      if (onClose) onClose();
+    } catch (err) {
+      console.error("Erro ao sair:", err);
+    }
+  };
 
   const AvatarIcon = AVATAR_ICONS[userAvatar] || AVATAR_ICONS["User"];
   const currentColorObj =
@@ -220,7 +231,7 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
           </button>
         </div>
 
-        {/* User Avatar - Settings Link */}
+        {/* User Avatar - Settings Link + Logout */}
         <div className="w-full px-3 flex flex-col gap-2 pb-4">
           <div
             onClick={() => {
@@ -238,6 +249,19 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
               Configurações
             </span>
           </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleSignOut}
+            title="Sair da conta"
+            className="w-full md:aspect-square flex md:flex-col flex-row items-center md:justify-center justify-start gap-4 md:gap-0 px-4 md:px-0 py-3 md:py-0 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-300 transition-colors group relative"
+          >
+            <LogOut size={24} className="md:w-[20px] md:h-[20px] shrink-0" />
+            <span className="md:hidden font-medium">Sair da conta</span>
+            <span className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+              Sair da conta
+            </span>
+          </button>
         </div>
       </aside>
     </>
