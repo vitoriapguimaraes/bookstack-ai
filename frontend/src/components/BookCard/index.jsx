@@ -1,11 +1,26 @@
-import { useState } from "react";
-import { Star, ImageOff } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Star, ImageOff, Info } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { getCoverUrl } from "../../utils/imageUtils";
 
 export default function BookCard({ book, compact = false, onEdit }) {
   const { theme } = useTheme();
   const [coverLoadFailed, setCoverLoadFailed] = useState(false);
+  const [mobileMotivation, setMobileMotivation] = useState(false);
+  const autoHideRef = useRef(null);
+
+  const showMobileMotivation = (e) => {
+    e.stopPropagation(); // não aciona o onClick do card
+    setMobileMotivation(true);
+    clearTimeout(autoHideRef.current);
+    autoHideRef.current = setTimeout(() => setMobileMotivation(false), 4000);
+  };
+
+  const hideMobileMotivation = (e) => {
+    e.stopPropagation();
+    clearTimeout(autoHideRef.current);
+    setMobileMotivation(false);
+  };
 
   // Dynamic placeholder colors based on theme
   const bgColor = theme === "dark" ? "171717" : "f1f5f9";
@@ -116,13 +131,37 @@ export default function BookCard({ book, compact = false, onEdit }) {
               </div>
             )}
 
-            {/* Motivation overlay — fades in on hover over text area */}
+            {/* Motivation overlay — desktop: hover | mobile: botão ℹ */}
             {book.motivation && (
-              <div className="absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center p-1.5 pointer-events-none">
-                <p className="text-[9px] text-slate-600 dark:text-neutral-300 leading-relaxed line-clamp-6">
-                  {book.motivation}
-                </p>
-              </div>
+              <>
+                {/* Botão info — só mobile */}
+                <button
+                  onPointerDown={mobileMotivation ? hideMobileMotivation : showMobileMotivation}
+                  className="md:hidden absolute top-0 right-0 p-1 text-slate-400 dark:text-neutral-500 z-20"
+                  title="Ver motivação"
+                >
+                  <Info size={12} />
+                </button>
+
+                {/* Overlay desktop (hover) */}
+                <div className="hidden md:flex absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded items-center p-1.5 pointer-events-none">
+                  <p className="text-[9px] text-slate-600 dark:text-neutral-300 leading-relaxed line-clamp-6">
+                    {book.motivation}
+                  </p>
+                </div>
+
+                {/* Overlay mobile (tap no ℹ) */}
+                {mobileMotivation && (
+                  <div
+                    onPointerDown={hideMobileMotivation}
+                    className="md:hidden absolute inset-0 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-[2px] rounded flex items-center p-1.5 z-10 animate-fade-in"
+                  >
+                    <p className="text-[9px] text-slate-600 dark:text-neutral-300 leading-relaxed line-clamp-6">
+                      {book.motivation}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -245,13 +284,40 @@ export default function BookCard({ book, compact = false, onEdit }) {
           )}
         </div>
 
-        {/* Motivation overlay — fades in on hover, covers text area only */}
+        {/* Motivation overlay — desktop: hover | mobile: botão ℹ */}
         {book.motivation && (
-          <div className="absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center p-3 pointer-events-none">
-            <p className="text-[10px] text-slate-700 dark:text-neutral-200 leading-relaxed line-clamp-6 italic">
-              "{book.motivation}"
-            </p>
-          </div>
+          <>
+            {/* Botão info — só mobile */}
+            <button
+              onPointerDown={mobileMotivation ? hideMobileMotivation : showMobileMotivation}
+              className="md:hidden absolute top-1 right-1 p-1.5 bg-white/80 dark:bg-neutral-900/80 rounded-full text-slate-400 dark:text-neutral-500 z-20 shadow-sm"
+              title="Ver motivação"
+            >
+              <Info size={14} />
+            </button>
+
+            {/* Overlay desktop (hover) */}
+            <div className="hidden md:flex absolute inset-0 bg-white/92 dark:bg-neutral-900/92 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-center p-3 pointer-events-none">
+              <p className="text-[10px] text-slate-700 dark:text-neutral-200 leading-relaxed line-clamp-6 italic">
+                "{book.motivation}"
+              </p>
+            </div>
+
+            {/* Overlay mobile (tap no ℹ) */}
+            {mobileMotivation && (
+              <div
+                onPointerDown={hideMobileMotivation}
+                className="md:hidden absolute inset-0 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-[2px] rounded-lg flex flex-col justify-center p-3 z-10 animate-fade-in"
+              >
+                <p className="text-[10px] text-slate-700 dark:text-neutral-200 leading-relaxed line-clamp-6 italic">
+                  "{book.motivation}"
+                </p>
+                <p className="text-[8px] text-slate-400 dark:text-neutral-500 mt-2 text-right">
+                  toque para fechar
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
