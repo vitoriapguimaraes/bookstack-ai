@@ -239,8 +239,10 @@ export default function BookshelfExporter({
                           // But here we want to proxy unless it's same domain
                           coverUrl = book.cover_image;
                         } else {
-                          // External URL (http/https), use proxy to avoid CORS issues in html2canvas
-                          coverUrl = `${API_URL}/proxy/image?url=${encodeURIComponent(
+                          const cleanApiUrl = API_URL.endsWith("/")
+                            ? API_URL.slice(0, -1)
+                            : API_URL;
+                          coverUrl = `${cleanApiUrl}/proxy/image?url=${encodeURIComponent(
                             book.cover_image,
                           )}`;
                         }
