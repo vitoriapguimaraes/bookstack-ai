@@ -11,11 +11,13 @@ import {
   Layers,
   Sparkles,
   Info,
+  Pencil,
 } from "lucide-react";
 import BookCard from "../../components/BookCard";
 import ScrollToTopBottom from "../../components/ScrollToTopBottom";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmationContext";
+import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 
 const CARD_MIN_WIDTH = 280; // minmax do grid
@@ -31,7 +33,7 @@ export default function MuralView({
 }) {
   const navigate = useNavigate();
   const { status } = useParams();
-  const [yearlyGoal, setYearlyGoal] = useState(20);
+  const { yearlyGoal } = useAuth(); // Bug 3: lê do contexto global (sincronizado com Settings)
   const containerRef = useRef(null); // mede a largura real do container
 
   const { addToast } = useToast();
@@ -116,13 +118,7 @@ export default function MuralView({
     };
   }, []);
 
-  // Load yearly goal from localStorage
-  useEffect(() => {
-    const savedGoal = localStorage.getItem("yearlyReadingGoal");
-    if (savedGoal) {
-      setYearlyGoal(parseInt(savedGoal));
-    }
-  }, []);
+  // yearlyGoal é lido do AuthContext — não precisa mais de localStorage
 
   // Filter books by status
   const getFilteredBooks = () => {
@@ -412,9 +408,13 @@ export default function MuralView({
         </div>
       </div>
 
-      {/* Meta 2026 Card - Only show on 'reading' tab */}
+      {/* Meta Card - Only show on 'reading' tab. Bug 2: virou botão que leva às configurações */}
       {activeStatus === "reading" && (
-        <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-slate-200 dark:border-neutral-700 mb-6 flex-shrink-0">
+        <button
+          onClick={() => navigate("/settings/preferences")}
+          title="Clique para editar a meta anual"
+          className="group w-full bg-white dark:bg-neutral-800 rounded-lg p-4 border border-slate-200 dark:border-neutral-700 mb-6 flex-shrink-0 text-left hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-sm transition-all duration-200"
+        >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Layers
@@ -425,8 +425,14 @@ export default function MuralView({
                 Meta {new Date().getFullYear()}
               </span>
             </div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-white">
-              {currentYearBooks}/{yearlyGoal}
+            <div className="flex items-center gap-3">
+              <div className="text-2xl font-bold text-slate-800 dark:text-white">
+                {currentYearBooks}/{yearlyGoal}
+              </div>
+              <Pencil
+                size={14}
+                className="text-slate-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              />
             </div>
           </div>
           <div className="w-full bg-slate-200 dark:bg-neutral-700 rounded-full h-2">
@@ -437,8 +443,11 @@ export default function MuralView({
           </div>
           <p className="text-xs text-slate-500 dark:text-neutral-400 mt-2">
             {progressPercentage.toFixed(0)}% da meta anual concluída
+            <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 dark:text-purple-400">
+              · Editar meta
+            </span>
           </p>
-        </div>
+        </button>
       )}
 
       {/* Pagination Controls - Moved to Top */}
