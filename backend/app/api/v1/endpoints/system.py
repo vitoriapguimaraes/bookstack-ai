@@ -61,12 +61,30 @@ async def proxy_image(url: str):
     # 1. Tenta Cache
     cached = _get_cached_image(cache_path, url)
     if cached:
+        cached.headers["Access-Control-Allow-Origin"] = "*"
+        cached.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        cached.headers["Access-Control-Allow-Headers"] = "*"
         return cached
 
     # 2. Busca
     response, error = _fetch_and_cache_image(url, cache_path)
     if response:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
         return response
+
+
+@router.options("/proxy/image")
+async def proxy_image_options():
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
 
 
 @router.get("/health")
