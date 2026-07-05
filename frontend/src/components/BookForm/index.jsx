@@ -464,9 +464,18 @@ export default function BookForm({
       const payload = {
         ...formData,
         year: formData.year ? parseInt(formData.year) : null,
-        // rating: formData.rating ? parseInt(formData.rating) : 0, // rating kept as is
         order: formData.order ? parseInt(formData.order) : null,
       };
+
+      // CRITICAL FIX: Never send a blob:URL to the backend.
+      // If the user selected a local file, cover_image is a temporary blob:URL
+      // that is only valid in the browser session. The actual upload to Supabase
+      // happens via the separate /cover endpoint below.
+      // If no local file was chosen, keep whatever URL is already in cover_image (e.g. from Google Books).
+      if (payload.cover_image && payload.cover_image.startsWith("blob:")) {
+        // Remove blob URL — the /cover upload will set the real URL
+        payload.cover_image = bookToEdit?.cover_image || null;
+      }
 
       let savedBook;
       if (bookToEdit) {

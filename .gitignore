@@ -10,3 +10,5 @@ image_cache/
 .flake8
 .editorconfig
 .vscode
+
+.venv

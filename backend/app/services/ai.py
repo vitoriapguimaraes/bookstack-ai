@@ -106,25 +106,27 @@ def get_ai_classification(
             f"Independente do que o prompt acima diga, você DEVE usar APENAS as seguintes classes e categorias:\n\n"
             f'1. "book_class" (string): Escolha UMA das classes abaixo:\n{valid_classes_str}\n\n'
             f'2. "category" (string): Escolha UMA categoria específica válida para a classe:\n{class_categories_str}\n\n'
-            f'LIVRO A ANALISAR:\nTítulo: "{title}"\nDescrição: "{description[:800]}"'
+            f'LIVRO A ANALISAR:\nTítulo: "{title}"\nDescrição: "{description[:1500]}"'
         )
     else:
-        # Simplificando prompt para economizar espaço tokens na refatoracao
-        # Mantenha o original se critico, mas aqui vou usar o que estava no utils original.
+        description_section = (
+            f'RESUMO DO LIVRO (via Google Books):\n"{description[:1500]}"'
+            if description and description.strip()
+            else "RESUMO DO LIVRO: Não disponível — use seu conhecimento sobre o livro."
+        )
         prompt = f"""
-PERFIL DO USUÁRIO:
-[NOME/PERSONA]: [Idade, profissão e principais áreas de interesse]
-[OBJETIVO DE LEITURA]: [O que você busca ao ler um livro?]
-[LENTE DE MUNDO]: [Quais valores ou perspectivas você aplica?]
-
 LIVRO A ANALISAR:
 Título: "{title}"
-Descrição: "{description[:800]}"
+
+{description_section}
+
+INSTRUÇÕES DE CLASSIFICAÇÃO:
 
 PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
-1. Primeiro, defina a "book_class" (Classe Macro) adequada.
-2. Depois, consulte a lista de categorias APENAS dessa classe específica.
-3. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
+1. Leia o resumo acima com atenção.
+2. Defina a "book_class" (Classe Macro) adequada.
+3. Consulte a lista de categorias APENAS dessa classe específica.
+4. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
 
 1. "book_class" (string): Escolha UMA das classes abaixo.
 {valid_classes_str}
@@ -133,8 +135,10 @@ PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
 {class_categories_str}
 
 3. "type" (string): "Técnico" ou "Não Técnico"
-4. "motivation" (string): 2-3 frases diretas que respondem "por que ler este livro agora, e não outro?". Escreva como um leitor experiente argumentando com outro leitor — sem introduções genéricas como "Este livro faz sentido porque..." ou "Esta obra é...". Comece direto no argumento. Foque no que torna este livro único, o que o leitor ganha concretamente, e quando faz sentido priorizá-lo.
-5. "original_title" (string): O título original.
+
+4. "motivation" (string): Com base no resumo real do livro acima, escreva 2-3 frases diretas e específicas que explicam por que ler ESTE livro — não qualquer livro do mesmo tema. O que este livro ensina de concreto? Que problema ou gap ele resolve? O que o leitor vai sair sabendo que não sabia antes? Foque no diferencial único desta obra. Não use introduções genéricas como "Este livro é importante porque..." ou "Esta obra aborda...". Comece direto no argumento.
+
+5. "original_title" (string): O título original do livro (se for tradução). Se já estiver em inglês ou for o título original, repita o título.
 
 Responda APENAS com um JSON válido:
 {{

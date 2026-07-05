@@ -1,4 +1,6 @@
+import os
 import requests
+from app.core.config import settings
 
 
 def _score_google_item(item: dict) -> int:
@@ -36,37 +38,68 @@ def _extract_book_result(book_info: dict) -> dict:
             pass
 
     image_links = book_info.get("imageLinks", {})
+    # Prefer higher resolution images
     cover_url = (
-        image_links.get("thumbnail")
-        or image_links.get("smallThumbnail")
+        image_links.get("large")
+        or image_links.get("medium")
         or image_links.get("small")
+        or image_links.get("thumbnail")
+        or image_links.get("smallThumbnail")
     )
-    result["cover_image"] = (
-        cover_url.replace("http://", "https://") if cover_url else None
-    )
+    if cover_url:
+        # Force https and request larger zoom
+        cover_url = cover_url.replace("http://", "https://")
+        # Google Books URLs support zoom parameter — zoom=1 is thumbnail, zoom=3 is larger
+        if "zoom=" in cover_url:
+            cover_url = cover_url.replace("zoom=1", "zoom=3")
+        elif "?" in cover_url:
+            cover_url += "&zoom=3"
+        else:
+            cover_url += "?zoom=3"
+    result["cover_image"] = cover_url
     return result
 
 
-def get_google_books_data(title: str):
-    """Busca dados do livro na Google Books API."""
+def _search_google_books(query: str, api_key: str = None) -> list:
+    """Run a single query against Google Books API and return items list."""
     try:
         url = "https://www.googleapis.com/books/v1/volumes"
-        params = {"q": f"intitle:{title}", "maxResults": 3}
-
-        response = requests.get(url, params=params, timeout=5)
+        params = {"q": query, "maxResults": 5, "printType": "books"}
+        if api_key:
+            params["key"] = api_key
+        response = requests.get(url, params=params, timeout=8)
         response.raise_for_status()
-        items = response.json().get("items", [])
-
-        if not items:
-            return None
-
-        best = max(items, key=_score_google_item)
-        return _extract_book_result(best["volumeInfo"])
-
+        return response.json().get("items", [])
     except Exception as e:
-        print(f"Erro ao buscar no Google Books: {e}")
+        print(f"Google Books query failed for '{query}': {e}")
+        return []
 
-    return None
+
+def get_google_books_data(title: str, author: str = None):
+    """Busca dados do livro na Google Books API com estratégia de fallback."""
+    api_key = getattr(settings, "GOOGLE_BOOKS_API_KEY", None) or os.getenv(
+        "GOOGLE_BOOKS_API_KEY"
+    )
+
+    # Strategy 1: Search by title only
+    items = _search_google_books(f"intitle:{title}", api_key)
+
+    # Strategy 2: If no items with cover found, try title + author
+    if author and (
+        not items or not any(i.get("volumeInfo", {}).get("imageLinks") for i in items)
+    ):
+        items_with_author = _search_google_books(
+            f"intitle:{title} inauthor:{author}", api_key
+        )
+        if items_with_author:
+            # Merge, preferring results with images
+            items = items_with_author + [i for i in items if i not in items_with_author]
+
+    if not items:
+        return None
+
+    best = max(items, key=_score_google_item)
+    return _extract_book_result(best["volumeInfo"])
 
 
 def get_openlibrary_rating(title: str, author: str = None):
