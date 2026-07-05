@@ -13,15 +13,19 @@ import { useToast } from "../../context/ToastContext";
 
 const DEFAULT_SYSTEM_PROMPT =
   "Você é um assistente literário especializado que auxilia na organização e enriquecimento de uma biblioteca pessoal.";
-const DEFAULT_USER_PROMPT = `PERFIL DO USUÁRIO:
-[NOME/PERSONA]: [Idade, profissão e principais áreas de interesse]
-[OBJETIVO DE LEITURA]: [O que você busca ao ler um livro? Ex: Rigor técnico, lazer, expansão de repertório, etc.]
-[LENTE DE MUNDO]: [Quais valores ou perspectivas você aplica ao analisar um tema? Ex: Inclusividade, ética, pragmatismo, etc.]
+const DEFAULT_USER_PROMPT = `LIVRO A ANALISAR:
+Título: "{title}"
+
+RESUMO DO LIVRO (via Google Books):
+"{description}"
+
+INSTRUÇÕES DE CLASSIFICAÇÃO:
 
 PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
-1. Primeiro, defina a "book_class" (Classe Macro) adequada.
-2. Depois, consulte a lista de categorias APENAS dessa classe específica.
-3. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
+1. Leia o resumo acima com atenção.
+2. Defina a "book_class" (Classe Macro) adequada.
+3. Consulte a lista de categorias APENAS dessa classe específica.
+4. Escolha a "category" (Subcategoria) a partir dessa lista restrita.
 
 1. "book_class" (string): Escolha UMA das classes abaixo.
    - Tecnologia & IA
@@ -35,11 +39,9 @@ PROCESSO DE RACIOCÍNIO OBRIGATÓRIO:
 
 3. "type" (string): "Técnico" ou "Não Técnico"
 
-4. "motivation" (string): Uma frase reflexiva e autêntica (2-3 linhas) que explique por que este livro faz sentido para o usuário AGORA.
-   - Conecte o tema do livro com seus objetivos de leitura.
-   - Reflita sua lente de mundo na análise.
+4. "motivation" (string): Com base no resumo real do livro acima, escreva 2-3 frases diretas e específicas que explicam por que ler ESTE livro — não qualquer livro do mesmo tema. O que este livro ensina de concreto? Que problema ou gap ele resolve? O que o leitor vai sair sabendo que não sabia antes? Foque no diferencial único desta obra. Não use introduções genéricas como "Este livro é importante porque..." ou "Esta obra aborda...". Comece direto no argumento.
 
-5. "original_title" (string): O título original do livro.`;
+5. "original_title" (string): O título original do livro (se for tradução). Se já estiver em inglês ou for o título original, repita o título.`;
 
 export default function AISettings() {
   const { addToast } = useToast();

@@ -16,6 +16,9 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
 
+    # External APIs
+    GOOGLE_BOOKS_API_KEY: str = os.getenv("GOOGLE_BOOKS_API_KEY")
+
     # Email
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
