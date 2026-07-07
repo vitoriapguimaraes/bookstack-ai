@@ -23,8 +23,10 @@ def upload_file_to_bucket(
             file_path, file_content, {"content-type": content_type}
         )
     except Exception as e:
+        error_text = str(e).lower()
+
         # Check for bucket not found error and try to create it
-        if "Bucket not found" in str(e) or "404" in str(e):
+        if "bucket not found" in error_text or "404" in error_text:
             try:
                 supabase.storage.create_bucket(bucket_name, options={"public": True})
                 # Retry upload
@@ -35,7 +37,21 @@ def upload_file_to_bucket(
                 print(f"Failed to create bucket '{bucket_name}': {create_err}")
                 raise Exception(
                     f"Storage Error: Could not create '{bucket_name}' bucket."
-                )
+                ) from create_err
+
+        elif any(
+            token in error_text
+            for token in [
+                "jws protected header is invalid",
+                "unauthorized",
+                "forbidden",
+                "invalid jwt",
+                "jwt",
+            ]
+        ):
+            raise Exception(
+                "Supabase Storage authentication failed. Verify SUPABASE_SERVICE_ROLE_KEY and bucket permissions."
+            ) from e
         else:
             raise e
 
