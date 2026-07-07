@@ -493,9 +493,18 @@ export default function BookForm({
         formDataUpload.append("file", coverFile);
 
         try {
-          await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          const coverResponse = await api.post(
+            `/books/${savedBook.id}/cover`,
+            formDataUpload,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            },
+          );
+
+          if (coverResponse?.data?.ok === false) {
+            coverUploadError =
+              coverResponse.data.detail || "Erro ao enviar capa";
+          }
         } catch (coverErr) {
           console.error("Erro ao enviar capa:", coverErr);
           coverUploadError =
