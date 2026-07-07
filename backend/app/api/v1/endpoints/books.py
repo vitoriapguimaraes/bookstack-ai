@@ -478,10 +478,10 @@ async def test_cover_upload(
         return {"ok": True, "public_url": public_url}
     except Exception as e:
         print(f"Cover test upload error: {e}")
-        raise HTTPException(status_code=502, detail=str(e))
+        return {"ok": False, "detail": str(e)}
 
 
-@router.post("/{book_id}/cover", response_model=Book)
+@router.post("/{book_id}/cover")
 async def upload_book_cover(
     book_id: int,
     file: UploadFile = File(...),
@@ -514,7 +514,7 @@ async def upload_book_cover(
 
     except Exception as e:
         print(f"Upload Error: {e}")
-        raise HTTPException(status_code=502, detail=str(e))
+        return {"ok": False, "detail": str(e)}
 
 
 @router.get("/stats/toread")
