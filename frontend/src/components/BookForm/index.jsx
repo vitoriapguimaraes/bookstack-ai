@@ -487,16 +487,29 @@ export default function BookForm({
       }
 
       // Only upload file if user selected a local file
+      let coverUploadError = null;
       if (coverFile && savedBook.id) {
         const formDataUpload = new FormData();
         formDataUpload.append("file", coverFile);
 
-        await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        try {
+          await api.post(`/books/${savedBook.id}/cover`, formDataUpload, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } catch (coverErr) {
+          console.error("Erro ao enviar capa:", coverErr);
+          coverUploadError =
+            coverErr.response?.data?.detail || "Erro ao enviar capa";
+        }
       }
 
       addToast({ type: "success", message: "Livro salvo com sucesso!" });
+      if (coverUploadError) {
+        addToast({
+          type: "warning",
+          message: `Livro salvo, mas a capa não foi enviada: ${coverUploadError}`,
+        });
+      }
       onSuccess();
     } catch (err) {
       console.error("Erro ao salvar livro:", err);

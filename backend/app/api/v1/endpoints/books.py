@@ -457,6 +457,30 @@ def suggest_book(
     return enrichment
 
 
+@router.post("/cover/test")
+async def test_cover_upload(
+    file: UploadFile = File(...),
+    session: Session = Depends(get_session),
+    user: dict = Depends(get_current_user),
+):
+    from app.core.storage import upload_file_to_bucket
+
+    try:
+        file_ext = (file.filename or "bin").split(".")[-1]
+        filename = f"test/{user['id']}/test-{int(time.time())}.{file_ext}"
+        file_content = await file.read()
+        public_url = upload_file_to_bucket(
+            "book-covers",
+            filename,
+            file_content,
+            file.content_type or "application/octet-stream",
+        )
+        return {"ok": True, "public_url": public_url}
+    except Exception as e:
+        print(f"Cover test upload error: {e}")
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 @router.post("/{book_id}/cover", response_model=Book)
 async def upload_book_cover(
     book_id: int,
@@ -490,7 +514,7 @@ async def upload_book_cover(
 
     except Exception as e:
         print(f"Upload Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 @router.get("/stats/toread")
