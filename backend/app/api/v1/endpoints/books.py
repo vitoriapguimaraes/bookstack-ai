@@ -449,7 +449,10 @@ def suggest_book(
     )
 
     if enrichment and enrichment.get("error"):
-        return {"error": enrichment.get("error")}
+        result = {"error": enrichment.get("error")}
+        if enrichment.get("partial_result"):
+            result["partial_result"] = enrichment["partial_result"]
+        return result
 
     if not enrichment:
         return {"error": "Não foi possível encontrar dados para este livro."}

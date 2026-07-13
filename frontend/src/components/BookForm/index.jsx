@@ -368,13 +368,38 @@ export default function BookForm({
       const suggestion = res.data;
 
       if (suggestion) {
-        // Check for explicit error from backend
         if (suggestion.error) {
-          console.error("AI Error Log:", suggestion.error);
-          addToast({
-            type: "error",
-            message: `Falha na IA: ${suggestion.error}`,
-          });
+          console.warn("AI partial result:", suggestion.partial_result);
+          if (suggestion.partial_result) {
+            setFormData((prev) => ({
+              ...prev,
+              author: suggestion.partial_result.author || prev.author,
+              year: suggestion.partial_result.year || prev.year,
+              book_class:
+                suggestion.partial_result.book_class || prev.book_class,
+              type: suggestion.partial_result.type || prev.type,
+              category: suggestion.partial_result.category || prev.category,
+              motivation:
+                suggestion.partial_result.motivation || prev.motivation,
+              original_title:
+                suggestion.partial_result.original_title ?? prev.original_title,
+              google_rating:
+                suggestion.partial_result.google_rating || prev.google_rating,
+              cover_image:
+                suggestion.partial_result.cover_image || prev.cover_image,
+            }));
+
+            addToast({
+              type: "warning",
+              message: `Autocomplete parcial: ${suggestion.error}`,
+            });
+          } else {
+            console.error("AI Error Log:", suggestion.error);
+            addToast({
+              type: "error",
+              message: `Falha na IA: ${suggestion.error}`,
+            });
+          }
           return;
         }
 
@@ -387,7 +412,7 @@ export default function BookForm({
           category: suggestion.category || prev.category,
           motivation: suggestion.motivation || prev.motivation,
           original_title: suggestion.original_title ?? prev.original_title,
-          google_rating: suggestion.google_rating || null,
+          google_rating: suggestion.google_rating || prev.google_rating,
           cover_image: suggestion.cover_image || prev.cover_image,
         }));
 
@@ -496,9 +521,6 @@ export default function BookForm({
           const coverResponse = await api.post(
             `/books/${savedBook.id}/cover`,
             formDataUpload,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-            },
           );
 
           if (coverResponse?.data?.ok === false) {
