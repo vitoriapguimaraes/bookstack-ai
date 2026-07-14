@@ -201,8 +201,8 @@ export default function Sidebar({ onAddBook, isOpen, onClose }) {
         </nav>
 
         {/* Theme Toggle & Add */}
-        <div className="w-full px-3 flex flex-col gap-4 mb-6 mt-auto">
-        {/* Add Button */}
+        <div className="w-full px-3 flex flex-col gap-4 mb-3 mt-auto">
+          {/* Add Button */}
           <button
             onClick={() => {
               onAddBook();

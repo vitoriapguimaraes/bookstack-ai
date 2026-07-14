@@ -81,19 +81,14 @@ def get_google_books_data(title: str, author: str = None):
         "GOOGLE_BOOKS_API_KEY"
     )
 
-    # Strategy 1: Search by title only
-    items = _search_google_books(f"intitle:{title}", api_key)
+    items = []
+    # Strategy 1: Search by title AND author
+    if author:
+        items = _search_google_books(f"intitle:{title} inauthor:{author}", api_key)
 
-    # Strategy 2: If no items with cover found, try title + author
-    if author and (
-        not items or not any(i.get("volumeInfo", {}).get("imageLinks") for i in items)
-    ):
-        items_with_author = _search_google_books(
-            f"intitle:{title} inauthor:{author}", api_key
-        )
-        if items_with_author:
-            # Merge, preferring results with images
-            items = items_with_author + [i for i in items if i not in items_with_author]
+    # Strategy 2: If no items found, fallback to title only
+    if not items:
+        items = _search_google_books(f"intitle:{title}", api_key)
 
     if not items:
         return None
@@ -102,8 +97,8 @@ def get_google_books_data(title: str, author: str = None):
     return _extract_book_result(best["volumeInfo"])
 
 
-def get_openlibrary_rating(title: str, author: str = None):
-    """Busca rating do livro na Open Library API."""
+def get_openlibrary_data(title: str, author: str = None):
+    """Busca dados adicionais (ano da primeira publicação, título original, rating) na Open Library API."""
     try:
         search_query = title
         if author:
@@ -120,13 +115,25 @@ def get_openlibrary_rating(title: str, author: str = None):
             book = data["docs"][0]
             rating = book.get("ratings_average")
             rating_count = book.get("ratings_count", 0)
-
+            
+            result = {}
             if rating and rating > 0:
-                return {
+                result.update({
                     "average_rating": round(rating, 2),
                     "ratings_count": rating_count,
                     "source": "Open Library",
-                }
+                })
+            
+            first_publish_year = book.get("first_publish_year")
+            if first_publish_year:
+                result["year"] = first_publish_year
+                
+            # O título original (OpenLibrary costuma ter o título principal da obra)
+            ol_title = book.get("title")
+            if ol_title:
+                result["original_title"] = ol_title
+
+            return result if result else None
     except Exception as e:
         print(f"Erro ao buscar no Open Library: {e}")
 
@@ -155,15 +162,15 @@ def get_hybrid_rating(title: str, author: str = None, original_title: str = None
             }
 
     # Tenta Open Library com título em português
-    openlibrary_data = get_openlibrary_rating(title, author)
-    if openlibrary_data:
+    openlibrary_data = get_openlibrary_data(title, author)
+    if openlibrary_data and openlibrary_data.get("average_rating"):
         openlibrary_data["source"] = "Open Library (PT)"
         return openlibrary_data
 
     # Tenta Open Library com título original
     if original_title:
-        openlibrary_data_original = get_openlibrary_rating(original_title, author)
-        if openlibrary_data_original:
+        openlibrary_data_original = get_openlibrary_data(original_title, author)
+        if openlibrary_data_original and openlibrary_data_original.get("average_rating"):
             openlibrary_data_original["source"] = "Open Library (Original)"
             return openlibrary_data_original
 

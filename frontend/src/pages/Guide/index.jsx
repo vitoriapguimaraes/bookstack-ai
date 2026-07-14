@@ -45,10 +45,10 @@ export default function GuideSettings() {
             </div>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-            O cérebro do sistema utiliza LLMs (Gemini, OpenAI ou Groq) para
-            automatizar o preenchimento de campos. Ao adicionar um livro apenas
-            pelo título, a IA sugere a categoria técnica, o título original e
-            uma motivação reflexiva baseada no seu perfil.
+            O cérebro do sistema agora é um verdadeiro Agente Inteligente (LangGraph).
+            Ao adicionar um livro (título e autor), ele executa um pipeline em múltiplos passos:
+            busca os metadados no Google Books e OpenLibrary, infere a Categoria ideal usando LLMs
+            poderosos (como Llama 3.3) e redige uma motivação exclusiva focada nos seus interesses.
           </p>
           <ul className="space-y-2 mt-auto">
             <li className="flex gap-2 text-xs text-slate-500 dark:text-slate-400">

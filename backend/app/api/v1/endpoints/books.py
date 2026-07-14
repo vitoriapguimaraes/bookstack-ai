@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from typing import List
+from typing import List, Optional
 from app.api.deps import get_current_user
 from app.core.database import get_session
 from app.models.book import Book
@@ -429,6 +429,7 @@ def export_books_csv(
 
 class SuggestRequest(BaseModel):
     title: str
+    author: Optional[str] = None
 
 
 @router.post("/suggest")
@@ -443,9 +444,10 @@ def suggest_book(
     """
     user_id = user["id"]
     api_keys, custom_prompts, class_categories = _get_ai_params(session, user_id)
+    from app.services.agent import get_book_details_langgraph
 
-    enrichment = get_book_details_hybrid(
-        request.title, api_keys, custom_prompts, class_categories
+    enrichment = get_book_details_langgraph(
+        request.title, request.author, api_keys, custom_prompts, class_categories
     )
 
     if enrichment and enrichment.get("error"):
@@ -506,7 +508,10 @@ async def upload_book_cover(
 
         # Upload using helper (handles bucket creation)
         public_url = upload_file_to_bucket(
-            "book-covers", filename, file_content, file.content_type or "application/octet-stream"
+            "book-covers",
+            filename,
+            file_content,
+            file.content_type or "application/octet-stream",
         )
 
         book.cover_image = public_url

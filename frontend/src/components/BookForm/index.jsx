@@ -364,6 +364,7 @@ export default function BookForm({
     try {
       const res = await api.post("/books/suggest", {
         title: formData.title,
+        author: formData.author || null,
       });
       const suggestion = res.data;
 
