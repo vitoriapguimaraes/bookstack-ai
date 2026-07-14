@@ -23,7 +23,6 @@ plt.rcParams["font.size"] = 12
 BASE_DIR = Path(__file__).parent.resolve()
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
-DATA_PATH = BASE_DIR / "data" / "biblioteca.csv"
 
 # ── Mapeamento de colunas ───────────────────────────────────────────────────
 COLUMN_MAP = {
@@ -108,16 +107,6 @@ def load_from_supabase(supabase_url: str, service_key: str) -> pd.DataFrame:
     books = response.data
     log.info("%d livros recebidos do Supabase", len(books))
     return pd.DataFrame(books)
-
-
-def load_from_csv() -> pd.DataFrame:
-    if not DATA_PATH.exists():
-        log.error("Arquivo não encontrado: %s", DATA_PATH)
-        log.error("Use o comando de dump do sqlite primeiro (ex: no main.py).")
-        sys.exit(1)
-    df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
-    log.info("%d livros carregados do CSV", len(df))
-    return df
 
 
 # ── Limpeza ─────────────────────────────────────────────────────────────────

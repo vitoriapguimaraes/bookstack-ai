@@ -22,7 +22,6 @@ from analyze_recommendations import analyze_recommendations
 from utils import (
     clean,
     load_from_api,
-    load_from_csv,
     load_from_supabase,
     log,
     validate_columns,
@@ -31,9 +30,6 @@ from utils import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Análise da biblioteca bookstack-ai")
-    parser.add_argument(
-        "--local", action="store_true", help="Usar CSV local em vez da API ou Supabase"
-    )
     parser.add_argument(
         "--api", default=None, help="URL do backend (ex: http://localhost:8000)"
     )
@@ -48,9 +44,7 @@ def main():
     log.info("Iniciando análises...")
 
     # Load Stage
-    if args.local:
-        df_raw = load_from_csv()
-    elif args.api and args.token:
+    if args.api and args.token:
         df_raw = load_from_api(args.api, args.token)
     else:
         import os
@@ -72,7 +66,7 @@ def main():
                 return
         else:
             log.error(f"Arquivo .env não encontrado em {env_path}")
-            log.error("Nenhuma fonte de dados especificada (--local ou backend/.env)")
+            log.error("Nenhuma fonte de dados especificada (--api ou backend/.env)")
             return
 
     if df_raw.empty:
