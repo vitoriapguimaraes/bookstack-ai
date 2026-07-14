@@ -364,6 +364,7 @@ export default function BookForm({
     try {
       const res = await api.post("/books/suggest", {
         title: formData.title,
+        author: formData.author || null,
       });
       const suggestion = res.data;
 
@@ -605,7 +606,7 @@ export default function BookForm({
                   id="title"
                   required
                   name="title"
-                  value={formData.title}
+                  value={formData.title || ""}
                   onChange={handleChange}
                   className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-sm p-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-bold placeholder-slate-400 dark:placeholder-neutral-700"
                   placeholder="Ex: Hábitos Atômicos"
@@ -638,7 +639,7 @@ export default function BookForm({
                   <input
                     id="author"
                     name="author"
-                    value={formData.author}
+                    value={formData.author || ""}
                     onChange={handleChange}
                     className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700"
                   />
@@ -723,7 +724,7 @@ export default function BookForm({
                     id="year"
                     type="number"
                     name="year"
-                    value={formData.year}
+                    value={formData.year || ""}
                     onChange={handleChange}
                     className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white text-xs p-2 focus:border-purple-500"
                   />
@@ -804,7 +805,7 @@ export default function BookForm({
               <textarea
                 id="motivation"
                 name="motivation"
-                value={formData.motivation}
+                value={formData.motivation || ""}
                 onChange={handleChange}
                 rows={6}
                 className="w-full rounded bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs p-2 focus:border-purple-500 placeholder-slate-400 dark:placeholder-neutral-700 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-neutral-700"

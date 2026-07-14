@@ -10,7 +10,9 @@ class SupabaseStorageClient:
     def is_configured(self) -> bool:
         return bool(self.url and self.key)
 
-    def upload(self, bucket_name: str, file_path: str, file_content: bytes, content_type: str) -> str:
+    def upload(
+        self, bucket_name: str, file_path: str, file_content: bytes, content_type: str
+    ) -> str:
         if not self.is_configured():
             raise Exception("Supabase Storage not configured")
 
@@ -49,20 +51,6 @@ def upload_file_to_bucket(
     try:
         return storage_client.upload(bucket_name, file_path, file_content, content_type)
     except Exception as e:
-        error_text = str(e).lower()
-
-        if any(
-            token in error_text
-            for token in [
-                "jws protected header is invalid",
-                "unauthorized",
-                "forbidden",
-                "invalid jwt",
-                "jwt",
-            ]
-        ):
-            raise Exception(
-                "Supabase Storage authentication failed. Verify SUPABASE_SERVICE_ROLE_KEY and bucket permissions."
-            ) from e
-
-        raise e
+        raise Exception(
+            f"Supabase error: {e} | Key ends with: {storage_client.key[-10:] if storage_client.key else 'None'}"
+        )
