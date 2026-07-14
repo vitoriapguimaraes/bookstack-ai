@@ -11,3 +11,5 @@ google-generativeai
 cryptography
 supabase
 email-validator
+numpy
+matplotlib

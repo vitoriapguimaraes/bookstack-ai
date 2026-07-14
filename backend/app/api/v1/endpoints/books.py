@@ -506,7 +506,7 @@ async def upload_book_cover(
 
         # Upload using helper (handles bucket creation)
         public_url = upload_file_to_bucket(
-            "book-covers", filename, file_content, file.content_type
+            "book-covers", filename, file_content, file.content_type or "application/octet-stream"
         )
 
         book.cover_image = public_url
